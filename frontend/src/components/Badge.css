@@ -1,0 +1,57 @@
+.pf-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-sans);
+  font-weight: 500;
+  border-radius: var(--radius-full);
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.pf-badge--sm {
+  padding: 3px 8px;
+  font-size: 0.6875rem;
+}
+
+.pf-badge--md {
+  padding: 4px 10px;
+  font-size: 0.75rem;
+}
+
+.pf-badge--lg {
+  padding: 6px 14px;
+  font-size: 0.8125rem;
+}
+
+/* Variants */
+.pf-badge--sage {
+  background-color: var(--color-primary-light);
+  color: var(--color-primary);
+  border: 1px solid var(--border-accent);
+}
+
+.pf-badge--neutral {
+  background-color: var(--bg-tag);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-subtle);
+}
+
+.pf-badge--amber {
+  background-color: var(--color-warning-bg);
+  color: var(--color-warning);
+  border: 1px solid #f2dab4;
+}
+
+.pf-badge--success {
+  background-color: var(--color-success-bg);
+  color: var(--color-success);
+  border: 1px solid var(--color-success-border);
+}
+
+.pf-badge--coming-soon {
+  background-color: #f7f3eb;
+  color: #7a6e5d;
+  border: 1px dashed #d5cab7;
+  font-style: italic;
+}

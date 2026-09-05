@@ -1,0 +1,118 @@
+.pf-consent-box {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  width: 100%;
+}
+
+.pf-consent-box__notice {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-md);
+  padding: var(--space-md);
+  background-color: var(--color-primary-subtle);
+  border: 1px solid var(--border-accent);
+  border-radius: var(--radius-md);
+}
+
+.pf-consent-box__notice-icon {
+  width: 32px;
+  height: 32px;
+  background-color: var(--color-primary-light);
+  color: var(--color-primary);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.pf-consent-box__notice-title {
+  font-family: var(--font-sans);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--color-primary);
+  margin-bottom: 2px;
+}
+
+.pf-consent-box__notice-desc {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.pf-consent-box__meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 4px;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.pf-consent-box__security {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--color-sage);
+}
+
+.pf-consent-checkbox-card {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  transition: all var(--transition-fast);
+}
+
+.pf-consent-checkbox-card.is-error {
+  border-color: var(--color-error);
+  background-color: var(--color-error-bg);
+}
+
+.pf-consent-checkbox-label {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-sm);
+  cursor: pointer;
+}
+
+.pf-consent-checkbox {
+  margin-top: 3px;
+  width: 18px;
+  height: 18px;
+  accent-color: var(--color-primary);
+  cursor: pointer;
+}
+
+.pf-consent-checkbox-text {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.pf-consent-checkbox-text strong {
+  color: var(--text-primary);
+}
+
+.pf-consent-error {
+  font-size: 0.8125rem;
+  color: var(--color-error);
+  margin-top: var(--space-xs);
+  margin-left: 26px;
+}
+
+.pf-consent-box__guarantee {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+  padding: 0 var(--space-xs);
+}
+
+.pf-consent-box__guarantee svg {
+  flex-shrink: 0;
+  color: var(--color-sage);
+}

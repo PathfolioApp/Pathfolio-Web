@@ -1,0 +1,22 @@
+{
+  "name": "pathfolio-api",
+  "version": "1.0.0",
+  "description": "PathfolioApp Onboarding & Student Lifecycle Express API",
+  "main": "src/server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2"
+  },
+  "devDependencies": {
+    "morgan": "^1.10.0"
+  },
+  "keywords": ["express", "onboarding", "pathfolio", "api"],
+  "author": "PathfolioApp Team",
+  "license": "MIT"
+}

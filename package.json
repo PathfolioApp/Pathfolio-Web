@@ -1,0 +1,34 @@
+{
+  "name": "pathfolio-app-workspace",
+  "version": "1.0.0",
+  "private": true,
+  "description": "PathfolioApp - Student Lifecycle & Career Portal (SLCP) - Landing Page & Onboarding Release",
+  "scripts": {
+    "dev": "concurrently --kill-others \"npm run dev:api\" \"npm run dev:frontend\"",
+    "dev:frontend": "npm run dev --prefix frontend",
+    "dev:api": "npm run dev --prefix api",
+    "install:all": "npm install && npm install --prefix api && npm install --prefix frontend",
+    "build": "npm run build --prefix frontend",
+    "build:frontend": "npm run build --prefix frontend",
+    "start": "concurrently --kill-others \"npm run start:api\" \"npm run start:frontend\"",
+    "start:api": "npm start --prefix api",
+    "start:frontend": "npm run preview --prefix frontend",
+    "prod": "npm run install:all && npm run build && concurrently --kill-others \"npm run start:api\" \"npm run start:frontend\"",
+    "start:prod": "npm run install:all && npm run build && concurrently --kill-others \"npm run start:api\" \"npm run start:frontend\"",
+    "preview": "npm run preview --prefix frontend"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "keywords": [
+    "student-lifecycle",
+    "portfolio",
+    "career-portal",
+    "onboarding",
+    "react",
+    "vite",
+    "express"
+  ],
+  "author": "PathfolioApp Team",
+  "license": "MIT"
+}

@@ -1,0 +1,261 @@
+.pf-completion-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--bg-page);
+}
+
+.pf-completion-header {
+  height: 72px;
+  background-color: rgba(251, 249, 245, 0.95);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+}
+
+.pf-completion-header__inner {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.pf-completion-main {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-3xl) var(--space-md);
+}
+
+.pf-completion-card {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xl);
+  padding: var(--space-3xl);
+  box-shadow: var(--shadow-lg);
+  text-align: center;
+  width: 100%;
+  max-width: 680px;
+}
+
+.pf-completion-badge-wrap {
+  margin-bottom: var(--space-md);
+}
+
+.pf-completion-check-bubble {
+  width: 64px;
+  height: 64px;
+  background-color: var(--color-primary-light);
+  color: var(--color-primary);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+  box-shadow: 0 0 0 8px var(--color-primary-subtle);
+}
+
+.pf-completion-title {
+  font-size: 2.5rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  line-height: 1.2;
+  margin-bottom: var(--space-xs);
+}
+
+.pf-completion-sub {
+  font-size: 1.0625rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  max-width: 520px;
+  margin: 0 auto var(--space-2xl);
+}
+
+/* Profile Genesis Card */
+.pf-completion-profile-card {
+  background-color: var(--bg-page);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: var(--space-xl);
+  text-align: left;
+  margin-bottom: var(--space-2xl);
+}
+
+.pf-completion-profile-top {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding-bottom: var(--space-md);
+  border-bottom: 1px solid var(--border-subtle);
+  margin-bottom: var(--space-md);
+}
+
+.pf-completion-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background-color: var(--color-primary);
+  color: var(--text-on-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-serif);
+  font-weight: 600;
+  font-size: 1.125rem;
+  flex-shrink: 0;
+}
+
+.pf-completion-meta {
+  flex: 1;
+}
+
+.pf-completion-name {
+  font-family: var(--font-serif);
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.pf-completion-dept {
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+}
+
+.pf-completion-handle {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.pf-completion-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-md);
+  margin-bottom: var(--space-md);
+}
+
+.pf-completion-stat-box {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.pf-completion-stat-icon {
+  color: var(--color-primary);
+}
+
+.pf-completion-stat-icon--gold {
+  color: #B37D2A;
+}
+
+.pf-completion-stat-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.pf-completion-stat-num {
+  font-family: var(--font-serif);
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1;
+}
+
+.pf-completion-stat-label {
+  font-size: 0.6875rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.pf-completion-growth-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: var(--space-sm);
+}
+
+.pf-completion-growth-info {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.pf-completion-growth-track {
+  height: 6px;
+  background-color: var(--border-subtle);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.pf-completion-growth-fill {
+  width: 25%;
+  height: 100%;
+  background-color: var(--color-primary);
+  border-radius: var(--radius-full);
+}
+
+/* Actions */
+.pf-completion-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.pf-completion-return-btn {
+  background: none;
+  border: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color var(--transition-fast);
+}
+
+.pf-completion-return-btn:hover {
+  color: var(--color-primary);
+}
+
+/* Coming Next list */
+.pf-coming-next-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  padding: 0;
+}
+
+.pf-coming-next-list li {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  padding: var(--space-xs) 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.pf-coming-next-list li:last-child {
+  border-bottom: none;
+}
+
+@media (max-width: 640px) {
+  .pf-completion-card {
+    padding: var(--space-xl) var(--space-md);
+  }
+  .pf-completion-title {
+    font-size: 2rem;
+  }
+  .pf-completion-stats-grid {
+    grid-template-columns: 1fr;
+    gap: var(--space-xs);
+  }
+  .pf-completion-profile-top {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

@@ -1,0 +1,29 @@
+const app = require('./app');
+const config = require('./config');
+
+const server = app.listen(config.port, () => {
+  console.log(`\n======================================================`);
+  console.log(` [PathfolioApp Backend API]`);
+  console.log(` Server URL:   http://localhost:${config.port}/api/health`);
+  console.log(` Environment:  ${config.nodeEnv}`);
+  console.log(` Port:         ${config.port}`);
+  console.log(`======================================================\n`);
+});
+
+server.on('error', (err) => {
+  if (err.code === 'EADDRINUSE') {
+    console.error(`\n[PathfolioApp API Error] Port ${config.port} is already in use.`);
+    console.error(`Please close any existing process on port ${config.port} or configure PORT in api/.env\n`);
+    process.exit(1);
+  } else {
+    console.error('[PathfolioApp API Server Error]:', err);
+    process.exit(1);
+  }
+});
+
+process.on('SIGTERM', () => {
+  console.log('[PathfolioApp API] SIGTERM received: closing HTTP server');
+  server.close(() => {
+    console.log('[PathfolioApp API] HTTP server closed');
+  });
+});
