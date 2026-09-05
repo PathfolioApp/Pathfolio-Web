@@ -1,155 +1,16 @@
-/**
- * In-memory persistence layer for student onboarding profiles.
- * Designed with repository interfaces for seamless future PostgreSQL / database migration.
- */
-
+const crypto = require('crypto'); const mysql = require('mysql2/promise'); const config = require('../config');
 class StudentStore {
-  constructor() {
-    this.students = new Map();
-    this.emails = new Map();
-    this.sessions = new Map();
-    this.usernames = new Set([
-      'admin',
-      'pathfolio',
-      'student_demo',
-      'alex_rivera',
-      'system',
-      'superuser',
-      'moderator'
-    ]);
-    this.rollNumbers = new Map([
-      ['2024CS101', { department: 'Computer Science & Engineering', batchYear: '2024-2028', registered: false }],
-      ['2024ECE204', { department: 'Electronics & Communication', batchYear: '2024-2028', registered: false }],
-      ['2024ME312', { department: 'Mechanical Engineering', batchYear: '2024-2028', registered: false }],
-      ['2024DS108', { department: 'Data Science & AI', batchYear: '2024-2028', registered: false }],
-      ['2024DES05', { department: 'Design & Human-Computer Interaction', batchYear: '2024-2028', registered: false }]
-    ]);
-
-    // Add a demo student to test state
-    this.saveStudent({
-      id: 'usr_demo_101',
-      personal: {
-        fullName: 'Alex Rivera',
-        age: 19,
-        email: 'alex.rivera@university.edu',
-        username: 'alex_rivera'
-      },
-      academic: {
-        rollNumber: '2024CS101',
-        department: 'Computer Science & Engineering',
-        batchYear: '2024-2028'
-      },
-      interests: {
-        hobbies: ['Photography', 'Reading', 'Cycling'],
-        passions: ['Artificial Intelligence', 'Human-Centered Design', 'Open Source']
-      },
-      achievements: [
-        {
-          id: 'ach_1',
-          title: 'National Science Olympiad Silver Medalist',
-          category: 'Competition',
-          description: 'Secured national top 1% rank in physical computing track.',
-          year: '2023'
-        }
-      ],
-      familyContext: {
-        details: 'First-generation college student.',
-        consentGiven: true
-      },
-      createdAt: new Date().toISOString(),
-      status: 'completed'
-    });
-  }
-
-  async isUsernameTaken(username) {
-    if (!username) return false;
-    const normalized = username.toLowerCase().trim();
-    return this.usernames.has(normalized);
-  }
-
-  async verifyRollNumber(rollNumber) {
-    if (!rollNumber) return { valid: false, message: 'Roll number is required.' };
-    const normalized = rollNumber.toUpperCase().trim();
-
-    // Check pre-enrolled registry
-    if (this.rollNumbers.has(normalized)) {
-      const record = this.rollNumbers.get(normalized);
-      return {
-        valid: true,
-        enrolled: true,
-        department: record.department,
-        batchYear: record.batchYear,
-        message: 'Student roll number verified in institutional registry.'
-      };
-    }
-
-    // Heuristic format check for general institutional roll numbers (e.g. 2024CS123 or general alphanumeric)
-    const rollPattern = /^[A-Z0-9-]{4,16}$/i;
-    if (rollPattern.test(normalized)) {
-      return {
-        valid: true,
-        enrolled: true,
-        department: null,
-        batchYear: null,
-        message: 'Format verified for institutional enrollment.'
-      };
-    }
-
-    return {
-      valid: false,
-      enrolled: false,
-      message: 'Roll number format does not match college enrollment pattern (4-16 alphanumeric characters).'
-    };
-  }
-
-  async saveStudent(studentData) {
-    const id = studentData.id || `usr_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
-    const previous = this.students.get(id);
-    const studentRecord = {
-      ...studentData,
-      id,
-      updatedAt: new Date().toISOString()
-    };
-
-    if (previous?.personal?.username && previous.personal.username.toLowerCase() !== studentRecord.personal?.username?.toLowerCase()) {
-      this.usernames.delete(previous.personal.username.toLowerCase().trim());
-    }
-    if (studentRecord.personal?.username) {
-      this.usernames.add(studentRecord.personal.username.toLowerCase().trim());
-    }
-    if (studentRecord.personal?.email) this.emails.set(studentRecord.personal.email.toLowerCase().trim(), id);
-
-    this.students.set(id, studentRecord);
-    return studentRecord;
-  }
-
-  async getStudentById(id) {
-    return this.students.get(id) || null;
-  }
-
-  async getStudentByUsername(username) {
-    const normalized = username.toLowerCase().trim();
-    for (const student of this.students.values()) {
-      if (student.personal?.username?.toLowerCase() === normalized) {
-        return student;
-      }
-    }
-    return null;
-  }
-
-  async getStudentByEmail(email) {
-    const id = this.emails.get((email || '').toLowerCase().trim());
-    return id ? this.getStudentById(id) : null;
-  }
-
-  async createSession(studentId) {
-    const token = require('crypto').randomBytes(32).toString('hex');
-    this.sessions.set(token, { studentId, createdAt: Date.now() });
-    return token;
-  }
-
-  async getSession(token) { return this.sessions.get(token) || null; }
-  async deleteSession(token) { this.sessions.delete(token); }
+  constructor(){ this.students=new Map(); this.sessions=new Map(); this.pool=null; }
+  async initialize(){ if(!config.databaseConfigured){ if(config.nodeEnv==='production') throw new Error('Database configuration is required in production.'); console.warn('[PathfolioApp] Database is not configured. Development-only volatile storage is active.'); return; } this.pool=mysql.createPool({host:config.db.host,port:config.db.port,user:config.db.user,password:config.db.password,database:config.db.name,waitForConnections:true,connectionLimit:10}); const c=await this.pool.getConnection(); try { await c.query(`CREATE TABLE IF NOT EXISTS students (id VARCHAR(64) PRIMARY KEY, email VARCHAR(254) NOT NULL UNIQUE, username VARCHAR(32) NOT NULL UNIQUE, password_hash VARCHAR(255), personal JSON NOT NULL, academic JSON NOT NULL, interests JSON NOT NULL, achievements JSON NOT NULL, family_context JSON NOT NULL, profile_settings JSON NOT NULL, onboarding JSON NOT NULL, status VARCHAR(64), created_at DATETIME NOT NULL, updated_at DATETIME NOT NULL, INDEX idx_roll_number ((CAST(JSON_UNQUOTE(JSON_EXTRACT(academic, '$.rollNumber')) AS CHAR(32)))) )`); await c.query(`CREATE TABLE IF NOT EXISTS sessions (token_hash CHAR(64) PRIMARY KEY, student_id VARCHAR(64) NOT NULL, created_at DATETIME NOT NULL, expires_at DATETIME NOT NULL, FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE)`); await c.query(`CREATE TABLE IF NOT EXISTS notifications (id BIGINT AUTO_INCREMENT PRIMARY KEY, student_id VARCHAR(64) NOT NULL, title VARCHAR(150) NOT NULL, message TEXT NOT NULL, type VARCHAR(32) NOT NULL DEFAULT 'system', is_read BOOLEAN NOT NULL DEFAULT FALSE, created_at DATETIME NOT NULL, FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE, INDEX idx_notifications_student_read (student_id,is_read))`); } finally { c.release(); } }
+  row(row){ if(!row) return null; const parse=v=>typeof v==='string'?JSON.parse(v):v; return {id:row.id,personal:parse(row.personal),academic:parse(row.academic),interests:parse(row.interests),achievements:parse(row.achievements),familyContext:parse(row.family_context),profileSettings:parse(row.profile_settings),onboarding:parse(row.onboarding),passwordHash:row.password_hash,status:row.status,createdAt:new Date(row.created_at).toISOString(),updatedAt:new Date(row.updated_at).toISOString()}; }
+  async isUsernameTaken(username){if(!username)return false; if(this.pool){const [r]=await this.pool.execute('SELECT 1 FROM students WHERE username=? LIMIT 1',[username.toLowerCase().trim()]);return r.length>0;} return [...this.students.values()].some(s=>s.personal.username.toLowerCase()===username.toLowerCase().trim());}
+  async verifyRollNumber(value){ const roll=String(value||'').trim(); if(!roll)return {valid:false,message:'Roll number is required.'}; if(!/^\d+$/.test(roll))return {valid:false,message:'Roll number must contain numbers only.'}; return {valid:true,enrolled:true,department:null,batchYear:null,message:'Roll number format verified.'}; }
+  async saveStudent(student){const id=student.id||`usr_${Date.now()}_${crypto.randomBytes(3).toString('hex')}`;const record={...student,id,updatedAt:new Date().toISOString()};if(this.pool){const v=[id,record.personal.email.toLowerCase(),record.personal.username.toLowerCase(),record.passwordHash||null,JSON.stringify(record.personal),JSON.stringify(record.academic),JSON.stringify(record.interests),JSON.stringify(record.achievements||[]),JSON.stringify(record.familyContext||{}),JSON.stringify(record.profileSettings||{}),JSON.stringify(record.onboarding||{}),record.status||null,new Date(record.createdAt||Date.now()),new Date(record.updatedAt)];await this.pool.execute(`INSERT INTO students (id,email,username,password_hash,personal,academic,interests,achievements,family_context,profile_settings,onboarding,status,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON DUPLICATE KEY UPDATE email=VALUES(email),username=VALUES(username),password_hash=VALUES(password_hash),personal=VALUES(personal),academic=VALUES(academic),interests=VALUES(interests),achievements=VALUES(achievements),family_context=VALUES(family_context),profile_settings=VALUES(profile_settings),onboarding=VALUES(onboarding),status=VALUES(status),updated_at=VALUES(updated_at)`,v);return record;} this.students.set(id,record);return record;}
+  async getStudentById(id){if(this.pool){const [r]=await this.pool.execute('SELECT * FROM students WHERE id=?',[id]);return this.row(r[0]);}return this.students.get(id)||null;}
+  async getStudentByUsername(username){if(this.pool){const[r]=await this.pool.execute('SELECT * FROM students WHERE username=?',[String(username).toLowerCase().trim()]);return this.row(r[0]);}return [...this.students.values()].find(s=>s.personal.username.toLowerCase()===String(username).toLowerCase().trim())||null;}
+  async getStudentByEmail(email){if(this.pool){const[r]=await this.pool.execute('SELECT * FROM students WHERE email=?',[String(email).toLowerCase().trim()]);return this.row(r[0]);}return [...this.students.values()].find(s=>s.personal.email.toLowerCase()===String(email).toLowerCase().trim())||null;}
+  async createSession(studentId){const token=crypto.randomBytes(32).toString('hex');if(this.pool){await this.pool.execute('INSERT INTO sessions (token_hash,student_id,created_at,expires_at) VALUES (?,?,NOW(),DATE_ADD(NOW(),INTERVAL 7 DAY))',[crypto.createHash('sha256').update(token).digest('hex'),studentId]);}else this.sessions.set(token,{studentId});return token;}
+  async getSession(token){if(!token)return null;if(this.pool){const[r]=await this.pool.execute('SELECT student_id studentId FROM sessions WHERE token_hash=? AND expires_at>NOW()',[crypto.createHash('sha256').update(token).digest('hex')]);return r[0]||null;}return this.sessions.get(token)||null;}
+  async deleteSession(token){if(this.pool)await this.pool.execute('DELETE FROM sessions WHERE token_hash=?',[crypto.createHash('sha256').update(token).digest('hex')]);else this.sessions.delete(token);}
 }
-
-module.exports = new StudentStore();
+module.exports=new StudentStore();

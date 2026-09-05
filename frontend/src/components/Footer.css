@@ -82,9 +82,6 @@
   color: var(--text-muted);
 }
 
-.pf-footer__disclaimer {
-  font-style: italic;
-}
 
 @media (max-width: 768px) {
   .pf-footer__inner {

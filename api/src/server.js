@@ -1,7 +1,8 @@
 const app = require('./app');
 const config = require('./config');
 
-const server = app.listen(config.port, () => {
+const store = require('./models/studentStore');
+async function start() { await store.initialize(); const server = app.listen(config.port, () => {
   console.log(`\n======================================================`);
   console.log(` [PathfolioApp Backend API]`);
   console.log(` Server URL:   http://localhost:${config.port}/api/health`);
@@ -27,3 +28,5 @@ process.on('SIGTERM', () => {
     console.log('[PathfolioApp API] HTTP server closed');
   });
 });
+}
+start().catch(err => { console.error('[PathfolioApp] Unable to initialize persistence:', err.message); process.exit(1); });

@@ -11,12 +11,18 @@
   "dependencies": {
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
-    "express": "^4.19.2"
+    "express": "^4.19.2",
+    "mysql2": "^3.24.3"
   },
   "devDependencies": {
     "morgan": "^1.10.0"
   },
-  "keywords": ["express", "onboarding", "pathfolio", "api"],
+  "keywords": [
+    "express",
+    "onboarding",
+    "pathfolio",
+    "api"
+  ],
   "author": "PathfolioApp Team",
   "license": "MIT"
 }

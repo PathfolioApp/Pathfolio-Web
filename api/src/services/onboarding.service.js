@@ -51,7 +51,7 @@ class OnboardingService {
     }
 
     if (!personal?.email || !this.validateEmail(personal.email)) {
-      throw new Error('A valid institutional email is required.');
+      throw new Error('Please use your KIIT institutional email ending in @kiit.ac.in.');
     }
 
     if (!personal?.username) {
@@ -73,8 +73,8 @@ class OnboardingService {
       throw new Error(usernameCheck.message);
     }
 
-    if (!academic?.rollNumber) {
-      throw new Error('College roll number is required.');
+    if (!academic?.rollNumber || !/^\d+$/.test(String(academic.rollNumber).trim())) {
+      throw new Error('Roll number must contain numbers only.');
     }
 
     if (!academic?.department) {
@@ -119,7 +119,7 @@ class OnboardingService {
         username: personal.username.trim().toLowerCase()
       },
       academic: {
-        rollNumber: academic.rollNumber.trim().toUpperCase(),
+        rollNumber: academic.rollNumber.trim(),
         department: academic.department.trim(),
         batchYear: academic.batchYear.trim()
       },
@@ -180,8 +180,7 @@ class OnboardingService {
   }
 
   validateEmail(email) {
-    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return re.test(String(email).toLowerCase());
+    return /^[^\s@]+@kiit\.ac\.in$/i.test(String(email).trim());
   }
 }
 

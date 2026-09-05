@@ -150,11 +150,11 @@ export function OnboardingProvider({ children }) {
 
       case 'email': {
         const email = (formData.personal.email || '').trim();
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        const emailRegex = /^[^\s@]+@kiit\.ac\.in$/i;
         if (!email) {
           newErrors.email = 'Institutional email is required.';
         } else if (!emailRegex.test(email)) {
-          newErrors.email = 'Please provide a valid email address (e.g. yourname@university.edu).';
+          newErrors.email = 'Please use your KIIT institutional email ending in @kiit.ac.in.';
         }
         break;
       }
@@ -181,6 +181,8 @@ export function OnboardingProvider({ children }) {
         const roll = (formData.academic.rollNumber || '').trim();
         if (!roll) {
           newErrors.rollNumber = 'College roll number is required.';
+        } else if (!/^\d+$/.test(roll)) {
+          newErrors.rollNumber = 'Roll number must contain numbers only.';
         } else {
           const res = await onboardingApi.verifyRollNumber(roll);
           if (!res.valid) {

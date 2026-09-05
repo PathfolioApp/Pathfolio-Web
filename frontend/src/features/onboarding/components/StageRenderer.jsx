@@ -216,7 +216,7 @@ export function StageRenderer() {
               autoFocus
               value={formData.personal.email}
               onChange={(e) => updatePersonal('email', e.target.value)}
-              placeholder="name@university.edu"
+              placeholder="name@kiit.ac.in"
               className={`pf-stage-hero-input ${errors.email ? 'is-error' : ''}`}
             />
             {errors.email && <p className="pf-stage-error">{errors.email}</p>}
@@ -298,8 +298,8 @@ export function StageRenderer() {
               type="text"
               autoFocus
               value={formData.academic.rollNumber}
-              onChange={(e) => updateAcademic('rollNumber', e.target.value.toUpperCase())}
-              placeholder="e.g. 2024CS101 or 24CSE042"
+              onChange={(e) => updateAcademic('rollNumber', e.target.value)}
+              placeholder="e.g. 2305040"
               className={`pf-stage-hero-input ${errors.rollNumber ? 'is-error' : ''}`}
               maxLength={20}
             />

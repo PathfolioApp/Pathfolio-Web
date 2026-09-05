@@ -1,10 +1,12 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from './Button';
+import { useAuth } from '../context/AuthContext';
 import './Header.css';
 
 export function Header() {
   const navigate = useNavigate();
+  const { student, loading } = useAuth();
 
   const scrollToSection = (e, sectionId) => {
     e.preventDefault();
@@ -42,19 +44,13 @@ export function Header() {
           </nav>
 
           <div className="pf-header__actions">
-            <button
-              type="button"
-              onClick={() => navigate('/signin')}
-              className="pf-header__signin"
-            >
-              Sign in
-            </button>
+            {!loading && (student ? <button type="button" onClick={() => navigate(student.onboarding?.completed ? '/dashboard' : '/onboarding')} className="pf-header__signin">{student.onboarding?.completed ? `Hi, ${student.personal.fullName.split(' ')[0]}` : 'Continue onboarding'}</button> : <button type="button" onClick={() => navigate('/signin')} className="pf-header__signin">Sign in</button>)}
             <Button
               variant="primary"
               size="sm"
-              onClick={() => navigate('/onboarding')}
+              onClick={() => navigate(student?.onboarding?.completed ? '/dashboard' : '/onboarding')}
             >
-              Begin your journey
+              {student?.onboarding?.completed ? 'Go to dashboard' : 'Begin your journey'}
             </Button>
           </div>
         </div>
