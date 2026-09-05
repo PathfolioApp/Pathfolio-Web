@@ -12,5 +12,8 @@ class StudentStore {
   async createSession(studentId){const token=crypto.randomBytes(32).toString('hex');if(this.pool){await this.pool.execute('INSERT INTO sessions (token_hash,student_id,created_at,expires_at) VALUES (?,?,NOW(),DATE_ADD(NOW(),INTERVAL 7 DAY))',[crypto.createHash('sha256').update(token).digest('hex'),studentId]);}else this.sessions.set(token,{studentId});return token;}
   async getSession(token){if(!token)return null;if(this.pool){const[r]=await this.pool.execute('SELECT student_id studentId FROM sessions WHERE token_hash=? AND expires_at>NOW()',[crypto.createHash('sha256').update(token).digest('hex')]);return r[0]||null;}return this.sessions.get(token)||null;}
   async deleteSession(token){if(this.pool)await this.pool.execute('DELETE FROM sessions WHERE token_hash=?',[crypto.createHash('sha256').update(token).digest('hex')]);else this.sessions.delete(token);}
+  async getNotifications(studentId){if(this.pool){const[r]=await this.pool.execute('SELECT id,title,message,type,is_read isRead,created_at createdAt FROM notifications WHERE student_id=? ORDER BY created_at DESC LIMIT 30',[studentId]);return r.map(n=>({...n,isRead:Boolean(n.isRead),createdAt:new Date(n.createdAt).toISOString()}));}return []}
+  async markNotificationRead(studentId,id){if(this.pool)await this.pool.execute('UPDATE notifications SET is_read=TRUE WHERE id=? AND student_id=?',[id,studentId]);return this.getNotifications(studentId)}
+  async createNotification(studentId,notification){if(!this.pool)return null;await this.pool.execute('INSERT INTO notifications (student_id,title,message,type,created_at) VALUES (?,?,?,?,NOW())',[studentId,notification.title,notification.message,notification.type||'system']);}
 }
 module.exports=new StudentStore();

@@ -154,7 +154,7 @@ export function CompletionPage() {
       <Modal
         isOpen={showNextModal}
         onClose={() => setShowNextModal(false)}
-        title="PathfolioApp — Future Modules"
+        title="PathfolioApp future modules"
         footer={
           <Button variant="primary" size="sm" onClick={() => setShowNextModal(false)}>
             Back to Overview

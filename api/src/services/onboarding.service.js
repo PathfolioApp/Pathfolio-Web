@@ -137,6 +137,7 @@ class OnboardingService {
     };
 
     const savedRecord = await studentStore.saveStudent(record);
+    await studentStore.createNotification(savedRecord.id, { title: 'Account created', message: 'Your PathfolioApp account is ready.', type: 'account' });
 
     // Return student record without exposing internal raw flags in sensitive ways
     return {

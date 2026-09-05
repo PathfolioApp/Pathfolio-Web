@@ -28,19 +28,19 @@ export function ReviewSummary({ formData, onEditSection }) {
         <div className="pf-review-grid">
           <div className="pf-review-item">
             <span className="pf-review-item__label">Full Name</span>
-            <span className="pf-review-item__value">{personal.fullName || '—'}</span>
+            <span className="pf-review-item__value">{personal.fullName || 'Not provided'}</span>
           </div>
           <div className="pf-review-item">
             <span className="pf-review-item__label">Age</span>
-            <span className="pf-review-item__value">{personal.age ? `${personal.age} years old` : '—'}</span>
+            <span className="pf-review-item__value">{personal.age ? `${personal.age} years old` : 'Not provided'}</span>
           </div>
           <div className="pf-review-item">
             <span className="pf-review-item__label">Institutional Email</span>
-            <span className="pf-review-item__value">{personal.email || '—'}</span>
+            <span className="pf-review-item__value">{personal.email || 'Not provided'}</span>
           </div>
           <div className="pf-review-item">
             <span className="pf-review-item__label">Username / Handle</span>
-            <span className="pf-review-item__value">@{personal.username || '—'}</span>
+            <span className="pf-review-item__value">@{personal.username || 'Not provided'}</span>
           </div>
         </div>
       </div>
@@ -66,16 +66,16 @@ export function ReviewSummary({ formData, onEditSection }) {
           <div className="pf-review-item">
             <span className="pf-review-item__label">Roll Number</span>
             <span className="pf-review-item__value">
-              <code>{academic.rollNumber || '—'}</code>
+              <code>{academic.rollNumber || 'Not provided'}</code>
             </span>
           </div>
           <div className="pf-review-item">
             <span className="pf-review-item__label">Department</span>
-            <span className="pf-review-item__value">{academic.department || '—'}</span>
+            <span className="pf-review-item__value">{academic.department || 'Not provided'}</span>
           </div>
           <div className="pf-review-item">
             <span className="pf-review-item__label">Batch Cohort</span>
-            <span className="pf-review-item__value">{academic.batchYear || '—'}</span>
+            <span className="pf-review-item__value">{academic.batchYear || 'Not provided'}</span>
           </div>
         </div>
       </div>

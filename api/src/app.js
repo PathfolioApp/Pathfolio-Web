@@ -38,6 +38,7 @@ app.use('/api/onboarding', onboardingRoutes);
 app.use('/api/auth', require('./routes/auth.routes'));
 app.use('/api/profile', require('./routes/profile.routes'));
 app.use('/api/settings', require('./routes/settings.routes'));
+app.use('/api/notifications', require('./routes/notification.routes'));
 
 // 404 Handler for undefined API routes
 app.use((req, res) => {

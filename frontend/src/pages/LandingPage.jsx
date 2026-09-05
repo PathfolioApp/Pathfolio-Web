@@ -38,7 +38,7 @@ export function LandingPage() {
                 Build a record of who you're becoming.
               </h1>
               <p className="pf-hero__sub">
-                PathfolioApp helps you capture the experiences, interests, and achievements that shape your college journey — starting from your very first day.
+                PathfolioApp helps you manage the experiences, interests, and achievements that shape your college record.
               </p>
 
               <div className="pf-hero__actions">
@@ -169,7 +169,7 @@ export function LandingPage() {
                 </div>
                 <h3 className="pf-feature-card__title">Your Ambitions</h3>
                 <p className="pf-feature-card__desc">
-                  Articulate where you want your college years to take you—from research tracks to entrepreneurial ventures.
+                  Record the areas you want to explore, from research to entrepreneurship.
                 </p>
               </div>
 
