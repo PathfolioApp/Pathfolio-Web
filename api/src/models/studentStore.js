@@ -104,12 +104,16 @@ class StudentStore {
 
   async saveStudent(studentData) {
     const id = studentData.id || `usr_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
+    const previous = this.students.get(id);
     const studentRecord = {
       ...studentData,
       id,
       updatedAt: new Date().toISOString()
     };
 
+    if (previous?.personal?.username && previous.personal.username.toLowerCase() !== studentRecord.personal?.username?.toLowerCase()) {
+      this.usernames.delete(previous.personal.username.toLowerCase().trim());
+    }
     if (studentRecord.personal?.username) {
       this.usernames.add(studentRecord.personal.username.toLowerCase().trim());
     }

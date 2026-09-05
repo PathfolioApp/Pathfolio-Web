@@ -37,4 +37,6 @@ class AuthService {
     return session ? publicStudent(await studentStore.getStudentById(session.studentId)) : null;
   }
 }
-module.exports = new AuthService();
+const service = new AuthService();
+service.publicStudent = publicStudent;
+module.exports = service;
