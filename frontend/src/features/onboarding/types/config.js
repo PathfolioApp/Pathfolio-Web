@@ -1,5 +1,5 @@
 /**
- * Step definitions and metadata for the 13-stage Onboarding Journey.
+ * Step definitions and metadata for the onboarding journey.
  */
 
 export const ONBOARDING_STAGES = [
@@ -60,43 +60,51 @@ export const ONBOARDING_STAGES = [
     isSkippable: false
   },
   {
-    id: 'hobbies',
+    id: 'password',
     stageNumber: 8,
+    title: 'Create your password.',
+    eyebrow: 'Step 8 of 13 • Account security',
+    description: 'Choose a password to keep your Pathfolio account secure.',
+    isSkippable: false
+  },
+  {
+    id: 'hobbies',
+    stageNumber: 9,
     title: 'What do you enjoy outside the classroom?',
-    eyebrow: 'Step 8 of 12 • Personal Interests',
+    eyebrow: 'Step 9 of 13 • Personal Interests',
     description: 'Select a few things you love doing in your free time, or add your own.',
     isSkippable: false
   },
   {
     id: 'passions',
-    stageNumber: 9,
+    stageNumber: 10,
     title: 'What are you curious about?',
-    eyebrow: 'Step 9 of 12 • Curiosities & Ambitions',
+    eyebrow: 'Step 10 of 13 • Curiosities & Ambitions',
     description: 'Tell us about topics, domains, and fields that excite you intellectually.',
     isSkippable: false
   },
   {
     id: 'achievements',
-    stageNumber: 10,
+    stageNumber: 11,
     title: 'What are you proud of so far?',
-    eyebrow: 'Step 10 of 12 • Milestones',
+    eyebrow: 'Step 11 of 13 • Milestones',
     description: 'Add any achievements, certifications, school projects, competitions, or personal milestones.',
     isSkippable: true
   },
   {
     id: 'familyContext',
-    stageNumber: 11,
+    stageNumber: 12,
     title: "Is there anything about your background you'd like us to understand?",
-    eyebrow: 'Step 11 of 12 • Personal Context (Optional)',
+    eyebrow: 'Step 12 of 13 • Personal Context (Optional)',
     description: "You decide what you share. Sensitive personal or family background details require your explicit consent before saving.",
     isSkippable: true,
     isSensitive: true
   },
   {
     id: 'review',
-    stageNumber: 12,
+    stageNumber: 13,
     title: 'Review your initial record.',
-    eyebrow: 'Step 12 of 12 • Verification',
+    eyebrow: 'Step 13 of 13 • Verification',
     description: 'Take a moment to review the information you shared before we initialize your Pathfolio journey.',
     isSkippable: false
   }

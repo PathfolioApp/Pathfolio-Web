@@ -17,6 +17,7 @@ const initialFormData = {
     department: '',
     batchYear: ''
   },
+  credentials: { password: '', confirmPassword: '' },
   interests: {
     hobbies: [],
     passions: []
@@ -37,7 +38,19 @@ export function OnboardingProvider({ children }) {
   const [formData, setFormData] = useState(() => {
     try {
       const saved = sessionStorage.getItem(STORAGE_KEY);
-      return saved ? JSON.parse(saved) : initialFormData;
+      if (!saved) return initialFormData;
+      // Existing drafts can predate newly added onboarding fields. Merge every
+      // nested group so resuming an older draft never crashes a new stage.
+      const parsed = JSON.parse(saved);
+      return {
+        ...initialFormData,
+        ...parsed,
+        personal: { ...initialFormData.personal, ...(parsed.personal || {}) },
+        academic: { ...initialFormData.academic, ...(parsed.academic || {}) },
+        credentials: { ...initialFormData.credentials, ...(parsed.credentials || {}) },
+        interests: { ...initialFormData.interests, ...(parsed.interests || {}) },
+        familyContext: { ...initialFormData.familyContext, ...(parsed.familyContext || {}) }
+      };
     } catch {
       return initialFormData;
     }
@@ -80,6 +93,10 @@ export function OnboardingProvider({ children }) {
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: null }));
     }
+  };
+  const updateCredentials = (field, value) => {
+    setFormData(prev => ({ ...prev, credentials: { ...prev.credentials, [field]: value } }));
+    if (errors[field]) setErrors(prev => ({ ...prev, [field]: null }));
   };
 
   const updateInterests = (field, list) => {
@@ -188,6 +205,11 @@ export function OnboardingProvider({ children }) {
         }
         break;
 
+      case 'password':
+        if (!formData.credentials?.password || formData.credentials.password.length < 8) newErrors.password = 'Use at least 8 characters.';
+        if (formData.credentials?.password !== formData.credentials?.confirmPassword) newErrors.confirmPassword = 'Passwords do not match.';
+        break;
+
       case 'hobbies':
         if (!formData.interests.hobbies || formData.interests.hobbies.length === 0) {
           newErrors.hobbies = 'Please select or add at least one hobby or interest.';
@@ -278,20 +300,17 @@ export function OnboardingProvider({ children }) {
         throw new Error(regResponse.message || 'Registration failed.');
       }
 
-      const studentId = regResponse.data?.id || `usr_${Date.now()}`;
-      const compResponse = await onboardingApi.complete(studentId);
+      const studentId = regResponse.data?.id;
 
       const completedData = {
         ...formData,
         id: studentId,
-        completedAt: compResponse.student?.completedAt || new Date().toISOString()
+        completedAt: regResponse.data?.onboarding?.completedAt || new Date().toISOString()
       };
 
       setCompletedStudent(completedData);
-      sessionStorage.setItem('pathfolio_completed_student', JSON.stringify(completedData));
       sessionStorage.removeItem(STORAGE_KEY);
-
-      navigate('/onboarding/complete');
+      navigate('/dashboard');
     } catch (err) {
       console.error('Registration failed:', err);
       setSubmitError(err.message || 'Unable to complete registration. Please try again.');
@@ -323,6 +342,7 @@ export function OnboardingProvider({ children }) {
         completedStudent,
         updatePersonal,
         updateAcademic,
+        updateCredentials,
         updateInterests,
         setAchievements,
         updateFamilyContext,

@@ -132,11 +132,11 @@ export function CompletionPage() {
             <Button
               variant="primary"
               size="lg"
-              onClick={() => setShowNextModal(true)}
+              onClick={() => navigate('/dashboard')}
               icon={ArrowRight}
               iconPosition="right"
             >
-              Continue to Pathfolio
+              Continue to dashboard
             </Button>
             
             <button

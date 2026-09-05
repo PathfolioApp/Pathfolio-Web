@@ -9,7 +9,8 @@ const app = express();
 
 // Middleware
 app.use(cors({
-  origin: '*', // Allows separate frontend port (e.g. 5173) connectivity
+  origin: config.clientOrigin,
+  credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
@@ -34,6 +35,7 @@ app.get('/api/health', (req, res) => {
 
 // Mount Onboarding API
 app.use('/api/onboarding', onboardingRoutes);
+app.use('/api/auth', require('./routes/auth.routes'));
 
 // 404 Handler for undefined API routes
 app.use((req, res) => {

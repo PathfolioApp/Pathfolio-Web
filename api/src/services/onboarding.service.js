@@ -39,7 +39,7 @@ class OnboardingService {
   }
 
   async registerStudent(onboardingData) {
-    const { personal, academic, interests, achievements, familyContext } = onboardingData;
+    const { personal, academic, interests, achievements, familyContext, credentials } = onboardingData;
 
     // Validate required fields
     if (!personal?.fullName || personal.fullName.trim().length < 2) {
@@ -56,6 +56,16 @@ class OnboardingService {
 
     if (!personal?.username) {
       throw new Error('Username is required.');
+    }
+
+    if (!credentials?.password || credentials.password.length < 8) {
+      throw new Error('Password must be at least 8 characters.');
+    }
+    if (credentials.password !== credentials.confirmPassword) {
+      throw new Error('Passwords do not match.');
+    }
+    if (await studentStore.getStudentByEmail(personal.email)) {
+      throw new Error('An account already exists for this email.');
     }
 
     const usernameCheck = await this.checkUsernameAvailability(personal.username);
@@ -119,6 +129,8 @@ class OnboardingService {
       },
       achievements: sanitizedAchievements,
       familyContext: sanitizedFamilyContext,
+      passwordHash: await require('./auth.service').hashPassword(credentials.password),
+      onboarding: { completed: true, completedAt: new Date().toISOString() },
       status: 'active_onboarded',
       createdAt: new Date().toISOString()
     };

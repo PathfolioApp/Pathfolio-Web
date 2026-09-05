@@ -6,6 +6,8 @@
 class StudentStore {
   constructor() {
     this.students = new Map();
+    this.emails = new Map();
+    this.sessions = new Map();
     this.usernames = new Set([
       'admin',
       'pathfolio',
@@ -111,6 +113,7 @@ class StudentStore {
     if (studentRecord.personal?.username) {
       this.usernames.add(studentRecord.personal.username.toLowerCase().trim());
     }
+    if (studentRecord.personal?.email) this.emails.set(studentRecord.personal.email.toLowerCase().trim(), id);
 
     this.students.set(id, studentRecord);
     return studentRecord;
@@ -129,6 +132,20 @@ class StudentStore {
     }
     return null;
   }
+
+  async getStudentByEmail(email) {
+    const id = this.emails.get((email || '').toLowerCase().trim());
+    return id ? this.getStudentById(id) : null;
+  }
+
+  async createSession(studentId) {
+    const token = require('crypto').randomBytes(32).toString('hex');
+    this.sessions.set(token, { studentId, createdAt: Date.now() });
+    return token;
+  }
+
+  async getSession(token) { return this.sessions.get(token) || null; }
+  async deleteSession(token) { this.sessions.delete(token); }
 }
 
 module.exports = new StudentStore();

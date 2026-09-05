@@ -1,4 +1,5 @@
 const onboardingService = require('../services/onboarding.service');
+const authService = require('../services/auth.service');
 
 class OnboardingController {
   async checkUsername(req, res, next) {
@@ -24,10 +25,12 @@ class OnboardingController {
   async register(req, res, next) {
     try {
       const student = await onboardingService.registerStudent(req.body);
+      const session = await authService.register(await require('../models/studentStore').getStudentById(student.id));
+      res.cookie('pf_session', session.token, { httpOnly: true, sameSite: 'lax', secure: process.env.NODE_ENV === 'production', maxAge: 1000 * 60 * 60 * 24 * 7, path: '/' });
       return res.status(201).json({
         success: true,
         message: 'Onboarding profile registered successfully.',
-        data: student
+        data: session.student
       });
     } catch (error) {
       return res.status(400).json({

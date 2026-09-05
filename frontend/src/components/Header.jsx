@@ -1,14 +1,10 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from './Button';
-import { Modal } from './Modal';
-import { Badge } from './Badge';
-import { BookOpen, Sparkles, ShieldCheck } from 'lucide-react';
 import './Header.css';
 
 export function Header() {
   const navigate = useNavigate();
-  const [showSignInModal, setShowSignInModal] = useState(false);
 
   const scrollToSection = (e, sectionId) => {
     e.preventDefault();
@@ -19,8 +15,7 @@ export function Header() {
   };
 
   return (
-    <>
-      <header className="pf-header">
+    <header className="pf-header">
         <div className="container pf-header__inner">
           <Link to="/" className="pf-brand" aria-label="PathfolioApp Home">
             <div className="pf-brand__logo">
@@ -49,7 +44,7 @@ export function Header() {
           <div className="pf-header__actions">
             <button
               type="button"
-              onClick={() => setShowSignInModal(true)}
+              onClick={() => navigate('/signin')}
               className="pf-header__signin"
             >
               Sign in
@@ -63,31 +58,6 @@ export function Header() {
             </Button>
           </div>
         </div>
-      </header>
-
-      {/* Sign-in Modal indicating post-onboarding feature status */}
-      <Modal
-        isOpen={showSignInModal}
-        onClose={() => setShowSignInModal(false)}
-        title="Student Portal Sign-in"
-        footer={
-          <Button variant="primary" size="sm" onClick={() => setShowSignInModal(false)}>
-            Understood
-          </Button>
-        }
-      >
-        <div className="pf-signin-notice">
-          <div className="pf-signin-notice__badge">
-            <Badge variant="coming-soon">Coming in Release 2</Badge>
-          </div>
-          <p style={{ marginBottom: '12px' }}>
-            Direct student sign-in and profile management are part of the upcoming post-onboarding modules.
-          </p>
-          <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>
-            If you are a new or admitted student, please start by completing the onboarding journey to establish your initial record.
-          </p>
-        </div>
-      </Modal>
-    </>
+    </header>
   );
 }

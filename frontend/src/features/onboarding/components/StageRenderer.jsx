@@ -8,7 +8,7 @@ import { AchievementManager } from './AchievementManager';
 import { ConsentBox } from './ConsentBox';
 import { ReviewSummary } from './ReviewSummary';
 import { SUGGESTED_HOBBIES, SUGGESTED_PASSIONS, DEPARTMENTS, BATCH_YEARS } from '../types/config';
-import { Check, X, Loader2, Sparkles, BookOpen, Compass, Award } from 'lucide-react';
+import { Check, X, Loader2, Sparkles, BookOpen, Compass, Award, Eye, EyeOff } from 'lucide-react';
 import './StageRenderer.css';
 
 export function StageRenderer() {
@@ -18,6 +18,7 @@ export function StageRenderer() {
     errors,
     updatePersonal,
     updateAcademic,
+    updateCredentials,
     updateInterests,
     setAchievements,
     updateFamilyContext,
@@ -58,6 +59,7 @@ export function StageRenderer() {
   // Roll Number live format verification
   const [rollStatus, setRollStatus] = useState({ checking: false, verified: null, message: '' });
   const debouncedRoll = useDebounce(formData.academic.rollNumber, 400);
+  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     if (currentStage.id !== 'rollNumber') return;
@@ -362,6 +364,10 @@ export function StageRenderer() {
       );
 
     // STAGE 8: Hobbies
+    case 'password': { const credentials = formData.credentials || { password: '', confirmPassword: '' }; return (
+      <div className="pf-stage-content animate-fade-in"><StepHeader eyebrow={currentStage.eyebrow} title={currentStage.title} description={currentStage.description} />
+        <div className="pf-stage-input-wrapper"><label htmlFor="password-input" className="pf-form-label">Password</label><div className="pf-username-input-container"><input id="password-input" autoFocus type={showPassword ? 'text' : 'password'} autoComplete="new-password" value={credentials.password} onChange={e => updateCredentials('password', e.target.value)} className={`pf-stage-hero-input ${errors.password ? 'is-error' : ''}`} /><button type="button" className="pf-username-status" aria-label={showPassword ? 'Hide password' : 'Show password'} onClick={() => setShowPassword(!showPassword)}>{showPassword ? <EyeOff size={17} /> : <Eye size={17} />}</button></div>{errors.password && <p className="pf-stage-error">{errors.password}</p>}<label htmlFor="confirm-password-input" className="pf-form-label" style={{ marginTop: '18px' }}>Confirm password</label><input id="confirm-password-input" type={showPassword ? 'text' : 'password'} autoComplete="new-password" value={credentials.confirmPassword} onChange={e => updateCredentials('confirmPassword', e.target.value)} className={`pf-stage-hero-input ${errors.confirmPassword ? 'is-error' : ''}`} />{errors.confirmPassword && <p className="pf-stage-error">{errors.confirmPassword}</p>}<p className="pf-stage-hint">At least 8 characters. We never display or store your password in plain text.</p></div></div>); }
+
     case 'hobbies':
       return (
         <div className="pf-stage-content animate-fade-in">
