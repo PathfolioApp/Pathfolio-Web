@@ -8,5 +8,5 @@ module.exports = {
   allowedDomains: ['kiit.ac.in'],
   db: { host: process.env.DB_HOST, port: Number(process.env.DB_PORT || 3306), name: process.env.DB_NAME, user: process.env.DB_USER, password: process.env.DB_PASSWORD },
   sessionSecret: process.env.SESSION_SECRET,
-  databaseConfigured: Boolean(process.env.DB_HOST && process.env.DB_NAME && process.env.DB_USER)
+  databaseConfigured: (process.env.NODE_ENV === 'production' || process.env.USE_DATABASE === 'true') && Boolean(process.env.DB_HOST && process.env.DB_NAME && process.env.DB_USER)
 };
