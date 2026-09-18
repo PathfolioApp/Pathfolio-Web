@@ -1,5 +1,5 @@
 const profile = require('../services/profile.service');
-const send = async (res, action) => { try { res.json({ success: true, student: await action() }); } catch (e) { res.status(400).json({ success: false, message: e.message }); } };
+const send = async (res, action) => { try { res.json({ success: true, student: await action() }); } catch (e) { res.status(e.statusCode || 400).json({ success: false, message: e.message }); } };
 exports.get = (req,res) => send(res, () => profile.get(req.student.id));
 exports.update = (section) => (req,res) => send(res, () => profile.update(req.student.id, section, req.body));
 exports.addAchievement = (req,res) => send(res, () => profile.achievement(req.student.id, req.body));
