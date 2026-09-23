@@ -267,7 +267,7 @@
 
 /* SECTIONS COMMON */
 .pf-section {
-  padding: var(--space-3xl) 0;
+  padding: calc(var(--space-3xl) * 1.5) 0;
 }
 
 .pf-section-header {

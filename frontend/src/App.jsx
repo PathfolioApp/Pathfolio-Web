@@ -11,8 +11,9 @@ import { ProfilePage } from './pages/ProfilePage';
 import { ProfileEditPage } from './pages/ProfileEditPage';
 import { SettingsPage, ProfileSettingsPage, SecurityPage, PrivacyPage } from './pages/SettingsPages';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { AppLayout } from './components/AppLayout';
 
-function Protected({ children }) { const { student, loading } = useAuth(); if (loading) return <main className="pf-auth-page">Loading your Pathfolio…</main>; return student?.onboarding?.completed ? children : <Navigate to={student ? '/onboarding' : '/signin'} replace />; }
+function Protected({ children }) { const { student, loading } = useAuth(); if (loading) return <main className="pf-auth-page">Loading your Pathfolio…</main>; return student?.onboarding?.completed ? <AppLayout>{children}</AppLayout> : <Navigate to={student ? '/onboarding' : '/signin'} replace />; }
 
 export default function App() {
   return (

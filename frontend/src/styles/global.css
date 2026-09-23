@@ -13,6 +13,23 @@ html {
   scroll-behavior: smooth;
 }
 
+/* Custom Scrollbar for premium feel */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-page);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-medium);
+  border-radius: var(--radius-full);
+  border: 2px solid var(--bg-page);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
 body {
   font-family: var(--font-sans);
   background-color: var(--bg-page);
@@ -20,8 +37,16 @@ body {
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  min-height: 100vh;
+  min-height: 100dvh; /* Better viewport handling on mobile */
   overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+#root {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 /* Typography styles */
@@ -55,7 +80,10 @@ button, input, select, textarea {
 button, a, input, select, textarea { max-width: 100%; }
 p, h1, h2, h3, h4, dd, li, small { overflow-wrap: anywhere; }
 button { min-width: 0; }
-main { animation: fadeInSlideUp 180ms ease-out both; }
+main { 
+  flex: 1;
+  animation: fadeInSlideUp 400ms cubic-bezier(0.16, 1, 0.3, 1) both; 
+}
 
 /* Focus styles for WCAG 2.1 AA accessibility */
 :focus-visible {
@@ -93,7 +121,7 @@ main { animation: fadeInSlideUp 180ms ease-out both; }
 @keyframes fadeInSlideUp {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(20px);
   }
   to {
     opacity: 1;
@@ -106,8 +134,41 @@ main { animation: fadeInSlideUp 180ms ease-out both; }
   to { opacity: 1; }
 }
 
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
 .animate-fade-in {
   animation: fadeInSlideUp var(--transition-smooth) forwards;
+}
+
+.animate-fade {
+  animation: fadeIn var(--transition-smooth) forwards;
+}
+
+.animate-scale-in {
+  animation: scaleIn var(--transition-smooth) forwards;
+}
+
+/* Stagger delays for animations */
+.delay-100 { animation-delay: 100ms; }
+.delay-200 { animation-delay: 200ms; }
+.delay-300 { animation-delay: 300ms; }
+.delay-400 { animation-delay: 400ms; }
+.delay-500 { animation-delay: 500ms; }
+
+/* Initialize opacity to 0 for elements that will be animated in */
+.animate-fade-in,
+.animate-fade,
+.animate-scale-in {
+  opacity: 0;
 }
 
 /* Screen reader only utility */

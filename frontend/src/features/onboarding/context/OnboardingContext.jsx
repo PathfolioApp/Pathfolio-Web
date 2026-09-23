@@ -312,7 +312,11 @@ export function OnboardingProvider({ children }) {
 
       setCompletedStudent(completedData);
       sessionStorage.removeItem(STORAGE_KEY);
-      navigate('/dashboard');
+      sessionStorage.setItem('pathfolio_completed_student', JSON.stringify(completedData));
+      
+      // Update auth context by triggering a full page reload to /onboarding/complete
+      // which will ensure the AuthContext fetches the new session on load.
+      window.location.href = '/onboarding/complete';
     } catch (err) {
       console.error('Registration failed:', err);
       setSubmitError(err.message || 'Unable to complete registration. Please try again.');

@@ -56,7 +56,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: var(--space-2xl) 0;
+  padding: var(--space-lg) 0;
 }
 
 .pf-onboarding-content-container {

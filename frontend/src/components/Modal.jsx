@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { Button } from './Button';
 import './Modal.css';
@@ -22,7 +23,7 @@ export function Modal({ isOpen, onClose, title, children, footer }) {
 
   if (!isOpen) return null;
 
-  return (
+  return createPortal(
     <div className="pf-modal-backdrop" onClick={onClose} role="dialog" aria-modal="true">
       <div className="pf-modal-container" onClick={(e) => e.stopPropagation()}>
         <div className="pf-modal-header">
@@ -36,6 +37,7 @@ export function Modal({ isOpen, onClose, title, children, footer }) {
         </div>
         {footer && <div className="pf-modal-footer">{footer}</div>}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

@@ -1,1 +1,54 @@
-.pf-dashboard{min-height:100vh;background:#fbfaf6;display:flex}.pf-dashboard-side{width:245px;padding:27px 16px;background:#fff;border-right:1px solid #e6e7df;display:flex;flex-direction:column;position:fixed;inset:0 auto 0 0}.pf-dashboard-logo{font-family:var(--font-serif);font-size:1.35rem;font-weight:700;padding:0 14px 36px}.pf-dashboard-side nav{display:grid;gap:5px}.pf-dashboard-side button{border:0;background:transparent;color:#5d665d;text-align:left;padding:11px 13px;border-radius:8px;display:flex;align-items:center;gap:11px;cursor:pointer;font-size:.92rem}.pf-dashboard-side button.active{background:#eaf2e7;color:#294a31;font-weight:700}.pf-dashboard-side small{margin-left:auto;color:#9ca49a;font-size:.68rem}.pf-dashboard-side .pf-side-signout{margin-top:auto;color:#87504a}.pf-dashboard-main{margin-left:245px;width:calc(100% - 245px);padding:0 5.5vw 52px}.pf-dashboard-top{height:78px;display:flex;align-items:center;justify-content:flex-end;border-bottom:1px solid #e9e8e1}.pf-dashboard-top>div{display:flex;gap:12px;align-items:center}.pf-icon-btn,.pf-avatar{border:0;background:#fff;border:1px solid #e0e5dc;cursor:pointer}.pf-icon-btn{padding:9px;border-radius:50%;color:#556154}.pf-avatar{width:38px;height:38px;border-radius:50%;background:#dcebd8;color:#294a31;font-weight:700}.pf-mobile-brand{display:none}.pf-welcome{padding:58px 0 32px}.pf-welcome h1{font-size:clamp(2rem,4vw,3.2rem);margin-bottom:8px}.pf-dashboard-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:20px}.pf-progress-card,.pf-journey-card,.pf-dashboard-bottom article{background:#fff;border:1px solid #e5e6de;border-radius:16px;padding:27px}.pf-progress-card{background:#254932;color:#fff;display:flex;justify-content:space-between;gap:16px}.pf-progress-card h2{color:#fff;font-size:1.65rem}.pf-progress-card p{color:#d9e5d9}.pf-card-label{font-size:.75rem;text-transform:uppercase;letter-spacing:.1em;font-weight:700;color:#789175!important;margin-bottom:8px}.pf-progress-card button,.pf-preview button{display:flex;gap:7px;align-items:center;border:0;background:transparent;color:inherit;font-weight:700;padding:0;margin-top:20px;cursor:pointer}.pf-progress-ring{width:94px;height:94px;border-radius:50%;background:conic-gradient(#d5e8be var(--progress),rgba(255,255,255,.18) 0);display:grid;place-items:center;flex:0 0 auto}.pf-progress-ring span{background:#254932;width:76px;height:76px;border-radius:50%;display:grid;place-items:center;font-size:.9rem;font-weight:bold}.pf-journey-card h2,.pf-dashboard-bottom h2,.pf-section-heading h2{font-size:1.4rem}.pf-milestones{border-left:1px solid #d7e1d3;margin:20px 0 0 7px;padding-left:18px;display:grid;gap:13px}.pf-milestones span{font-size:.88rem;color:#7a8377;position:relative}.pf-milestones span:before{content:'';position:absolute;width:9px;height:9px;border-radius:50%;background:#d5ded2;left:-23px;top:6px}.pf-milestones .done{color:#315a36}.pf-milestones .done:before{background:#6f9b6d}.pf-section-heading{padding:44px 0 16px}.pf-actions{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}.pf-actions button{background:#fff;border:1px solid #e5e6de;border-radius:13px;padding:18px;text-align:left;color:#334;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:10px;cursor:pointer}.pf-actions button:hover{border-color:#95b28e}.pf-dashboard-bottom{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:38px}.pf-activity{list-style:none;margin-top:17px;display:grid;gap:14px}.pf-activity li{display:flex;gap:11px;align-items:flex-start;font-size:.9rem}.pf-activity li>span{width:9px;height:9px;background:#7ca479;border-radius:50%;margin-top:6px}.pf-activity small{display:block;color:#8a9187;font-size:.75rem}.pf-preview{background:#edf4e9!important}.pf-preview>svg{color:#4d794e;margin-bottom:12px}.pf-preview p:not(.pf-card-label){font-size:.9rem}.pf-preview button{color:#315a36}.pf-placement{margin-top:16px!important;padding:16px!important;display:flex;gap:11px;background:#fbf7ec!important}.pf-placement p{font-size:.8rem;margin:3px 0 0}.pf-dashboard-notice{background:#edf4e9;border:1px solid #cadcc3;padding:11px 16px;margin-top:18px;border-radius:9px;color:#315a36;font-size:.9rem;display:flex;justify-content:space-between;gap:12px}.pf-dashboard-notice button{border:0;background:transparent;color:#315a36;text-decoration:underline;cursor:pointer}@media(max-width:850px){.pf-dashboard-side{display:none}.pf-dashboard-main{margin:0;width:100%;padding:0 22px 35px}.pf-dashboard-top{justify-content:space-between}.pf-mobile-brand{display:block;margin:0;border:0;background:transparent;padding:0}.pf-dashboard-grid,.pf-dashboard-bottom{grid-template-columns:1fr}.pf-actions{grid-template-columns:repeat(2,1fr)}}@media(max-width:480px){.pf-dashboard-main{padding:0 15px 28px}.pf-welcome{padding-top:36px}.pf-progress-card{padding:21px}.pf-actions{grid-template-columns:1fr}.pf-progress-ring{width:74px;height:74px}.pf-progress-ring span{width:60px;height:60px}.pf-auth-card{padding:30px 23px}}
+.pf-welcome { padding: 58px 0 32px; }
+.pf-welcome h1 { font-size: clamp(2rem, 4vw, 3.2rem); margin-bottom: 8px; }
+
+.pf-dashboard-grid { display: grid; grid-template-columns: 1.1fr .9fr; gap: 20px; }
+
+.pf-progress-card, .pf-journey-card, .pf-dashboard-bottom article { background: #fff; border: 1px solid #e5e6de; border-radius: 16px; padding: 27px; }
+
+.pf-progress-card { background: #254932; color: #fff; display: flex; justify-content: space-between; gap: 16px; }
+.pf-progress-card h2 { color: #fff; font-size: 1.65rem; }
+.pf-progress-card p { color: #d9e5d9; }
+.pf-card-label { font-size: .75rem; text-transform: uppercase; letter-spacing: .1em; font-weight: 700; color: #789175 !important; margin-bottom: 8px; }
+.pf-progress-card button, .pf-preview button { display: flex; gap: 7px; align-items: center; border: 0; background: transparent; color: inherit; font-weight: 700; padding: 0; margin-top: 20px; cursor: pointer; }
+
+.pf-progress-ring { width: 94px; height: 94px; border-radius: 50%; background: conic-gradient(#d5e8be var(--progress), rgba(255,255,255,.18) 0); display: grid; place-items: center; flex: 0 0 auto; }
+.pf-progress-ring span { background: #254932; width: 76px; height: 76px; border-radius: 50%; display: grid; place-items: center; font-size: .9rem; font-weight: bold; }
+
+.pf-journey-card h2, .pf-dashboard-bottom h2, .pf-section-heading h2 { font-size: 1.4rem; }
+.pf-milestones { border-left: 1px solid #d7e1d3; margin: 20px 0 0 7px; padding-left: 18px; display: grid; gap: 13px; }
+.pf-milestones span { font-size: .88rem; color: #7a8377; position: relative; }
+.pf-milestones span:before { content: ''; position: absolute; width: 9px; height: 9px; border-radius: 50%; background: #d5ded2; left: -23px; top: 6px; }
+.pf-milestones .done { color: #315a36; }
+.pf-milestones .done:before { background: #6f9b6d; }
+
+.pf-section-heading { padding: 44px 0 16px; }
+.pf-actions { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+.pf-actions button { background: #fff; border: 1px solid #e5e6de; border-radius: 13px; padding: 18px; text-align: left; color: #334; display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 10px; cursor: pointer; }
+.pf-actions button:hover { border-color: #95b28e; }
+
+.pf-dashboard-bottom { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 38px; }
+.pf-activity { list-style: none; margin-top: 17px; display: grid; gap: 14px; }
+.pf-activity li { display: flex; gap: 11px; align-items: flex-start; font-size: .9rem; }
+.pf-activity li > span { width: 9px; height: 9px; background: #7ca479; border-radius: 50%; margin-top: 6px; }
+.pf-activity small { display: block; color: #8a9187; font-size: .75rem; }
+
+.pf-preview { background: #edf4e9 !important; }
+.pf-preview > svg { color: #4d794e; margin-bottom: 12px; }
+.pf-preview p:not(.pf-card-label) { font-size: .9rem; }
+.pf-preview button { color: #315a36; }
+
+.pf-placement { margin-top: 16px !important; padding: 16px !important; display: flex; gap: 11px; background: #fbf7ec !important; }
+.pf-placement p { font-size: .8rem; margin: 3px 0 0; }
+
+@media(max-width: 850px) {
+  .pf-dashboard-grid, .pf-dashboard-bottom { grid-template-columns: 1fr; }
+  .pf-actions { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media(max-width: 480px) {
+  .pf-welcome { padding-top: 36px; }
+  .pf-progress-card { padding: 21px; }
+  .pf-actions { grid-template-columns: 1fr; }
+  .pf-progress-ring { width: 74px; height: 74px; }
+  .pf-progress-ring span { width: 60px; height: 60px; }
+}

@@ -69,7 +69,7 @@ export function LandingPage() {
             </div>
 
             {/* PRODUCT PREVIEW / VISUAL SECTION */}
-            <div id="your-journey" className="pf-hero__visual-container animate-fade-in">
+            <div id="your-journey" className="pf-hero__visual-container animate-fade-in delay-200">
               <div className="pf-preview-card">
                 {/* Visual Card Header */}
                 <div className="pf-preview-card__top">
@@ -143,7 +143,7 @@ export function LandingPage() {
             </div>
 
             <div className="pf-features-grid">
-              <div className="pf-feature-card">
+              <div className="pf-feature-card animate-fade-in delay-100">
                 <div className="pf-feature-card__icon pf-feature-card__icon--forest">
                   <Compass size={22} />
                 </div>
@@ -153,7 +153,7 @@ export function LandingPage() {
                 </p>
               </div>
 
-              <div className="pf-feature-card">
+              <div className="pf-feature-card animate-fade-in delay-200">
                 <div className="pf-feature-card__icon pf-feature-card__icon--sage">
                   <Award size={22} />
                 </div>
@@ -163,7 +163,7 @@ export function LandingPage() {
                 </p>
               </div>
 
-              <div className="pf-feature-card">
+              <div className="pf-feature-card animate-fade-in delay-300">
                 <div className="pf-feature-card__icon pf-feature-card__icon--amber">
                   <Flame size={22} />
                 </div>
@@ -173,7 +173,7 @@ export function LandingPage() {
                 </p>
               </div>
 
-              <div className="pf-feature-card">
+              <div className="pf-feature-card animate-fade-in delay-400">
                 <div className="pf-feature-card__icon pf-feature-card__icon--primary">
                   <Layers size={22} />
                 </div>
@@ -199,7 +199,7 @@ export function LandingPage() {
 
             <div className="pf-steps-grid">
               {/* Step 1 - ACTIVE */}
-              <div className="pf-step-card pf-step-card--active">
+              <div className="pf-step-card pf-step-card--active animate-fade-in delay-100">
                 <div className="pf-step-card__top">
                   <span className="pf-step-num">01</span>
                   <Badge variant="sage" size="sm">Available Now</Badge>
@@ -215,7 +215,7 @@ export function LandingPage() {
               </div>
 
               {/* Step 2 - FUTURE */}
-              <div className="pf-step-card pf-step-card--future">
+              <div className="pf-step-card pf-step-card--future animate-fade-in delay-200">
                 <div className="pf-step-card__top">
                   <span className="pf-step-num">02</span>
                   <Badge variant="coming-soon" size="sm">Coming Next</Badge>
@@ -230,7 +230,7 @@ export function LandingPage() {
               </div>
 
               {/* Step 3 - FUTURE */}
-              <div className="pf-step-card pf-step-card--future">
+              <div className="pf-step-card pf-step-card--future animate-fade-in delay-300">
                 <div className="pf-step-card__top">
                   <span className="pf-step-num">03</span>
                   <Badge variant="coming-soon" size="sm">Coming Next</Badge>
