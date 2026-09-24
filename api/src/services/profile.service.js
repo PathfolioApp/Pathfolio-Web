@@ -1,6 +1,27 @@
 const store = require('../models/studentStore');
 const auth = require('./auth.service');
 const email = value => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value || '');
+const academicFields = ['department', 'batchYear', 'degreeProgram', 'graduationYear', 'currentSemester', 'cgpa', 'tenthPercentage', 'twelfthPercentage', 'activeBacklogs', 'historicalBacklogs', 'gapYears'];
+const numericRules = {
+  graduationYear: [1900, 2200, 'Graduation year'],
+  currentSemester: [1, 20, 'Current semester'],
+  cgpa: [0, 10, 'CGPA'],
+  tenthPercentage: [0, 100, '10th percentage'],
+  twelfthPercentage: [0, 100, '12th percentage'],
+  activeBacklogs: [0, 100, 'Active backlogs'],
+  historicalBacklogs: [0, 100, 'Historical backlogs'],
+  gapYears: [0, 20, 'Gap years']
+};
+const normalizeAcademicValue = (field, value) => {
+  if (value === '' || value === null || value === undefined) return undefined;
+  if (numericRules[field]) {
+    const number = Number(value);
+    const [minimum, maximum, label] = numericRules[field];
+    if (!Number.isFinite(number) || number < minimum || number > maximum) throw new Error(`${label} must be between ${minimum} and ${maximum}.`);
+    return number;
+  }
+  return String(value).trim();
+};
 class ProfileService {
   async current(id) { return auth.getStudentForSession((await store.createSession(id))); }
   async get(id) { return auth.publicStudent ? auth.publicStudent(await store.getStudentById(id)) : this.safe(await store.getStudentById(id)); }
@@ -15,7 +36,8 @@ class ProfileService {
     } else if (section === 'academic') {
       if (values.department !== undefined && !String(values.department).trim()) throw new Error('Department is required.');
       if (values.batchYear !== undefined && !String(values.batchYear).trim()) throw new Error('Batch year is required.');
-      student.academic = { ...student.academic, ...Object.fromEntries(Object.entries(values).filter(([k]) => ['department','batchYear'].includes(k)).map(([k, value]) => [k, String(value).trim()])) };
+      const academicUpdates = Object.fromEntries(Object.entries(values).filter(([field]) => academicFields.includes(field)).map(([field, value]) => [field, normalizeAcademicValue(field, value)]).filter(([, value]) => value !== undefined));
+      student.academic = { ...student.academic, ...academicUpdates };
     }
     else if (section === 'interests') { const tidy = list => Array.isArray(list) ? [...new Set(list.map(x => String(x).trim()).filter(Boolean))].slice(0, 30) : undefined; student.interests = { ...student.interests, ...(values.hobbies !== undefined ? { hobbies: tidy(values.hobbies) } : {}), ...(values.passions !== undefined ? { passions: tidy(values.passions) } : {}) }; }
     else if (section === 'familyContext') { const details = String(values.details || '').trim(); if (details && !values.consentGiven) throw new Error('Explicit consent is required before saving sensitive context.'); student.familyContext = details ? { details, consentGiven: true } : { details: '', consentGiven: false }; }
