@@ -7,6 +7,6 @@ export function AuthProvider({ children }) {
   useEffect(() => { refresh(); }, []);
   const login = async (email, password) => { const data = await authApi.login(email, password); setStudent(data.student); return data.student; };
   const logout = async () => { await authApi.logout(); setStudent(null); };
-  return <AuthContext.Provider value={{ student, loading, login, logout, refresh, authenticated: Boolean(student) }}>{children}</AuthContext.Provider>;
+  return <AuthContext.Provider value={{ student, loading, login, logout, refresh, authenticated: Boolean(student), isAdmin: Boolean(student?.isAdmin) }}>{children}</AuthContext.Provider>;
 }
 export const useAuth = () => useContext(AuthContext);

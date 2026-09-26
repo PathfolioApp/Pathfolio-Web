@@ -95,8 +95,13 @@ async function run() {
   result = await request('/auth/me');
   expectStatus(result.response, 200, 'auth me');
   assert.equal(result.body.student.personal.email, email);
+  assert.equal(result.body.student.isAdmin, false);
   assert.equal(result.body.student.passwordHash, undefined);
   console.log('PASS auth me');
+
+  result = await request('/admin/me');
+  expectStatus(result.response, 403, 'non-admin admin route');
+  console.log('PASS non-admin admin route blocked');
 
   result = await request('/profile');
   expectStatus(result.response, 200, 'profile');
@@ -224,6 +229,10 @@ async function run() {
   result = await request('/profile', {}, false);
   expectStatus(result.response, 401, 'unauthenticated profile');
   console.log('PASS unauthenticated profile blocked');
+
+  result = await request('/admin/me', {}, false);
+  expectStatus(result.response, 401, 'unauthenticated admin route');
+  console.log('PASS unauthenticated admin route blocked');
 
   result = await request('/onboarding/complete', {
     method: 'POST',
