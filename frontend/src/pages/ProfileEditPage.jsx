@@ -5,6 +5,7 @@ import { Award, ArrowLeft } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { profileApi } from '../services/profileApi';
 import { Modal } from '../components/Modal';
+import { AvatarEditor } from '../components/AvatarEditor';
 import { ACHIEVEMENT_CATEGORIES } from '../features/onboarding/types/config';
 import './ProfilePages.css';
 import './ProfileEditEnhancements.css';
@@ -124,6 +125,12 @@ export function ProfileEditPage() {
       <button className="pf-secondary pf-back-button" onClick={() => navigate('/profile')}><ArrowLeft size={16} /> Back</button>
     </div>
     {createPortal(<div className={`pf-edit-toast-region${toastLeaving ? ' pf-edit-toast-region--leaving' : ''}`} aria-live="polite">{message && <div className="pf-edit-toast" role="status">{message}</div>}{error && <div className="pf-edit-toast pf-edit-toast--error" role="alert">{error}</div>}</div>, document.body)}
+
+    <section className="pf-edit-section">
+      <h2>Profile picture</h2>
+      <p style={{ marginBottom: '14px' }}>Used across your profile, portals, and applications.</p>
+      <AvatarEditor name={student.personal.fullName} currentUrl={student.personal.avatarUrl || ''} onSaved={refresh} />
+    </section>
 
     <EditSection title="Personal information" note="Your email is linked to your institutional identity and can't be changed here." onSave={() => save('personal', personal)} saving={savingSection === 'personal'}>
       <label>Full name<input value={personal.fullName} onChange={event => setPersonal({ ...personal, fullName: event.target.value })} /></label>

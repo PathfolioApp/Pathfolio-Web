@@ -29,6 +29,7 @@ class AuthService {
     if (!email || !password) throw new Error('Email and password are required.');
     const student = await studentStore.getStudentByEmail(email);
     if (!student || !await this.verifyPassword(password, student.passwordHash)) throw new Error('Invalid institutional email or password.');
+    if (student.blocked) throw new Error('This account has been blocked by the institution. Please contact your PathfolioApp administrator.');
     return { student: publicStudent(student), token: await studentStore.createSession(student.id) };
   }
   async register(student) { return { student: publicStudent(student), token: await studentStore.createSession(student.id) }; }

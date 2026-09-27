@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useOnboarding } from '../context/OnboardingContext';
 import { StageRenderer } from '../components/StageRenderer';
 import { StepNavigation } from '../components/StepNavigation';
+import { Footer } from '../../../components/Footer';
 import { Shield, Sparkles } from 'lucide-react';
 import './OnboardingLayout.css';
 
@@ -108,6 +109,7 @@ export function OnboardingLayout() {
           </div>
         </div>
       </footer>
+      <Footer compact />
     </div>
   );
 }

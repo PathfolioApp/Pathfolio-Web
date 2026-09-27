@@ -1,0 +1,62 @@
+.pf-overview-cards {
+  display: grid;
+  grid-template-columns: repeat(var(--stat-columns, 4), minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 1.5rem;
+}
+
+.pf-stat-card {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 18px 20px;
+  box-shadow: var(--shadow-card);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.pf-stat-card:hover {
+  border-color: var(--border-accent);
+  box-shadow: var(--shadow-md);
+}
+
+.pf-stat-card__icon {
+  display: inline-flex;
+  color: var(--color-sage);
+  margin-bottom: 6px;
+}
+
+.pf-stat-card__value {
+  font-family: var(--font-serif);
+  font-size: 1.9rem;
+  line-height: 1.1;
+  color: var(--text-primary);
+}
+
+.pf-stat-card__label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.pf-stat-card__hint {
+  margin-top: 3px;
+  font-size: 0.78rem;
+  color: var(--text-faint);
+}
+
+@media (max-width: 900px) {
+  .pf-overview-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 480px) {
+  .pf-overview-cards {
+    grid-template-columns: 1fr;
+  }
+}

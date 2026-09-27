@@ -4,7 +4,7 @@ import { ArrowRight } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import './Footer.css';
 
-export function Footer() {
+export function Footer({ compact = false } = {}) {
   const navigate = useNavigate();
   const { student, loading } = useAuth();
 
@@ -19,7 +19,7 @@ export function Footer() {
   ];
 
   return (
-    <footer className="pf-footer">
+    <footer className={`pf-footer${compact ? ' pf-footer--compact' : ''}`}>
       <div className="container pf-footer__inner">
         <div className="pf-footer__brand">
           <Link to="/" className="pf-footer__logo" aria-label="PathfolioApp home">
@@ -74,9 +74,11 @@ export function Footer() {
 
       <div className="container pf-footer__bottom">
         <p>© {new Date().getFullYear()} PathfolioApp. All rights reserved.</p>
-        <Link to="/signin" className="pf-footer__bottom-link">
-          Sign in <ArrowRight size={14} />
-        </Link>
+        {!loading && !student && (
+          <Link to="/signin" className="pf-footer__bottom-link">
+            Sign in <ArrowRight size={14} />
+          </Link>
+        )}
       </div>
     </footer>
   );

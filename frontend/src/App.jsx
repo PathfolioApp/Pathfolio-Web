@@ -34,8 +34,8 @@ export default function App() {
         <Route path="/privacy" element={<PrivacyPolicyPage />} />
         <Route path="/terms" element={<TermsPage />} />
         <Route path="/cookies" element={<CookiePolicyPage />} />
-        <Route path="/admin" element={<AdminProtected><AdminPage /></AdminProtected>} />
-        <Route path="/recruiter" element={<RecruiterProtected><RecruiterPage /></RecruiterProtected>} />
+        <Route path="/admin" element={<AdminProtected><AppLayout><AdminPage /></AppLayout></AdminProtected>} />
+        <Route path="/recruiter" element={<RecruiterProtected><AppLayout><RecruiterPage /></AppLayout></RecruiterProtected>} />
         <Route path="/dashboard" element={<Protected><DashboardPage /></Protected>} />
         <Route path="/story" element={<Protected><StoryPage /></Protected>} />
         <Route path="/placement" element={<Protected><PlacementPage /></Protected>} />

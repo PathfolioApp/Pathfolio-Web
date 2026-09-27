@@ -1,6 +1,6 @@
 export const opportunitiesApi = {
   getOpportunities: async () => {
-    const res = await fetch('/api/opportunities');
+    const res = await fetch('/api/opportunities', { credentials: 'include' });
     if (!res.ok) throw new Error('Failed to load opportunities');
     const data = await res.json();
     if (!data.success) throw new Error(data.message);

@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '../components/Button';
 import { Badge } from '../components/Badge';
 import { Modal } from '../components/Modal';
+import { Footer } from '../components/Footer';
 import {
   CheckCircle,
   Sparkles,
@@ -195,6 +196,7 @@ export function CompletionPage() {
           </p>
         </div>
       </Modal>
+      <Footer compact />
     </div>
   );
 }

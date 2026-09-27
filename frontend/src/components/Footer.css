@@ -1,8 +1,45 @@
 .pf-footer {
   background-color: var(--bg-page-warm);
   border-top: 1px solid var(--border-subtle);
-  padding: var(--space-3xl) 0 var(--space-xl);
-  margin-top: auto;
+  padding: var(--space-2xl) 0 var(--space-lg);
+  margin-top: var(--space-3xl);
+}
+
+/* Compact variant for inside the app shell / portals */
+.pf-footer--compact {
+  padding: var(--space-lg) 0;
+  margin-top: var(--space-2xl);
+}
+
+.pf-footer--compact .pf-footer__inner {
+  grid-template-columns: 1fr;
+  gap: var(--space-md);
+  padding-bottom: var(--space-md);
+}
+
+.pf-footer--compact .pf-footer__columns {
+  flex-wrap: wrap;
+  display: flex;
+  gap: var(--space-lg);
+}
+
+.pf-footer--compact .pf-footer__heading {
+  margin-bottom: var(--space-xs);
+}
+
+.pf-footer--compact .pf-footer__list {
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: var(--space-sm) var(--space-md);
+}
+
+.pf-footer--compact .pf-footer__desc,
+.pf-footer--compact .pf-footer__note {
+  display: none;
+}
+
+.pf-footer--compact .pf-footer__bottom {
+  padding-top: var(--space-sm);
 }
 
 .pf-footer__inner {

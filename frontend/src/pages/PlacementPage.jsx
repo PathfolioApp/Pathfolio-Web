@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ArrowLeft, Building2, MapPin, Clock, ExternalLink, Paperclip, Send } from 'lucide-react';
+import { ArrowLeft, Building2, MapPin, Clock, ExternalLink, Paperclip, Send, Calendar, Wallet, GraduationCap, CheckCircle2, AlertTriangle, BriefcaseBusiness } from 'lucide-react';
 import { opportunitiesApi } from '../services/opportunitiesApi';
 import { Button } from '../components/Button';
 import { useAuth } from '../context/AuthContext';
@@ -8,6 +8,13 @@ import './PlacementPage.css';
 const formatISTDate = dateString => {
   if (!dateString) return '';
   return new Intl.DateTimeFormat('en-IN', { timeZone: 'Asia/Kolkata', month: 'short', day: 'numeric', year: 'numeric' }).format(new Date(dateString));
+};
+const salaryLabel = job => {
+  if (!job.salaryMin && !job.salaryMax) return '';
+  const currency = job.salaryCurrency || 'INR';
+  const format = value => value >= 100000 ? `${(value / 100000).toFixed(value % 100000 ? 1 : 0)}L` : value;
+  if (job.salaryMin && job.salaryMax) return `${currency} ${format(job.salaryMin)} – ${format(job.salaryMax)}`;
+  return `${currency} ${format(job.salaryMin || job.salaryMax)}`;
 };
 
 export function PlacementPage() {
@@ -33,7 +40,7 @@ export function PlacementPage() {
   };
 
   if (selectedJob) {
-    return <JobProfile job={selectedJob} onBack={() => setSelectedJob(null)} />;
+    return <JobProfile job={selectedJob} onBack={() => setSelectedJob(null)} onApplied={loadOpportunities} />;
   }
 
   return (
@@ -49,9 +56,9 @@ export function PlacementPage() {
       <section className="pf-placement-container">
         <div className="pf-placement-list">
           {loading ? (
-            <p>Loading opportunities...</p>
+            <p className="pf-placement-loading">Loading opportunities…</p>
           ) : jobs.length === 0 ? (
-            <p>No active opportunities at the moment.</p>
+            <div className="pf-placement-empty"><BriefcaseBusiness size={22} /><h3>No active opportunities right now.</h3><p>Check back soon — new roles from hiring partners appear here the moment they are published.</p></div>
           ) : (
             jobs.map(job => (
               <button key={job.id} className="pf-job-card" onClick={() => setSelectedJob(job)}>
@@ -69,12 +76,19 @@ export function PlacementPage() {
                       <span>Posted {formatISTDate(job.publishedAt || job.updatedAt)}</span>
                     </div>
                   </div>
+                  {job.hasApplied ? <span className="pf-job-applied-badge"><CheckCircle2 size={14} />Applied</span> : !job.eligibility?.meetsAll ? <span className="pf-job-eligibility-badge"><AlertTriangle size={13} />Check eligibility</span> : null}
                 </div>
                 <h2>{job.title}</h2>
+                <div className="pf-job-card-facts">
+                  <span><MapPin size={14} /> {job.location || 'Flexible'}{job.workMode ? ` · ${job.workMode}` : ''}</span>
+                  <span><Clock size={14} /> {job.employmentType || 'Full-time'}</span>
+                  {salaryLabel(job) && <span><Wallet size={14} /> {salaryLabel(job)}</span>}
+                  {job.applicationDeadline && <span><Calendar size={14} /> Apply by {formatISTDate(job.applicationDeadline)}</span>}
+                  {job.eligibility?.minCgpa && <span><GraduationCap size={14} /> CGPA {job.eligibility.minCgpa}+</span>}
+                </div>
                 <div className="pf-job-card-footer" style={{ justifyContent: 'space-between' }}>
                   <div style={{ display: 'flex', gap: '1rem' }}>
-                    <span><MapPin size={14} /> {job.location || 'Flexible'}</span>
-                    <span><Clock size={14} /> {job.employmentType || 'Full-time'}</span>
+                    {(job.requiredSkills || []).slice(0, 4).map(skill => <span key={skill} className="pf-job-skill-chip">{skill}</span>)}
                   </div>
                   <span style={{ color: '#557550', fontWeight: 700 }}>View details &rarr;</span>
                 </div>
@@ -87,12 +101,14 @@ export function PlacementPage() {
   );
 }
 
-function JobProfile({ job, onBack }) {
+function JobProfile({ job, onBack, onApplied }) {
   const { student } = useAuth();
   const [answers, setAnswers] = useState({});
   const [applying, setApplying] = useState(false);
   const [applyError, setApplyError] = useState('');
-  const [applied, setApplied] = useState(false);
+  const [applied, setApplied] = useState(Boolean(job.hasApplied));
+  const eligibilityIssues = job.eligibility?.issues || [];
+  const deadlinePassed = Boolean(job.deadlinePassed);
 
   useEffect(() => {
     if (job?.applicationForm?.fields) {
@@ -116,6 +132,7 @@ function JobProfile({ job, onBack }) {
     try {
       await opportunitiesApi.apply(job.id, answers);
       setApplied(true);
+      onApplied?.();
     } catch (err) {
       setApplyError(err.message);
     } finally {
@@ -134,9 +151,22 @@ function JobProfile({ job, onBack }) {
           <div className="pf-job-main">
             <h1 className="pf-job-title">{job.title}</h1>
             <div className="pf-job-subtitle">
-              <strong>{job.companyName}</strong> · {job.location || 'Location flexible'} · {job.employmentType || 'Full-time'}
+              <strong>{job.companyName}</strong> · {job.location || 'Location flexible'}{job.workMode ? ` · ${job.workMode}` : ''} · {job.employmentType || 'Full-time'}
             </div>
-            
+
+            {(salaryLabel(job) || job.applicationDeadline || job.eligibility?.minCgpa) && <div className="pf-job-facts">
+              {salaryLabel(job) && <span><Wallet size={14} /> {salaryLabel(job)}</span>}
+              {job.applicationDeadline && <span><Calendar size={14} /> Apply by {formatISTDate(job.applicationDeadline)}</span>}
+              {job.eligibility?.minCgpa && <span><GraduationCap size={14} /> CGPA {job.eligibility.minCgpa}+</span>}
+              {job.eligibility?.maxActiveBacklogs !== null && job.eligibility?.maxActiveBacklogs !== undefined && <span><AlertTriangle size={14} /> Max {job.eligibility.maxActiveBacklogs} backlog(s)</span>}
+            </div>}
+
+            {(job.requiredSkills || []).length > 0 && <div className="pf-job-skills">
+              {job.requiredSkills.map(skill => <span key={skill} className="pf-job-skill-chip">{skill}</span>)}
+            </div>}
+
+            {eligibilityIssues.length > 0 && <div className="pf-job-eligibility"><AlertTriangle size={15} /><div><b>Eligibility criteria you don't currently meet:</b><ul>{eligibilityIssues.map(issue => <li key={issue}>{issue}</li>)}</ul></div></div>}
+
             <div className="pf-job-desc">{job.description}</div>
             
             {job.attachments && job.attachments.length > 0 && (
@@ -157,9 +187,13 @@ function JobProfile({ job, onBack }) {
           <div className="pf-job-sidebar">
             {applied ? (
               <div className="pf-apply-success">
+                <CheckCircle2 size={22} />
                 <h3>Application submitted</h3>
                 <p>You have successfully applied for this role. Your profile snapshot was included.</p>
+                <Button variant="outline" size="sm" onClick={onBack}>Browse more roles</Button>
               </div>
+            ) : deadlinePassed ? (
+              <div className="pf-apply-closed"><AlertTriangle size={20} /><h3>Applications closed</h3><p>The deadline for this role passed on {formatISTDate(job.applicationDeadline)}.</p><Button variant="outline" size="sm" onClick={onBack}>Back to opportunities</Button></div>
             ) : (
               <form className="pf-apply-form" onSubmit={handleApply}>
                 {(job.applicationForm?.fields?.length > 0 || (job.applicationUrl && job.applicationUrl.trim() !== '')) && (

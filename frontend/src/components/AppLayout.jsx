@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, User, BookOpen, Briefcase, Settings, LogOut, ArrowLeft, ShieldCheck, Building2, Home } from 'lucide-react';
+import { LayoutDashboard, User, BookOpen, Briefcase, BriefcaseBusiness, Building2, Settings, LogOut, ArrowLeft, ShieldCheck, Search, Users, UserRound, FileSearch } from 'lucide-react';
 import { NotificationPanel } from './NotificationPanel';
 import { SignOutButton } from './SignOutButton';
 import { useAuth } from '../context/AuthContext';
+import { Footer } from './Footer';
 import './AppLayout.css';
 
 const nav = [
@@ -13,6 +14,22 @@ const nav = [
   [Briefcase, 'Placement Portal', '/placement'], 
   [Settings, 'Settings', '/settings']
 ];
+
+const portalNav = {
+  '/admin': [
+    [LayoutDashboard, 'Dashboard', '/admin'],
+    [BriefcaseBusiness, 'Job posts', '/admin', 'jobs'],
+    [Building2, 'Companies', '/admin', 'companies'],
+    [Users, 'Applications', '/admin', 'applications'],
+    [UserRound, 'Users', '/admin', 'users'],
+    [FileSearch, 'JD analyser', '/admin', 'jd']
+  ],
+  '/recruiter': [
+    [LayoutDashboard, 'Overview', '/recruiter'],
+    [Search, 'Talent search', '/recruiter', 'discover'],
+    [BriefcaseBusiness, 'My job posts', '/recruiter', 'jobs']
+  ]
+};
 
 export function AppLayout({ children }) {
   const { student } = useAuth();
@@ -24,8 +41,13 @@ export function AppLayout({ children }) {
   
   const name = student.personal?.fullName || '';
   const initials = name.split(' ').map(x => x[0]).join('').slice(0,2).toUpperCase();
+  const avatarUrl = student.personal?.avatarUrl || '';
   
   const isDashboard = location.pathname === '/dashboard';
+  const isPortal = location.pathname === '/admin' || location.pathname === '/recruiter';
+  const portalBase = location.pathname === '/admin' ? '/admin' : '/recruiter';
+  const items = isPortal ? (portalNav[portalBase] || []) : nav;
+  const [activeSection, setActiveSection] = useState(window.location.hash.slice(1));
 
   return (
     <div className="pf-dashboard">
@@ -42,13 +64,20 @@ export function AppLayout({ children }) {
           <span className="pf-brand__name">Pathfolio<span className="pf-brand__sub">App</span></span>
         </Link>
         <nav>
-          {nav.map(([Icon, label, path]) => {
-            const isActive = path && (location.pathname === path || (path !== '/dashboard' && location.pathname.startsWith(path)));
+          {items.map(([Icon, label, path, hash]) => {
+            const isActive = hash
+              ? (isPortal && activeSection === hash)
+              : (path && (isPortal ? location.pathname === path && !activeSection : (location.pathname === path || (path !== '/dashboard' && location.pathname.startsWith(path)))));
             return (
               <button 
                 key={label} 
                 className={isActive ? 'active' : ''} 
-                onClick={() => navigate(path)}
+                onClick={() => {
+                  navigate(path);
+                  setActiveSection(hash || '');
+                  if (hash) { window.location.hash = hash; }
+                  else if (isPortal) { window.history.replaceState(null, '', window.location.pathname + window.location.search); window.dispatchEvent(new Event('hashchange')); }
+                }}
               >
                 <Icon size={18}/>
                 {label}
@@ -56,9 +85,13 @@ export function AppLayout({ children }) {
             );
           })}
         </nav>
+        {!isPortal && <div className="pf-portal-links" aria-label="Portal access">
+          <span>Portals</span>
+          {(student.isRecruiter || student.isAdmin) && <button onClick={() => navigate('/recruiter')}><Building2 size={16} /> Recruiter</button>}
+          {student.isAdmin && <button onClick={() => navigate('/admin')}><ShieldCheck size={16} /> Admin</button>}
+        </div>}
         <div className="pf-portal-links" aria-label="Portal access">
           <span>Portals</span>
-          <button onClick={() => navigate('/')}><Home size={16} /> Public home</button>
           {(student.isRecruiter || student.isAdmin) && <button onClick={() => navigate('/recruiter')}><Building2 size={16} /> Recruiter</button>}
           {student.isAdmin && <button onClick={() => navigate('/admin')}><ShieldCheck size={16} /> Admin</button>}
         </div>
@@ -89,7 +122,9 @@ export function AppLayout({ children }) {
           </div>
           <div>
             <NotificationPanel/>
-            <button className="pf-avatar" onClick={() => navigate('/settings')} aria-label="Account settings">{initials}</button>
+            <button className="pf-avatar pf-avatar--image" onClick={() => navigate('/settings')} aria-label="Account settings">
+              {avatarUrl ? <img src={avatarUrl} alt="" /> : initials}
+            </button>
           </div>
         </header>
         
@@ -101,6 +136,7 @@ export function AppLayout({ children }) {
         )}
         
         {children}
+        <Footer compact />
       </main>
     </div>
   );

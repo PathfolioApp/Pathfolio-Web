@@ -59,5 +59,17 @@ class ProfileService {
     return this.safe(student);
   }
   async changePassword(id, currentPassword, newPassword) { const student = await store.getStudentById(id); if (!currentPassword || !newPassword) throw new Error('Current and new passwords are required.'); if (newPassword.length < 8) throw new Error('New password must be at least 8 characters.'); if (!await auth.verifyPassword(currentPassword, student.passwordHash)) throw new Error('Your current password is incorrect.'); student.passwordHash = await auth.hashPassword(newPassword); await store.saveStudent(student); }
+  async setAvatar(id, avatarUrl) {
+    const student = await store.getStudentById(id); if (!student) throw new Error('Student not found.');
+    const url = String(avatarUrl || '').trim();
+    if (url && !/^https:\/\//.test(url)) throw new Error('Avatar must be a secure URL.');
+    student.personal = { ...student.personal, avatarUrl: url };
+    await store.saveStudent(student); return this.safe(student);
+  }
+  async deleteAccount(id) {
+    const student = await store.getStudentById(id); if (!student) throw new Error('Student not found.');
+    if (student.isAdmin) throw new Error('The administrator account cannot be deleted here.');
+    await store.deleteUser(id);
+  }
 }
 module.exports = new ProfileService();

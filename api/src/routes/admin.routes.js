@@ -16,9 +16,12 @@ router.get('/me', (req, res) => {
 });
 
 router.get('/users', (req, res) => send(res, async () => ({ users: await users.list() })));
+router.get('/overview', (req, res) => send(res, async () => ({ overview: await users.overview(), jobs: await content.jobs(), companies: await content.companies(), applications: await content.applications() })));
 router.post('/users', (req, res) => send(res, async () => ({ user: await users.create(req.body) })));
 router.post('/users/import', (req, res) => send(res, async () => ({ summary: await users.importRows(req.body.rows) })));
 router.patch('/users/:id/role', (req, res) => send(res, async () => ({ user: await users.setRole(req.params.id, req.body.role) })));
+router.patch('/users/:id/block', (req, res) => send(res, async () => ({ user: await users.setBlocked(req.params.id, Boolean(req.body.blocked), req.student.id) })));
+router.delete('/users/:id', (req, res) => send(res, async () => ({ deleted: await users.deleteAccount(req.params.id, req.student.id) })));
 
 router.post('/uploads/signature', (req, res) => {
   if (!config.cloudinary.configured) return res.status(503).json({ success: false, message: 'Cloudinary is not configured on the API.' });

@@ -44,6 +44,7 @@ app.use('/api/settings', require('./routes/settings.routes'));
 app.use('/api/notifications', require('./routes/notification.routes'));
 app.use('/api/admin', require('./routes/admin.routes'));
 app.use('/api/recruiter', require('./routes/recruiter.routes'));
+app.use('/api/recruiter/jobs', require('./routes/recruiterJobs.routes'));
 app.use('/api/opportunities', require('./routes/opportunity.routes'));
 
 // 404 Handler for undefined API routes
