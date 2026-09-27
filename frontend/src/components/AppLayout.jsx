@@ -76,7 +76,7 @@ export function AppLayout({ children }) {
                   navigate(path);
                   setActiveSection(hash || '');
                   if (hash) { window.location.hash = hash; }
-                  else if (isPortal) { window.history.replaceState(null, '', window.location.pathname + window.location.search); window.dispatchEvent(new Event('hashchange')); }
+                  else if (isPortal && window.location.hash) { window.history.replaceState(null, '', window.location.pathname + window.location.search); window.dispatchEvent(new Event('hashchange')); }
                 }}
               >
                 <Icon size={18}/>

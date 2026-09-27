@@ -531,6 +531,84 @@
   margin-bottom: var(--space-xl);
 }
 
+/* HERO AUDIENCE NOTE */
+.pf-hero__audience {
+  margin: -10px 0 var(--space-2xl);
+  max-width: 520px;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+
+.pf-hero__audience b {
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+/* RECRUITER SECTION */
+.pf-recruiter-section {
+  background: var(--bg-page-warm);
+  border-top: 1px solid var(--border-subtle);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.pf-recruiter-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-md);
+}
+
+.pf-recruiter-feature {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg) var(--space-md);
+  box-shadow: var(--shadow-card);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast);
+}
+
+.pf-recruiter-feature:hover {
+  border-color: var(--border-accent);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.pf-recruiter-feature__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+  margin-bottom: var(--space-md);
+}
+
+.pf-recruiter-feature h3 {
+  font-size: 1.05rem;
+  margin-bottom: 6px;
+}
+
+.pf-recruiter-feature p {
+  font-size: 0.86rem;
+  line-height: 1.55;
+  color: var(--text-secondary);
+}
+
+.pf-recruiter-cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-md);
+  margin-top: var(--space-xl);
+}
+
+.pf-recruiter-cta span {
+  font-size: 0.84rem;
+  color: var(--text-muted);
+}
+
 /* RESPONSIVE BREAKPOINTS */
 @media (max-width: 992px) {
   .pf-hero__inner {
@@ -545,6 +623,9 @@
     justify-content: center;
   }
   .pf-features-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .pf-recruiter-grid {
     grid-template-columns: repeat(2, 1fr);
   }
   .pf-steps-grid {
@@ -568,6 +649,12 @@
   }
   .pf-features-grid {
     grid-template-columns: 1fr;
+  }
+  .pf-recruiter-grid {
+    grid-template-columns: 1fr;
+  }
+  .pf-recruiter-cta {
+    flex-direction: column;
   }
   .pf-floating-chip {
     display: none;

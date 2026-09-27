@@ -1,0 +1,119 @@
+.pf-cookie {
+  position: fixed;
+  inset: auto 0 0 0;
+  z-index: 300;
+  padding: 0 16px calc(16px + env(safe-area-inset-bottom));
+  pointer-events: none;
+  animation: pf-cookie-in 420ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes pf-cookie-in {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.pf-cookie__card {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: min(100%, 880px);
+  margin: 0 auto;
+  padding: 18px 20px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+}
+
+.pf-cookie__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+}
+
+.pf-cookie__copy {
+  min-width: 0;
+  flex: 1;
+}
+
+.pf-cookie__copy strong {
+  display: block;
+  font-size: 0.95rem;
+  color: var(--text-primary);
+}
+
+.pf-cookie__copy p {
+  margin: 2px 0 0;
+  font-size: 0.83rem;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+.pf-cookie__copy a {
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.pf-cookie__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+
+.pf-cookie__btn {
+  padding: 9px 16px;
+  border-radius: var(--radius-md);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--transition-fast), border-color var(--transition-fast);
+  white-space: nowrap;
+}
+
+.pf-cookie__btn--primary {
+  background: var(--color-primary);
+  border: 1px solid var(--color-primary);
+  color: #fff;
+}
+
+.pf-cookie__btn--primary:hover:not(:disabled) {
+  background: var(--color-primary-hover);
+}
+
+.pf-cookie__btn--ghost {
+  background: transparent;
+  border: 1px solid var(--border-medium);
+  color: var(--text-secondary);
+}
+
+.pf-cookie__btn--ghost:hover:not(:disabled) {
+  background: var(--bg-subtle);
+  color: var(--text-primary);
+}
+
+.pf-cookie__btn:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+@media (max-width: 640px) {
+  .pf-cookie__card {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .pf-cookie__actions {
+    width: 100%;
+  }
+  .pf-cookie__actions .pf-cookie__btn {
+    flex: 1;
+  }
+}

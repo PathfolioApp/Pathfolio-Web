@@ -11,6 +11,7 @@ import { ProfilePage } from './pages/ProfilePage';
 import { ProfileEditPage } from './pages/ProfileEditPage';
 import { SettingsPage, ProfileSettingsPage, SecurityPage, PrivacyPage } from './pages/SettingsPages';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { ConsentBanner } from './components/ConsentBanner';
 import { AppLayout } from './components/AppLayout';
 import { AdminPage } from './pages/AdminPage';
 import { PlacementPage } from './pages/PlacementPage';
@@ -25,6 +26,7 @@ function RecruiterProtected({ children }) { const { student, loading } = useAuth
 export default function App() {
   return (
     <BrowserRouter><AuthProvider>
+      <ConsentBanner />
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/onboarding" element={<OnboardingPage />} />

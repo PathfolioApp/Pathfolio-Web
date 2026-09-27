@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { BriefcaseBusiness, Building2, FileText, LogOut, Plus, Search, SlidersHorizontal, Undo2, Upload, UserRound, Send, MapPin, Clock, Calendar, Wallet, GraduationCap, CheckCircle2, Pencil } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { recruiterApi } from '../services/recruiterApi';
-import { Footer } from '../components/Footer';
 import { Modal } from '../components/Modal';
 import { Button } from '../components/Button';
 import { OverviewCards } from '../components/StatCard';
@@ -22,8 +21,11 @@ const salaryLabel = job => {
 };
 const deadlineLabel = job => job.applicationDeadline ? new Date(job.applicationDeadline).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' }) : '';
 
+const RECRUITER_TABS = ['discover', 'jobs'];
+
 export function RecruiterPage() {
-  const initialTab = ['discover', 'jobs'].includes(window.location.hash.slice(1)) ? window.location.hash.slice(1) : 'discover';
+  const sectionFromUrl = () => (RECRUITER_TABS.includes(window.location.hash.slice(1)) ? window.location.hash.slice(1) : 'discover');
+  const initialTab = sectionFromUrl();
   const [tab, setTab] = useState(initialTab);
   const [keywords, setKeywords] = useState('');
   const [jobDescription, setJobDescription] = useState('');
@@ -59,7 +61,7 @@ export function RecruiterPage() {
 
   useEffect(() => { search(); recruiterApi.overview().then(data => setOverview(data.overview)).catch(() => {}); }, []);
   useEffect(() => {
-    const onHashChange = () => { const next = window.location.hash.slice(1); if (['discover', 'jobs'].includes(next)) setTab(next); else if (!window.location.hash) setTab('discover'); };
+    const onHashChange = () => setTab(sectionFromUrl());
     window.addEventListener('hashchange', onHashChange);
     return () => window.removeEventListener('hashchange', onHashChange);
   }, []);
@@ -120,8 +122,7 @@ export function RecruiterPage() {
   const update = field => event => setJobForm(prev => ({ ...prev, [field]: event.target.value }));
   const deadlinePassed = job => job.applicationDeadline && new Date(job.applicationDeadline) < new Date();
 
-  return <div className="pf-recruiter-shell">
-    <main className="pf-recruiter-page">
+  return <main className="pf-recruiter-page">
       <header className="pf-recruiter-header pf-recruiter-header--compact">
         <div><p className="pf-recruiter-eyebrow">Pathfolio talent desk</p><h1>{tab === 'jobs' ? 'Your job posts.' : 'Find the people behind the potential.'}</h1></div>
       </header>
@@ -134,8 +135,9 @@ export function RecruiterPage() {
       ]} />}
 
       <nav className="pf-recruiter-tabs" aria-label="Recruiter sections">
-        <button className={tab === 'discover' ? 'is-active' : ''} onClick={() => setTab('discover')}><Search size={16} />Talent search</button>
-        <button className={tab === 'jobs' ? 'is-active' : ''} onClick={() => setTab('jobs')}><BriefcaseBusiness size={16} />My job posts <span>{jobs.length || ''}</span></button>
+        {[['discover', 'Talent search', Search], ['jobs', 'My job posts', BriefcaseBusiness]].map(([id, label, Icon]) => (
+          <button key={id} className={tab === id ? 'is-active' : ''} onClick={() => { window.location.hash = id; }}><Icon size={16} />{label}{id === 'jobs' && <span>{jobs.length || ''}</span>}</button>
+        ))}
       </nav>
 
       {jobError && <div className="pf-recruiter-error" role="alert">{jobError}</div>}
@@ -186,8 +188,6 @@ export function RecruiterPage() {
           </div>
         </article>)}</div>
       </section>}
-    </main>
-    <Footer compact />
 
     <Modal isOpen={composerOpen} onClose={() => !savingJob && setComposerOpen(false)} title={editingJob ? `Edit ${editingJob.title}` : 'Create a job post'}>
       <form className="pf-recruiter-job-form" onSubmit={saveJob}>
@@ -219,5 +219,5 @@ export function RecruiterPage() {
         </div>
       </form>
     </Modal>
-  </div>;
+  </main>;
 }

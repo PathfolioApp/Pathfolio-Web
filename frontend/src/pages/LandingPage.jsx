@@ -17,7 +17,11 @@ import {
   Flame,
   Lightbulb,
   TrendingUp,
-  UserCheck
+  UserCheck,
+  BriefcaseBusiness,
+  Search,
+  FileSearch,
+  Building2
 } from 'lucide-react';
 import './LandingPage.css';
 
@@ -77,6 +81,11 @@ export function LandingPage() {
                   <span>Strict Data Consent</span>
                 </div>
               </div>
+
+              <p className="pf-hero__audience">
+                Built for <b>talent havers</b> and <b>talent hunters</b> — students grow a verified
+                record, while recruiters and placement teams discover the people behind the potential.
+              </p>
             </div>
 
             {/* PRODUCT PREVIEW / VISUAL SECTION */}
@@ -254,6 +263,49 @@ export function LandingPage() {
                   <span>Future module: Career Prediction & Placements</span>
                 </div>
               </div>
+            </div>
+          </div>
+        </section>
+
+        {/* FOR RECRUITERS & PLACEMENT TEAMS */}
+        <section className="pf-section pf-recruiter-section">
+          <div className="container">
+            <div className="pf-section-header">
+              <span className="editorial-eyebrow">For talent hunters</span>
+              <h2 className="pf-section-title">Recruiting? Meet your shortest path to the right people.</h2>
+              <p className="pf-section-subtitle">
+                The same living records students build become a explainable, searchable talent pool for recruiters and TnP teams.
+              </p>
+            </div>
+
+            <div className="pf-recruiter-grid">
+              <div className="pf-recruiter-feature animate-fade-in delay-100">
+                <div className="pf-recruiter-feature__icon"><Search size={20} /></div>
+                <h3>Search real profiles</h3>
+                <p>Filter students by skills, interests, department, or batch — every result is a living record, not a static resume.</p>
+              </div>
+              <div className="pf-recruiter-feature animate-fade-in delay-200">
+                <div className="pf-recruiter-feature__icon"><FileSearch size={20} /></div>
+                <h3>Analyse job descriptions</h3>
+                <p>Paste a JD and Pathfolio extracts the skills and eligibility criteria, then ranks candidates with explainable matches.</p>
+              </div>
+              <div className="pf-recruiter-feature animate-fade-in delay-300">
+                <div className="pf-recruiter-feature__icon"><BriefcaseBusiness size={20} /></div>
+                <h3>Post opportunities</h3>
+                <p>Publish roles with salary, work mode, and eligibility criteria. Students apply in one click with verified profiles.</p>
+              </div>
+              <div className="pf-recruiter-feature animate-fade-in delay-400">
+                <div className="pf-recruiter-feature__icon"><Building2 size={20} /></div>
+                <h3>Track your pipeline</h3>
+                <p>Review applications, move candidates through shortlist to selected, and keep the placement team in sync.</p>
+              </div>
+            </div>
+
+            <div className="pf-recruiter-cta">
+              <Button variant="primary" size="md" icon={ArrowRight} iconPosition="right" onClick={() => navigate('/signin?portal=recruiter')}>
+                Enter the recruiter portal
+              </Button>
+              <span>For company recruiters and institutional placement teams.</span>
             </div>
           </div>
         </section>
