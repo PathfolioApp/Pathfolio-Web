@@ -80,6 +80,14 @@
   .pf-admin-page > .pf-admin-tabs { display: none; }
 }
 
+/* Overview quick links */
+.pf-admin-overview-note { margin: -0.5rem 0 1.25rem; color: var(--text-muted); font-size: 0.92rem; }
+.pf-admin-quick-links { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-bottom: 1.5rem; }
+.pf-admin-quick-links button { display: flex; align-items: center; gap: 10px; padding: 16px 18px; background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); color: var(--text-primary); font: inherit; font-size: 0.92rem; font-weight: 600; cursor: pointer; box-shadow: var(--shadow-sm); transition: border-color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast), color var(--transition-fast); }
+.pf-admin-quick-links button:hover { border-color: var(--border-accent); box-shadow: var(--shadow-md); transform: translateY(-1px); color: var(--color-primary); }
+.pf-admin-quick-links button svg { color: var(--color-sage); flex: 0 0 auto; }
+@media (max-width: 620px) { .pf-admin-quick-links { grid-template-columns: 1fr; } }
+
 /* Themed file pickers */
 .pf-file-picker { position: relative; display: inline-flex; align-items: center; gap: .45rem; border: 1px solid var(--border-accent); border-radius: var(--radius-md); padding: .6rem 1rem; background: var(--color-primary-light); color: var(--color-primary); font: inherit; font-size: .84rem; font-weight: 600; cursor: pointer; transition: background var(--transition-fast), border-color var(--transition-fast), transform var(--transition-fast); }
 .pf-file-picker:hover { background: var(--color-sage-light); border-color: var(--color-sage-soft); }

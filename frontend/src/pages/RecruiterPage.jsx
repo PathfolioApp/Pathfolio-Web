@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { BriefcaseBusiness, Building2, FileText, LogOut, Plus, Search, SlidersHorizontal, Undo2, Upload, UserRound, Send, MapPin, Clock, Calendar, Wallet, GraduationCap, CheckCircle2, Pencil } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
+import { BriefcaseBusiness, Building2, FileText, LayoutDashboard, Plus, Search, SlidersHorizontal, Undo2, Upload, Send, MapPin, Clock, Calendar, Wallet, GraduationCap, CheckCircle2, Pencil, UserRound } from 'lucide-react';
 import { recruiterApi } from '../services/recruiterApi';
 import { Modal } from '../components/Modal';
 import { Button } from '../components/Button';
@@ -21,10 +20,12 @@ const salaryLabel = job => {
 };
 const deadlineLabel = job => job.applicationDeadline ? new Date(job.applicationDeadline).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' }) : '';
 
-const RECRUITER_TABS = ['discover', 'jobs'];
+const RECRUITER_TABS = ['overview', 'discover', 'jobs'];
+const RECRUITER_TAB_LABELS = { overview: 'Overview', discover: 'Talent search', jobs: 'My job posts' };
 
 export function RecruiterPage() {
-  const sectionFromUrl = () => (RECRUITER_TABS.includes(window.location.hash.slice(1)) ? window.location.hash.slice(1) : 'discover');
+  // Base URL (/recruiter) shows the Overview; each section has its own #hash.
+  const sectionFromUrl = () => (RECRUITER_TABS.includes(window.location.hash.slice(1)) ? window.location.hash.slice(1) : 'overview');
   const initialTab = sectionFromUrl();
   const [tab, setTab] = useState(initialTab);
   const [keywords, setKeywords] = useState('');
@@ -124,20 +125,28 @@ export function RecruiterPage() {
 
   return <main className="pf-recruiter-page">
       <header className="pf-recruiter-header pf-recruiter-header--compact">
-        <div><p className="pf-recruiter-eyebrow">Pathfolio talent desk</p><h1>{tab === 'jobs' ? 'Your job posts.' : 'Find the people behind the potential.'}</h1></div>
+        <div><p className="pf-recruiter-eyebrow">Pathfolio talent desk</p><h1>{tab === 'overview' ? 'Your hiring dashboard.' : tab === 'jobs' ? 'Your job posts.' : 'Find the people behind the potential.'}</h1></div>
       </header>
 
-      {overview && <OverviewCards cards={[
-        { label: 'Job posts', value: overview.totalJobs, hint: `${overview.published} published · ${overview.drafts} drafts` },
-        { label: 'Applications', value: overview.totalApplications, hint: `${overview.last7Days} in the last 7 days` },
-        { label: 'In review', value: (overview.statusCounts?.shortlisted || 0) + (overview.statusCounts?.interview || 0), hint: `${overview.statusCounts?.selected || 0} selected overall` },
-        { label: 'New this week', value: overview.last7Days, hint: 'Applications received' }
-      ]} />}
+      {tab === 'overview' && overview && <>
+        <p className="pf-recruiter-overview-note">Your pipeline at a glance — post roles, search talent, and track applications from one place.</p>
+        <OverviewCards cards={[
+          { label: 'Job posts', value: overview.totalJobs, hint: `${overview.published} published · ${overview.drafts} drafts` },
+          { label: 'Applications', value: overview.totalApplications, hint: `${overview.last7Days} in the last 7 days` },
+          { label: 'In review', value: (overview.statusCounts?.shortlisted || 0) + (overview.statusCounts?.interview || 0), hint: `${overview.statusCounts?.selected || 0} selected overall` },
+          { label: 'New this week', value: overview.last7Days, hint: 'Applications received' }
+        ]} />
+        <div className="pf-recruiter-quick-links">
+          <button onClick={() => { window.location.hash = 'jobs'; }}><BriefcaseBusiness size={16} /><span>Create or manage job posts</span></button>
+          <button onClick={() => { window.location.hash = 'discover'; }}><Search size={16} /><span>Search student talent</span></button>
+        </div>
+      </>}
 
       <nav className="pf-recruiter-tabs" aria-label="Recruiter sections">
-        {[['discover', 'Talent search', Search], ['jobs', 'My job posts', BriefcaseBusiness]].map(([id, label, Icon]) => (
-          <button key={id} className={tab === id ? 'is-active' : ''} onClick={() => { window.location.hash = id; }}><Icon size={16} />{label}{id === 'jobs' && <span>{jobs.length || ''}</span>}</button>
-        ))}
+        {RECRUITER_TABS.map(id => {
+          const Icon = { overview: LayoutDashboard, discover: Search, jobs: BriefcaseBusiness }[id];
+          return <button key={id} className={tab === id ? 'is-active' : ''} onClick={() => { window.location.hash = id; }}><Icon size={16} />{RECRUITER_TAB_LABELS[id]}{id === 'jobs' && <span>{jobs.length || ''}</span>}</button>;
+        })}
       </nav>
 
       {jobError && <div className="pf-recruiter-error" role="alert">{jobError}</div>}

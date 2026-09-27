@@ -13,6 +13,14 @@
 @media (min-width: 851px) {
   .pf-recruiter-tabs { display: none; }
 }
+
+/* Overview quick links */
+.pf-recruiter-overview-note { max-width: 1180px; margin: -0.5rem auto 1.25rem; color: var(--text-muted); font-size: 0.92rem; }
+.pf-recruiter-quick-links { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; max-width: 1180px; margin: 0 auto 1.5rem; }
+.pf-recruiter-quick-links button { display: flex; align-items: center; gap: 10px; padding: 16px 18px; background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); color: var(--text-primary); font: inherit; font-size: 0.92rem; font-weight: 600; cursor: pointer; box-shadow: var(--shadow-sm); transition: border-color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast), color var(--transition-fast); }
+.pf-recruiter-quick-links button:hover { border-color: var(--border-accent); box-shadow: var(--shadow-md); transform: translateY(-1px); color: var(--color-primary); }
+.pf-recruiter-quick-links button svg { color: var(--color-sage); flex: 0 0 auto; }
+@media (max-width: 620px) { .pf-recruiter-quick-links { grid-template-columns: 1fr; } }
 .pf-recruiter-tabs { gap: .25rem; max-width: 1180px; margin: 0 auto 1.5rem; border-bottom: 1px solid #d4dbd2; display: flex; }
 .pf-recruiter-tabs button { display: inline-flex; align-items: center; gap: .45rem; padding: .75rem 1rem; border: 0; border-bottom: 2px solid transparent; background: transparent; color: var(--text-muted); font: inherit; font-size: .9rem; cursor: pointer; border-radius: var(--radius-sm) var(--radius-sm) 0 0; transition: color .15s ease, background .15s ease; }
 .pf-recruiter-tabs button:hover { color: var(--text-primary); background: var(--bg-subtle); }

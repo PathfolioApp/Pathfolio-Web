@@ -31,12 +31,14 @@ const formatISTDate = dateString => {
   if (!dateString) return '';
   return new Intl.DateTimeFormat('en-IN', { timeZone: 'Asia/Kolkata', month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true }).format(new Date(dateString));
 };
-const TAB_IDS = ['jobs', 'companies', 'applications', 'users', 'jd'];
+const TAB_IDS = ['overview', 'jobs', 'companies', 'applications', 'users', 'jd'];
+const TAB_LABELS = { overview: 'Overview', jobs: 'Posts', companies: 'Companies', applications: 'Applications', users: 'Users', jd: 'JD analyser' };
 
 export function AdminPage() {
   const { student } = useAuth();
   const navigate = useNavigate();
-  const sectionFromUrl = () => (TAB_IDS.includes(window.location.hash.slice(1)) ? window.location.hash.slice(1) : 'jobs');
+  // Base URL (/admin) shows the Overview; each section has its own #hash.
+  const sectionFromUrl = () => (TAB_IDS.includes(window.location.hash.slice(1)) ? window.location.hash.slice(1) : 'overview');
   const [tab, setTab] = useState(sectionFromUrl);
   const [overview, setOverview] = useState(null);
   const [companies, setCompanies] = useState([]); const [jobs, setJobs] = useState([]); const [applications, setApplications] = useState([]); const [users, setUsers] = useState([]);
@@ -75,23 +77,33 @@ export function AdminPage() {
   const downloadTemplate = () => { const blob = new Blob(['name,website,description,logo_url\nAcme Systems,https://acme.example,Technology company,https://logo.example/acme.png\n'], { type: 'text/csv;charset=utf-8' }); const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = 'pathfolio-companies-template.csv'; link.click(); URL.revokeObjectURL(link.href); };
   const loadOverview = async () => { try { setOverview((await adminApi.overview()).overview); } catch { /* non-critical */ } };
   useEffect(() => { loadOverview(); }, []);
-  useEffect(() => { if (tab === 'applications') loadOverview(); }, [tab]);
+  useEffect(() => { if (tab === 'overview' || tab === 'applications') loadOverview(); }, [tab]);
 
   const visibleApplications = applications.filter(application => !applicationFilter || application.status === applicationFilter);
 
   return <main className="pf-admin-page">
-    <header className="pf-admin-header pf-admin-header--compact"><div><p className="pf-admin-eyebrow">TnP operations workspace</p><h1>Good to see you, {student?.personal?.fullName?.split(' ')[0] || 'Admin'}.</h1></div></header>
-    {overview && <OverviewCards cards={[
-      { label: 'Total users', value: overview.total, hint: `${overview.students} students · ${overview.recruiters} recruiters` },
-      { label: 'Job posts', value: overview.jobs?.length ?? 0, hint: `${overview.jobs?.filter(j => j.status === 'published').length ?? 0} published` },
-      { label: 'Applications', value: overview.applications?.length ?? 0, hint: `${overview.applications?.filter(a => a.status === 'applied').length ?? 0} awaiting review` },
-      { label: 'Companies', value: overview.companies?.length ?? 0, hint: `${overview.recentSignups} new users this week` }
-    ]} />}
-    {error && <div className="pf-admin-error" role="alert">{error}</div>}
+    <header className="pf-admin-header pf-admin-header--compact"><div><p className="pf-admin-eyebrow">TnP operations workspace</p><h1>{tab === 'overview' ? `Good to see you, ${student?.personal?.fullName?.split(' ')[0] || 'Admin'}.` : TAB_LABELS[tab]}</h1></div></header>
+    {tab === 'overview' && overview && <>
+      <p className="pf-admin-overview-note">Everything happening across the placement workspace at a glance. Pick a section below to dive in.</p>
+      <OverviewCards cards={[
+        { label: 'Total users', value: overview.total, hint: `${overview.students} students · ${overview.recruiters} recruiters` },
+        { label: 'Job posts', value: overview.jobs?.length ?? 0, hint: `${overview.jobs?.filter(j => j.status === 'published').length ?? 0} published` },
+        { label: 'Applications', value: overview.applications?.length ?? 0, hint: `${overview.applications?.filter(a => a.status === 'applied').length ?? 0} awaiting review` },
+        { label: 'Companies', value: overview.companies?.length ?? 0, hint: `${overview.recentSignups} new users this week` }
+      ]} />
+      <div className="pf-admin-quick-links">
+        <button onClick={() => { window.location.hash = 'jobs'; }}><BriefcaseBusiness size={17} /><span>Manage job posts</span></button>
+        <button onClick={() => { window.location.hash = 'applications'; }}><Users size={17} /><span>Review applications</span></button>
+        <button onClick={() => { window.location.hash = 'users'; }}><UserPlus size={17} /><span>Add or manage users</span></button>
+        <button onClick={() => { window.location.hash = 'jd'; }}><FileSearch size={17} /><span>Analyse a job description</span></button>
+      </div>
+    </>}
+    {tab !== 'overview' && error && <div className="pf-admin-error" role="alert">{error}</div>}
     <nav className="pf-admin-tabs">
-      {[['jobs', 'Posts', BriefcaseBusiness], ['companies', 'Companies', Building2], ['applications', 'Applications', Users], ['users', 'Users', UserPlus], ['jd', 'JD analyser', FileSearch]].map(([id, label, Icon]) => (
-        <button key={id} className={tab === id ? 'is-active' : ''} onClick={() => { window.location.hash = id; }}><Icon size={17} />{label}</button>
-      ))}
+      {TAB_IDS.map(id => {
+        const Icon = { overview: LayoutDashboard, jobs: BriefcaseBusiness, companies: Building2, applications: Users, users: UserPlus, jd: FileSearch }[id];
+        return <button key={id} className={tab === id ? 'is-active' : ''} onClick={() => { window.location.hash = id; }}><Icon size={17} />{TAB_LABELS[id]}</button>;
+      })}
     </nav>
     {tab === 'companies' && <><CompanyWorkspace companies={companies} companyForm={companyForm} setCompanyForm={setCompanyForm} editingCompany={editingCompany} resetCompany={resetCompany} saveCompany={saveCompany} loading={loading} editCompany={editCompany} archive={archive} saving={saving} update={update} logoFile={logoFile} setLogoFile={setLogoFile} /><CompanyImport importRows={importRows} importErrors={importErrors} importSummary={importSummary} readImport={readImport} importCompanies={importCompanies} downloadTemplate={downloadTemplate} saving={saving} /></>}
     {tab === 'jobs' && <JobWorkspace companies={companies} jobs={jobs} jobForm={jobForm} setJobForm={setJobForm} editingJob={editingJob} resetJob={resetJob} saveJob={saveJob} loading={loading} editJob={editJob} jobFilter={jobFilter} setJobFilter={setJobFilter} publish={publish} saving={saving} selectedFields={selectedFields} setSelectedFields={setSelectedFields} namedAttachments={namedAttachments} setNamedAttachments={setNamedAttachments} update={update} />}

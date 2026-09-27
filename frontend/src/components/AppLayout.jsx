@@ -17,7 +17,7 @@ const nav = [
 
 const portalNav = {
   '/admin': [
-    [LayoutDashboard, 'Dashboard', '/admin'],
+    [LayoutDashboard, 'Overview', '/admin'],
     [BriefcaseBusiness, 'Job posts', '/admin', 'jobs'],
     [Building2, 'Companies', '/admin', 'companies'],
     [Users, 'Applications', '/admin', 'applications'],

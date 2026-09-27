@@ -533,7 +533,7 @@
 
 /* HERO AUDIENCE NOTE */
 .pf-hero__audience {
-  margin: -10px 0 var(--space-2xl);
+  margin: var(--space-md) 0 0;
   max-width: 520px;
   font-size: 0.9rem;
   line-height: 1.6;
@@ -604,7 +604,8 @@
   margin-top: var(--space-xl);
 }
 
-.pf-recruiter-cta span {
+/* The button's own label lives in a span; only style the standalone note. */
+.pf-recruiter-cta > span {
   font-size: 0.84rem;
   color: var(--text-muted);
 }
