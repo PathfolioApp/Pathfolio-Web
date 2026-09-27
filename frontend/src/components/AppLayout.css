@@ -10,6 +10,11 @@
 .pf-dashboard-side .pf-side-signout { margin-top: auto; color: #87504a; }
 .pf-dashboard-side .pf-side-signout:hover { background: #fff0ef; }
 
+.pf-portal-links { display: grid; gap: 4px; margin: auto 12px 16px; padding-top: 16px; border-top: 1px solid var(--border-subtle); }
+.pf-portal-links span { padding: 0 10px 4px; color: var(--text-faint); font-size: .68rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+.pf-portal-links button { padding: 8px 10px; color: var(--text-secondary); font-size: .8rem; text-align: left; background: transparent; border: 0; border-radius: var(--radius-sm); cursor: pointer; }
+.pf-portal-links button:hover { color: var(--color-primary); background: var(--bg-subtle); }
+
 .pf-dashboard-main { margin-left: 245px; width: calc(100% - 245px); padding: 0 5.5vw 52px; }
 
 .pf-dashboard-top { height: 78px; display: flex; align-items: center; justify-content: flex-end; border-bottom: 1px solid #e9e8e1; }

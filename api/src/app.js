@@ -9,7 +9,10 @@ const app = express();
 
 // Middleware
 app.use(cors({
-  origin: config.clientOrigin,
+  origin: (origin, callback) => {
+    if (!origin || config.clientOrigins.includes(origin)) return callback(null, true);
+    return callback(new Error(`Origin ${origin} is not allowed by PathfolioApp.`));
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
@@ -40,6 +43,7 @@ app.use('/api/profile', require('./routes/profile.routes'));
 app.use('/api/settings', require('./routes/settings.routes'));
 app.use('/api/notifications', require('./routes/notification.routes'));
 app.use('/api/admin', require('./routes/admin.routes'));
+app.use('/api/recruiter', require('./routes/recruiter.routes'));
 app.use('/api/opportunities', require('./routes/opportunity.routes'));
 
 // 404 Handler for undefined API routes

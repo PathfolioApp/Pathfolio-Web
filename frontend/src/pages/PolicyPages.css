@@ -1,0 +1,70 @@
+.pf-policy-page {
+  min-height: 100%;
+  padding: clamp(48px, 8vw, 96px) 0;
+  background: var(--bg-page-warm);
+}
+
+.pf-policy-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 56px;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.pf-policy-heading {
+  max-width: 680px;
+}
+
+.pf-policy-heading h1 {
+  margin-bottom: 16px;
+  font-size: clamp(2.5rem, 7vw, 4.5rem);
+}
+
+.pf-policy-heading p {
+  font-size: 1.1rem;
+  line-height: 1.8;
+}
+
+.pf-policy-notice {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  max-width: 680px;
+  margin: 32px 0 56px;
+  padding: 16px 18px;
+  color: var(--color-primary);
+  background: var(--color-primary-light);
+  border: 1px solid var(--border-accent);
+  border-radius: var(--radius-md);
+  font-size: 0.85rem;
+}
+
+.pf-policy-sections {
+  display: grid;
+  gap: 0;
+  max-width: 680px;
+  border-top: 1px solid var(--border-medium);
+}
+
+.pf-policy-sections section {
+  padding: 28px 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.pf-policy-sections h2 {
+  margin-bottom: 10px;
+  font-size: 1.5rem;
+}
+
+.pf-policy-sections p,
+.pf-policy-contact {
+  line-height: 1.8;
+}
+
+.pf-policy-contact {
+  max-width: 680px;
+  margin-top: 32px;
+  font-size: 0.9rem;
+}

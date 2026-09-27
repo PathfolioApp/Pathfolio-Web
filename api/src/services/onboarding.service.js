@@ -132,6 +132,7 @@ class OnboardingService {
       profileSettings: { visibility: 'private', fieldVisibility: { personal: 'student', academic: 'student', interests: 'shareable', achievements: 'shareable', familyContext: 'student' } },
       passwordHash: await require('./auth.service').hashPassword(credentials.password),
       isAdmin: false,
+      isRecruiter: false,
       onboarding: { completed: true, completedAt: new Date().toISOString() },
       status: 'active_onboarded',
       createdAt: new Date().toISOString()

@@ -3,7 +3,8 @@ const config = require('./config');
 
 const store = require('./models/studentStore');
 const adminContentStore = require('./models/adminContentStore');
-async function start() { await store.initialize(); await adminContentStore.initialize(); const server = app.listen(config.port, () => {
+const adminUserService = require('./services/adminUser.service');
+async function start() { await store.initialize(); await adminContentStore.initialize(); const bootstrapAdmin = await adminUserService.ensureBootstrapAdmin(config); if (bootstrapAdmin) console.log(`[PathfolioApp] Bootstrap admin ready for ${bootstrapAdmin.email}.`); const server = app.listen(config.port, () => {
   console.log(`\n======================================================`);
   console.log(` [PathfolioApp Backend API]`);
   console.log(` Server URL:   http://localhost:${config.port}/api/health`);

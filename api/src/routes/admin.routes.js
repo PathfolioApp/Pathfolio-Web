@@ -4,6 +4,7 @@ const requireAdmin = require('../middleware/requireAdmin');
 const content = require('../services/adminContent.service');
 const cloudinary = require('cloudinary').v2;
 const config = require('../config');
+const users = require('../services/adminUser.service');
 
 router.use(authenticate, requireAdmin);
 
@@ -12,6 +13,11 @@ const send = async (res, action) => { try { res.json({ success: true, ...(await 
 router.get('/me', (req, res) => {
   res.json({ success: true, admin: { id: req.student.id, isAdmin: true } });
 });
+
+router.get('/users', (req, res) => send(res, async () => ({ users: await users.list() })));
+router.post('/users', (req, res) => send(res, async () => ({ user: await users.create(req.body) })));
+router.post('/users/import', (req, res) => send(res, async () => ({ summary: await users.importRows(req.body.rows) })));
+router.patch('/users/:id/role', (req, res) => send(res, async () => ({ user: await users.setRole(req.params.id, req.body.role) })));
 
 router.post('/uploads/signature', (req, res) => {
   if (!config.cloudinary.configured) return res.status(503).json({ success: false, message: 'Cloudinary is not configured on the API.' });

@@ -174,6 +174,23 @@ npm run dev
 # or: pnpm dev
 ```
 
+The frontend proxies `/api` requests to `http://localhost:5000` by default. To use another backend during development, set `VITE_API_PROXY_TARGET` in `frontend/.env.local`. Set `VITE_PORT` to change the Vite port, and include that origin in the API `CLIENT_ORIGIN` value as a comma-separated list when the frontend runs on a non-default origin.
+
+### Bootstrap administrator
+
+Set these values in the ignored `api/.env` file before starting the API:
+
+```env
+BOOTSTRAP_ADMIN_EMAIL=admin@kiit.ac.in
+BOOTSTRAP_ADMIN_PASSWORD=use-a-strong-password-here
+BOOTSTRAP_ADMIN_NAME=Pathfolio Administrator
+BOOTSTRAP_ADMIN_USERNAME=pathfolio-admin
+```
+
+On startup, PathfolioApp creates the account if it does not exist, or restores its admin flag if the account already exists. The password is hashed and is never returned by the API. Do not commit `api/.env` or share the bootstrap password. In development without a database, the account is recreated after each restart because storage is intentionally volatile; production must use the configured database.
+
+After signing in through the Admin portal, the **Users** tab supports CSV bulk import and switching non-admin accounts between student and recruiter roles. The CSV columns are `fullName,email,username,password,role,department,batchYear,rollNumber`; use the downloadable template in the admin workspace.
+
 ### 3. Production Pipeline (`start:prod`)
 
 To install all dependencies, build the optimized frontend bundle, and run both services independently on separate ports:

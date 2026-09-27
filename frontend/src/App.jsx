@@ -14,9 +14,13 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { AppLayout } from './components/AppLayout';
 import { AdminPage } from './pages/AdminPage';
 import { PlacementPage } from './pages/PlacementPage';
+import { RecruiterPage } from './pages/RecruiterPage';
+import { StoryPage } from './pages/StoryPage';
+import { PrivacyPolicyPage, TermsPage, CookiePolicyPage } from './pages/PolicyPages';
 
 function Protected({ children }) { const { student, loading } = useAuth(); if (loading) return <main className="pf-auth-page">Loading your Pathfolio…</main>; return student?.onboarding?.completed ? <AppLayout>{children}</AppLayout> : <Navigate to={student ? '/onboarding' : '/signin'} replace />; }
-function AdminProtected({ children }) { const { student, loading } = useAuth(); if (loading) return <main className="pf-auth-page">Loading your Pathfolio…</main>; if (!student) return <Navigate to="/signin" replace />; return student.isAdmin ? children : <Navigate to="/dashboard" replace />; }
+function AdminProtected({ children }) { const { student, loading } = useAuth(); if (loading) return <main className="pf-auth-page">Loading your Pathfolio…</main>; if (!student) return <Navigate to="/signin?portal=admin" replace />; return student.isAdmin ? children : <Navigate to="/dashboard" replace />; }
+function RecruiterProtected({ children }) { const { student, loading } = useAuth(); if (loading) return <main className="pf-auth-page">Loading your Pathfolio…</main>; if (!student) return <Navigate to="/signin?portal=recruiter" replace />; return student.isRecruiter || student.isAdmin ? children : <Navigate to="/dashboard" replace />; }
 
 export default function App() {
   return (
@@ -27,8 +31,13 @@ export default function App() {
         <Route path="/onboarding/complete" element={<CompletionPage />} />
         <Route path="/signin" element={<SignInPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/privacy" element={<PrivacyPolicyPage />} />
+        <Route path="/terms" element={<TermsPage />} />
+        <Route path="/cookies" element={<CookiePolicyPage />} />
         <Route path="/admin" element={<AdminProtected><AdminPage /></AdminProtected>} />
+        <Route path="/recruiter" element={<RecruiterProtected><RecruiterPage /></RecruiterProtected>} />
         <Route path="/dashboard" element={<Protected><DashboardPage /></Protected>} />
+        <Route path="/story" element={<Protected><StoryPage /></Protected>} />
         <Route path="/placement" element={<Protected><PlacementPage /></Protected>} />
         <Route path="/profile" element={<Protected><ProfilePage /></Protected>} />
         <Route path="/profile/edit" element={<Protected><ProfileEditPage /></Protected>} />

@@ -6,6 +6,10 @@ async function request(path, options = {}) {
 }
 
 export const adminApi = {
+  users: () => request('/users'),
+  createUser: data => request('/users', { method: 'POST', body: JSON.stringify(data) }),
+  importUsers: rows => request('/users/import', { method: 'POST', body: JSON.stringify({ rows }) }),
+  setUserRole: (id, role) => request(`/users/${id}/role`, { method: 'PATCH', body: JSON.stringify({ role }) }),
   companies: () => request('/companies'),
   importCompanies: rows => request('/companies/import', { method: 'POST', body: JSON.stringify({ rows }) }),
   createCompany: data => request('/companies', { method: 'POST', body: JSON.stringify(data) }),

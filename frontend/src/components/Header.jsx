@@ -13,6 +13,8 @@ export function Header() {
     const element = document.getElementById(sectionId);
     if (element) {
       element.scrollIntoView({ behavior: 'smooth' });
+    } else {
+      navigate(`/#${sectionId}`);
     }
   };
 
@@ -41,6 +43,14 @@ export function Header() {
             <a href="#privacy" onClick={(e) => scrollToSection(e, 'privacy')} className="pf-nav__link">
               Privacy
             </a>
+            <div className="pf-portal-menu">
+              <span className="pf-nav__link">Portals</span>
+              <div className="pf-portal-menu__items">
+                <button type="button" onClick={() => navigate(student ? (student.onboarding?.completed ? '/dashboard' : '/onboarding') : '/signin')}>Student portal</button>
+                <button type="button" onClick={() => navigate(student?.isRecruiter || student?.isAdmin ? '/recruiter' : '/signin?portal=recruiter')}>Recruiter portal</button>
+                <button type="button" onClick={() => navigate(student?.isAdmin ? '/admin' : '/signin?portal=admin')}>Admin portal</button>
+              </div>
+            </div>
           </nav>
 
           <div className="pf-header__actions">

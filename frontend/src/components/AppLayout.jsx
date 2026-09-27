@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, User, Map, BookOpen, Compass, Briefcase, Settings, LogOut, ArrowLeft } from 'lucide-react';
+import { LayoutDashboard, User, BookOpen, Briefcase, Settings, LogOut, ArrowLeft, ShieldCheck, Building2, Home } from 'lucide-react';
 import { NotificationPanel } from './NotificationPanel';
 import { SignOutButton } from './SignOutButton';
 import { useAuth } from '../context/AuthContext';
@@ -9,9 +9,7 @@ import './AppLayout.css';
 const nav = [
   [LayoutDashboard, 'Dashboard', '/dashboard'], 
   [User, 'My Profile', '/profile'], 
-  [Map, 'My Journey'], 
-  [BookOpen, 'Story'], 
-  [Compass, 'Future Path'], 
+  [BookOpen, 'Story', '/story'],
   [Briefcase, 'Placement Portal', '/placement'], 
   [Settings, 'Settings', '/settings']
 ];
@@ -27,8 +25,6 @@ export function AppLayout({ children }) {
   const name = student.personal?.fullName || '';
   const initials = name.split(' ').map(x => x[0]).join('').slice(0,2).toUpperCase();
   
-  const coming = item => setNotice(`${item} is coming next. Your onboarding information is safely saved while we build it.`);
-  
   const isDashboard = location.pathname === '/dashboard';
 
   return (
@@ -42,15 +38,20 @@ export function AppLayout({ children }) {
               <button 
                 key={label} 
                 className={isActive ? 'active' : ''} 
-                onClick={() => path ? navigate(path) : coming(label)}
+                onClick={() => navigate(path)}
               >
                 <Icon size={18}/>
                 {label}
-                {!path && <small>Coming soon</small>}
               </button>
             );
           })}
         </nav>
+        <div className="pf-portal-links" aria-label="Portal access">
+          <span>Portals</span>
+          <button onClick={() => navigate('/')}><Home size={16} /> Public home</button>
+          {(student.isRecruiter || student.isAdmin) && <button onClick={() => navigate('/recruiter')}><Building2 size={16} /> Recruiter</button>}
+          {student.isAdmin && <button onClick={() => navigate('/admin')}><ShieldCheck size={16} /> Admin</button>}
+        </div>
         <SignOutButton className="pf-side-signout">
           <LogOut size={18}/>Sign out
         </SignOutButton>
