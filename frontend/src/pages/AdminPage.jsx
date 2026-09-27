@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { Archive, BriefcaseBusiness, Building2, Calendar, Clock, FileSearch, ImagePlus, LogOut, Paperclip, Plus, Save, Send, Users, Undo2, X } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Archive, BriefcaseBusiness, Building2, Calendar, Clock, FileSearch, ImagePlus, LayoutDashboard, LogOut, Paperclip, Plus, Save, Send, Users, Undo2, X, Eye, EyeOff, Filter, Download } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { Button } from '../components/Button';
+import { Modal } from '../components/Modal';
 import { adminApi } from '../services/adminApi';
 import './AdminPage.css';
 
@@ -21,17 +23,18 @@ const formatISTDate = dateString => {
 };
 export function AdminPage() {
   const { student, logout } = useAuth();
+  const navigate = useNavigate();
   const [tab, setTab] = useState('jobs');
   const [companies, setCompanies] = useState([]); const [jobs, setJobs] = useState([]); const [applications, setApplications] = useState([]);
   const [importRows, setImportRows] = useState([]); const [importErrors, setImportErrors] = useState([]); const [importSummary, setImportSummary] = useState(null);
   const [companyForm, setCompanyForm] = useState(emptyCompany); const [logoFile, setLogoFile] = useState(null); const [jobForm, setJobForm] = useState(emptyJob); const [selectedFields, setSelectedFields] = useState([]); const [namedAttachments, setNamedAttachments] = useState([]);
-  const [editingCompany, setEditingCompany] = useState(null); const [editingJob, setEditingJob] = useState(null); const [jobFilter, setJobFilter] = useState(''); const [applicationFilter, setApplicationFilter] = useState('');
+  const [editingCompany, setEditingCompany] = useState(null); const [editingJob, setEditingJob] = useState(null); const [jobFilter, setJobFilter] = useState(''); const [applicationFilter, setApplicationFilter] = useState(''); const [applicationJobFilter, setApplicationJobFilter] = useState('');
   const [loading, setLoading] = useState(true); const [saving, setSaving] = useState(false); const [error, setError] = useState('');
   const update = (setter, field) => event => setter(value => ({ ...value, [field]: event.target.value }));
   const loadBase = async () => { setLoading(true); setError(''); try { const [companyData, jobData] = await Promise.all([adminApi.companies(), adminApi.jobPosts(jobFilter)]); setCompanies(companyData.companies); setJobs(jobData.jobPosts); } catch (err) { setError(err.message); } finally { setLoading(false); } };
-  const loadApplications = async () => { setLoading(true); try { const data = await adminApi.applications(); setApplications(data.applications); } catch (err) { setError(err.message); } finally { setLoading(false); } };
+  const loadApplications = async () => { setLoading(true); try { const data = await adminApi.applications(applicationJobFilter); setApplications(data.applications); } catch (err) { setError(err.message); } finally { setLoading(false); } };
   useEffect(() => { loadBase(); }, [jobFilter]);
-  useEffect(() => { if (tab === 'applications') loadApplications(); }, [tab]);
+  useEffect(() => { if (tab === 'applications') loadApplications(); }, [tab, applicationJobFilter]);
   const resetCompany = () => { setCompanyForm({ ...emptyCompany }); setLogoFile(null); setEditingCompany(null); };
   const resetJob = () => { setJobForm({ ...emptyJob, companyId: companies[0]?.id || '' }); setSelectedFields([]); setNamedAttachments([]); setEditingJob(null); };
   const saveCompany = async event => { event.preventDefault(); setSaving(true); setError(''); try { const payload = { ...companyForm }; if (logoFile) { const uploaded = await uploadToCloudinary(logoFile); payload.logoUrl = uploaded.url; payload.logoPublicId = uploaded.publicId; } if (editingCompany) await adminApi.updateCompany(editingCompany, payload); else await adminApi.createCompany(payload); resetCompany(); await loadBase(); } catch (err) { setError(err.message); } finally { setSaving(false); } };
@@ -46,12 +49,12 @@ export function AdminPage() {
   const downloadTemplate = () => { const blob = new Blob(['name,website,description,logo_url\nAcme Systems,https://acme.example,Technology company,https://logo.example/acme.png\n'], { type: 'text/csv;charset=utf-8' }); const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = 'pathfolio-companies-template.csv'; link.click(); URL.revokeObjectURL(link.href); };
   const visibleApplications = applications.filter(application => !applicationFilter || application.status === applicationFilter);
 
-  return <main className="pf-admin-page"><header className="pf-admin-header"><div><p className="pf-admin-eyebrow">TnP operations workspace</p><h1>Good to see you, {student?.personal?.fullName || 'Admin'}.</h1><p className="pf-admin-intro">Publish opportunities, collect applications, and move candidates through your hiring workflow.</p></div><button className="pf-admin-signout" type="button" onClick={logout}><LogOut size={16} />Sign out</button></header>
+  return <main className="pf-admin-page"><header className="pf-admin-header"><div><p className="pf-admin-eyebrow">TnP operations workspace</p><h1>Good to see you, {student?.personal?.fullName || 'Admin'}.</h1><p className="pf-admin-intro">Publish opportunities, collect applications, and move candidates through your hiring workflow.</p></div><div className="pf-admin-header-actions"><button className="pf-admin-dashboard-btn" type="button" onClick={() => navigate('/dashboard')}><LayoutDashboard size={16} />Student view</button><button className="pf-admin-signout" type="button" onClick={logout}><LogOut size={16} />Sign out</button></div></header>
     {error && <div className="pf-admin-error" role="alert">{error}</div>}
     <nav className="pf-admin-tabs"><button className={tab === 'jobs' ? 'is-active' : ''} onClick={() => setTab('jobs')}><BriefcaseBusiness size={17} />Posts</button><button className={tab === 'companies' ? 'is-active' : ''} onClick={() => setTab('companies')}><Building2 size={17} />Companies</button><button className={tab === 'applications' ? 'is-active' : ''} onClick={() => setTab('applications')}><Users size={17} />Applications</button><button className="pf-admin-tab-muted" type="button"><FileSearch size={17} />JD matching <span>Coming soon</span></button></nav>
     {tab === 'companies' && <><CompanyWorkspace companies={companies} companyForm={companyForm} setCompanyForm={setCompanyForm} editingCompany={editingCompany} resetCompany={resetCompany} saveCompany={saveCompany} loading={loading} editCompany={editCompany} archive={archive} saving={saving} update={update} logoFile={logoFile} setLogoFile={setLogoFile} /><CompanyImport importRows={importRows} importErrors={importErrors} importSummary={importSummary} readImport={readImport} importCompanies={importCompanies} downloadTemplate={downloadTemplate} saving={saving} /></>}
     {tab === 'jobs' && <JobWorkspace companies={companies} jobs={jobs} jobForm={jobForm} setJobForm={setJobForm} editingJob={editingJob} resetJob={resetJob} saveJob={saveJob} loading={loading} editJob={editJob} jobFilter={jobFilter} setJobFilter={setJobFilter} publish={publish} saving={saving} selectedFields={selectedFields} setSelectedFields={setSelectedFields} namedAttachments={namedAttachments} setNamedAttachments={setNamedAttachments} update={update} />}
-    {tab === 'applications' && <ApplicationWorkspace applications={visibleApplications} loading={loading} applicationFilter={applicationFilter} setApplicationFilter={setApplicationFilter} updateApplication={updateApplication} saving={saving} />}
+    {tab === 'applications' && <ApplicationWorkspace jobs={jobs} applicationJobFilter={applicationJobFilter} setApplicationJobFilter={setApplicationJobFilter} applications={visibleApplications} loading={loading} applicationFilter={applicationFilter} setApplicationFilter={setApplicationFilter} updateApplication={updateApplication} saving={saving} />}
     <section className="pf-admin-coming-soon"><span><FileSearch size={18} />JD analysis and candidate matching</span><b>Coming soon</b><p>Paste a job description and discover eligible students with explainable matching.</p></section>
   </main>;
 }
@@ -87,6 +90,204 @@ function AttachmentList({ namedAttachments, setNamedAttachments }) {
   </div>;
 }
 
-function JobWorkspace({ companies, jobs, jobForm, setJobForm, editingJob, resetJob, saveJob, loading, editJob, jobFilter, setJobFilter, publish, saving, selectedFields, setSelectedFields, namedAttachments, setNamedAttachments, update }) { return <section className="pf-admin-workspace"><div className="pf-admin-panel"><PanelHeading eyebrow="Opportunity composer" title={editingJob ? 'Edit draft' : 'Create a post'} action={editingJob && <Button variant="ghost" size="sm" onClick={resetJob}>Cancel</Button>} /><form className="pf-admin-form" onSubmit={saveJob}><Input label="Company"><div style={{ display: 'flex', flexDirection: 'column', gap: '.4rem' }}><input type="search" placeholder="Filter companies..." value={jobForm._companySearch || ''} onChange={update(setJobForm, '_companySearch')} /><select required value={jobForm.companyId} onChange={update(setJobForm, 'companyId')}><option value="">Choose a company</option>{companies.filter(c => c.name.toLowerCase().includes((jobForm._companySearch || '').toLowerCase())).map(company => <option value={company.id} key={company.id}>{company.name}</option>)}</select></div></Input><Input label="Title"><input required value={jobForm.title} onChange={update(setJobForm, 'title')} placeholder="e.g. Software Engineer" /></Input><Input label="Location"><input value={jobForm.location} onChange={update(setJobForm, 'location')} placeholder="Bengaluru / Remote" /></Input><Input label="Employment type"><select value={jobForm.employmentType} onChange={update(setJobForm, 'employmentType')}><option>Full-time</option><option>Part-time</option><option>Internship</option><option>Contract</option></select></Input><Input label="Description" full><textarea required rows="7" value={jobForm.description} onChange={update(setJobForm, 'description')} placeholder="Write the role, responsibilities, and requirements..." /></Input><Input label="Application URL" full><input type="url" value={jobForm.applicationUrl} onChange={update(setJobForm, 'applicationUrl')} placeholder="https://..." /></Input><Input label="Attachments" full><AttachmentList namedAttachments={namedAttachments} setNamedAttachments={setNamedAttachments} /></Input><fieldset className="pf-admin-fieldset"><legend>Collect with application</legend>{formOptions.map(([id, label]) => <label key={id}><input type="checkbox" checked={selectedFields.includes(id)} onChange={() => setSelectedFields(fields => fields.includes(id) ? fields.filter(field => field !== id) : [...fields, id])} />{label}</label>)}</fieldset><Button type="submit" loading={saving} icon={Save}>Save draft</Button></form></div><div className="pf-admin-list"><div className="pf-admin-panel-heading"><div><p className="pf-admin-eyebrow">Published content</p><h2>Posts <span>{jobs.length}</span></h2></div><select className="pf-admin-filter" value={jobFilter} onChange={event => setJobFilter(event.target.value)}><option value="">All statuses</option><option value="draft">Drafts</option><option value="published">Published</option></select></div>{loading ? <Empty text="Loading posts..." /> : jobs.length === 0 ? <Empty text="No posts yet. Save a draft to begin." /> : jobs.map(job => <article className="pf-admin-list-item" key={job.id}><div><span className={`pf-admin-status-badge is-${job.status}`}>{job.status}</span><h3>{job.title}</h3><p>{job.companyName} · {job.location || 'Location flexible'} <span className="pf-admin-date"><Clock size={12} /> {formatISTDate(job.updatedAt)} IST</span></p></div><div className="pf-admin-item-actions"><Button variant="ghost" size="sm" onClick={() => editJob(job)} disabled={job.status === 'published'}>Edit</Button><Button variant={job.status === 'published' ? 'outline' : 'primary'} size="sm" loading={saving} icon={job.status === 'published' ? Undo2 : Send} onClick={() => publish(job)}>{job.status === 'published' ? 'Unpublish' : 'Publish'}</Button></div></article>)}</div></section>; }
+function JobWorkspace({ companies, jobs, jobForm, setJobForm, editingJob, resetJob, saveJob, loading, editJob, jobFilter, setJobFilter, publish, saving, selectedFields, setSelectedFields, namedAttachments, setNamedAttachments, update }) { return <section className="pf-admin-workspace"><div className="pf-admin-panel"><PanelHeading eyebrow="Opportunity composer" title={editingJob ? 'Edit draft' : 'Create a post'} action={editingJob && <Button variant="ghost" size="sm" onClick={resetJob}>Cancel</Button>} /><form className="pf-admin-form" onSubmit={saveJob}><Input label="Company"><div style={{ display: 'flex', flexDirection: 'column', gap: '.4rem' }}><input type="search" placeholder="Filter companies..." value={jobForm._companySearch || ''} onChange={update(setJobForm, '_companySearch')} /><select required value={jobForm.companyId} onChange={update(setJobForm, 'companyId')}><option value="">Choose a company</option>{companies.filter(c => c.name.toLowerCase().includes((jobForm._companySearch || '').toLowerCase())).map(company => <option value={company.id} key={company.id}>{company.name}</option>)}</select></div></Input><Input label="Title"><input required value={jobForm.title} onChange={update(setJobForm, 'title')} placeholder="e.g. Software Engineer" /></Input><Input label="Location"><input value={jobForm.location} onChange={update(setJobForm, 'location')} placeholder="Bengaluru / Remote" /></Input><Input label="Employment type"><select value={jobForm.employmentType} onChange={update(setJobForm, 'employmentType')}><option>Full-time</option><option>Part-time</option><option>Internship</option><option>Contract</option></select></Input><Input label="Description" full><textarea required rows="7" value={jobForm.description} onChange={update(setJobForm, 'description')} placeholder="Write the role, responsibilities, and requirements..." /></Input><Input label="Application URL" full><input type="url" value={jobForm.applicationUrl} onChange={update(setJobForm, 'applicationUrl')} placeholder="https://..." /></Input><Input label="Attachments" full><AttachmentList namedAttachments={namedAttachments} setNamedAttachments={setNamedAttachments} /></Input><fieldset className="pf-admin-fieldset"><legend>Collect with application</legend>{formOptions.map(([id, label]) => <label key={id}><input type="checkbox" checked={selectedFields.includes(id)} onChange={() => setSelectedFields(fields => fields.includes(id) ? fields.filter(field => field !== id) : [...fields, id])} />{label}</label>)}</fieldset><Button type="submit" loading={saving} icon={Save}>Save draft</Button></form></div><div className="pf-admin-list"><div className="pf-admin-panel-heading"><div><p className="pf-admin-eyebrow">Published content</p><h2>Posts <span>{jobs.length}</span></h2></div><select className="pf-admin-filter" value={jobFilter} onChange={event => setJobFilter(event.target.value)}><option value="">All statuses</option><option value="draft">Drafts</option><option value="published">Published</option></select></div>{loading ? <Empty text="Loading posts..." /> : jobs.length === 0 ? <Empty text="No posts yet. Save a draft to begin." /> : jobs.map((job, idx) => <article className="pf-admin-list-item" key={job.id}><div><span className={`pf-admin-status-badge is-${job.status}`}>#{jobs.length - idx} {job.status}</span><h3>{job.title}</h3><p>{job.companyName} · {job.location || 'Location flexible'} <span className="pf-admin-date"><Clock size={12} /> {formatISTDate(job.updatedAt)} IST</span></p></div><div className="pf-admin-item-actions"><Button variant="ghost" size="sm" onClick={() => editJob(job)} disabled={job.status === 'published'}>Edit</Button><Button variant={job.status === 'published' ? 'outline' : 'primary'} size="sm" loading={saving} icon={job.status === 'published' ? Undo2 : Send} onClick={() => publish(job)}>{job.status === 'published' ? 'Unpublish' : 'Publish'}</Button></div></article>)}</div></section>; }
 
-function ApplicationWorkspace({ applications, loading, applicationFilter, setApplicationFilter, updateApplication, saving }) { return <section className="pf-admin-single"><div className="pf-admin-list"><div className="pf-admin-panel-heading"><div><p className="pf-admin-eyebrow">Candidate pipeline</p><h2>Applications <span>{applications.length}</span></h2></div><select className="pf-admin-filter" value={applicationFilter} onChange={event => setApplicationFilter(event.target.value)}><option value="">All statuses</option><option value="applied">Applied</option><option value="shortlisted">Shortlisted</option><option value="interview">Interview</option><option value="selected">Selected</option><option value="rejected">Rejected</option></select></div>{loading ? <Empty text="Loading applications..." /> : applications.length === 0 ? <Empty text="Applications will appear here when students apply." /> : applications.map(application => <article className="pf-admin-application" key={application.id}><div><span className={`pf-admin-status-badge is-${application.status}`}>{application.status}</span><h3>{application.profileSnapshot.fullName || 'Student applicant'}</h3><p>{application.profileSnapshot.email} · {application.profileSnapshot.department || 'Department not provided'} · {application.profileSnapshot.batchYear || 'Batch not provided'} <span className="pf-admin-date"><Calendar size={12} /> {formatISTDate(application.createdAt)} IST</span></p></div><select value={application.status} disabled={saving} onChange={event => updateApplication(application.id, event.target.value)}><option value="applied">Applied</option><option value="shortlisted">Shortlisted</option><option value="interview">Interview</option><option value="selected">Selected</option><option value="rejected">Rejected</option></select></article>)}</div></section>; }
+function ApplicationWorkspace({ jobs, applicationJobFilter, setApplicationJobFilter, applications, loading, applicationFilter, setApplicationFilter, updateApplication, saving }) { 
+  const [filterModalOpen, setFilterModalOpen] = useState(false);
+  const [fieldFilters, setFieldFilters] = useState({});
+  const [viewingAppId, setViewingAppId] = useState(null);
+
+  const selectedJob = jobs.find(j => j.id === applicationJobFilter);
+  const jobFields = selectedJob?.applicationForm?.fields || [];
+
+  const handleFilterChange = (id, value) => {
+    setFieldFilters(prev => ({ ...prev, [id]: value }));
+  };
+
+  const getFilteredApplications = () => {
+    let filtered = applications;
+    Object.entries(fieldFilters).forEach(([fieldId, filterValue]) => {
+      if (!filterValue) return;
+      const lowerFilter = filterValue.toLowerCase();
+      filtered = filtered.filter(app => {
+        const val = app.answers?.[fieldId];
+        if (val === undefined || val === null) return false;
+        // if it's a number (like CGPA) handle minimum logic if they typed a number
+        if (!isNaN(parseFloat(filterValue)) && !isNaN(parseFloat(val))) {
+          return parseFloat(val) >= parseFloat(filterValue);
+        }
+        return String(val).toLowerCase().includes(lowerFilter);
+      });
+    });
+    return filtered;
+  };
+
+  const exportCsv = () => {
+    const filteredApps = getFilteredApplications();
+    if (filteredApps.length === 0) {
+      alert('No applications match the filter criteria.');
+      return;
+    }
+    const allKeys = new Set();
+    filteredApps.forEach(app => {
+      if (app.answers) Object.keys(app.answers).forEach(k => allKeys.add(k));
+    });
+    
+    const escapeCsv = (val) => `"${String(val || '').replace(/"/g, '""')}"`;
+    const header = ['Name', 'Email', 'Status', 'Applied At', ...Array.from(allKeys)].map(escapeCsv);
+    
+    const rows = filteredApps.map(app => {
+      const base = [app.profileSnapshot.fullName || '', app.profileSnapshot.email || '', app.status, new Date(app.createdAt).toISOString()];
+      const extras = Array.from(allKeys).map(k => app.answers?.[k] || '');
+      return [...base, ...extras].map(escapeCsv).join(',');
+    });
+    
+    const csvContent = [header.join(','), ...rows].join('\n');
+    const dataUri = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csvContent);
+    const link = document.createElement('a'); 
+    link.setAttribute('href', dataUri);
+    link.setAttribute('download', 'applications_export.csv');
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    link.click(); 
+    document.body.removeChild(link);
+    
+    setFilterModalOpen(false);
+  };
+
+  if (!applicationJobFilter) {
+    return (
+      <section className="pf-admin-single">
+        <div className="pf-admin-list">
+          <div className="pf-admin-panel-heading">
+            <div>
+              <p className="pf-admin-eyebrow">Candidate pipeline</p>
+              <h2>Select a job post</h2>
+            </div>
+          </div>
+          {jobs.length === 0 ? <Empty text="No posts available." /> : jobs.map((job, idx) => (
+            <article className="pf-admin-list-item" key={job.id} onClick={() => setApplicationJobFilter(job.id)} style={{ cursor: 'pointer', background: '#fff' }}>
+              <div>
+                <span className={`pf-admin-status-badge is-${job.status}`}>#{jobs.length - idx}</span>
+                <h3>{job.title}</h3>
+                <p>{job.companyName}</p>
+              </div>
+              <Button variant="ghost" size="sm" onClick={() => setApplicationJobFilter(job.id)}>View applications &rarr;</Button>
+            </article>
+          ))}
+        </div>
+      </section>
+    );
+  }
+
+  const viewingApp = applications.find(a => a.id === viewingAppId);
+  const displayApplications = getFilteredApplications();
+
+  return (
+    <section className="pf-admin-single">
+      <div className="pf-admin-list">
+        <div className="pf-admin-panel-heading" style={{ flexWrap: 'wrap', gap: '1rem', flexDirection: 'column', alignItems: 'flex-start' }}>
+          <Button variant="ghost" size="sm" onClick={() => setApplicationJobFilter('')}>&larr; Back to job posts</Button>
+          <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'flex-end', flexWrap: 'wrap', gap: '1rem' }}>
+            <div>
+              <p className="pf-admin-eyebrow">Candidate pipeline</p>
+              <h2>Applications <span>{displayApplications.length}</span></h2>
+              <p style={{ color: '#557550', margin: 0, fontWeight: 500 }}>{selectedJob?.title} ({selectedJob?.companyName})</p>
+            </div>
+            <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
+              <select className="pf-admin-filter" value={applicationFilter} onChange={event => setApplicationFilter(event.target.value)}>
+                <option value="">All statuses</option>
+                <option value="applied">Applied</option>
+                <option value="shortlisted">Shortlisted</option>
+                <option value="interview">Interview</option>
+                <option value="selected">Selected</option>
+                <option value="rejected">Rejected</option>
+              </select>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Button type="button" onClick={() => setFilterModalOpen(true)} size="sm" variant="outline" icon={Filter}>
+                  Filters {Object.values(fieldFilters).some(v => v) ? '(Active)' : ''}
+                </Button>
+                <Button type="button" onClick={exportCsv} size="sm" variant="primary" icon={Download}>
+                  Export CSV
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        {loading ? <Empty text="Loading applications..." /> : displayApplications.length === 0 ? <Empty text="No applications match the current filters." /> : displayApplications.map((application, idx) => (
+          <article className="pf-admin-list-item" key={application.id}>
+            <div>
+              <span className={`pf-admin-status-badge is-${application.status}`}>
+                #{displayApplications.length - idx} {application.status}
+              </span>
+              <h3>{application.profileSnapshot.fullName || 'Student applicant'}</h3>
+              <p>
+                {application.profileSnapshot.email} 
+                {application.profileSnapshot.department && ` · ${application.profileSnapshot.department}`}
+                {application.profileSnapshot.batchYear && ` · ${application.profileSnapshot.batchYear}`}
+                <span className="pf-admin-date" style={{ marginLeft: '.5rem', paddingLeft: '.5rem', borderLeft: '1px solid #d4dbd2' }}>
+                  <Calendar size={12} /> {formatISTDate(application.createdAt)} IST
+                </span>
+              </p>
+            </div>
+            <div className="pf-admin-item-actions">
+              {application.answers && Object.keys(application.answers).length > 0 && (
+                <Button variant="ghost" size="sm" onClick={() => setViewingAppId(application.id)} icon={Eye}>
+                  View Info
+                </Button>
+              )}
+              <select value={application.status} disabled={saving} onChange={event => updateApplication(application.id, event.target.value)}>
+                <option value="applied">Applied</option>
+                <option value="shortlisted">Shortlisted</option>
+                <option value="interview">Interview</option>
+                <option value="selected">Selected</option>
+                <option value="rejected">Rejected</option>
+              </select>
+            </div>
+          </article>
+        ))}
+      </div>
+
+      <Modal isOpen={!!viewingAppId} onClose={() => setViewingAppId(null)} title="Application Details">
+        {viewingApp && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <div style={{ borderBottom: '1px solid #eaeaea', paddingBottom: '1rem' }}>
+              <h3 style={{ margin: '0 0 0.5rem' }}>{viewingApp.profileSnapshot.fullName}</h3>
+              <p style={{ margin: 0, color: '#557550' }}>{viewingApp.profileSnapshot.email}</p>
+            </div>
+            <div>
+              <h4 style={{ fontSize: '0.85rem', textTransform: 'uppercase', color: '#9aa79a', margin: '0 0 1rem' }}>Submitted Information</h4>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                {Object.entries(viewingApp.answers || {}).map(([k, v]) => (
+                  <div key={k}>
+                    <strong style={{ display: 'block', fontSize: '0.9rem' }}>{k}</strong>
+                    {v.startsWith('http') ? <a href={v} target="_blank" rel="noreferrer" style={{ color: '#557550' }}>{v}</a> : <span>{v}</span>}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      <Modal isOpen={filterModalOpen} onClose={() => setFilterModalOpen(false)} title="Filter Applications" footer={<div style={{ display: 'flex', gap: '1rem', width: '100%', justifyContent: 'flex-end' }}><Button variant="ghost" onClick={() => { setFieldFilters({}); setFilterModalOpen(false); }}>Clear Filters</Button><Button variant="primary" onClick={() => setFilterModalOpen(false)}>Apply Filters</Button></div>}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', maxHeight: '60vh', overflowY: 'auto', paddingRight: '0.5rem' }}>
+          <p style={{ margin: 0, fontSize: '0.9rem', color: '#557550' }}>Filter applications by collected fields. The current filtered view will be used when exporting.</p>
+          {jobFields.length === 0 ? (
+             <p style={{ color: '#777', fontStyle: 'italic', margin: 0 }}>No custom fields were collected for this job.</p>
+          ) : (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.25rem' }}>
+              {jobFields.map(field => (
+                <label key={field.id} style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: '0.9rem', fontWeight: 600 }}>
+                  {field.label} {field.id.toLowerCase().includes('cgpa') && '(Min)'}
+                  <input type="text" placeholder={`Filter by ${field.label.toLowerCase()}...`} value={fieldFilters[field.id] || ''} onChange={e => handleFilterChange(field.id, e.target.value)} style={{ padding: '0.6rem 0.75rem', border: '1px solid #cbd4ca', borderRadius: '4px', fontSize: '0.9rem' }} />
+                </label>
+              ))}
+            </div>
+          )}
+        </div>
+      </Modal>
+    </section>
+  );
+}

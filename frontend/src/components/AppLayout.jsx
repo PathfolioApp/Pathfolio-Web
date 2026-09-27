@@ -12,7 +12,7 @@ const nav = [
   [Map, 'My Journey'], 
   [BookOpen, 'Story'], 
   [Compass, 'Future Path'], 
-  [Briefcase, 'Placement Portal'], 
+  [Briefcase, 'Placement Portal', '/placement'], 
   [Settings, 'Settings', '/settings']
 ];
 
