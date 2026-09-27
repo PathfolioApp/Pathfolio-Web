@@ -1,15 +1,21 @@
-import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from './Button';
 import { useAuth } from '../context/AuthContext';
 import './Header.css';
 
 export function Header() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { student, loading } = useAuth();
+  const [portalOpen, setPortalOpen] = useState(false);
 
   const scrollToSection = (e, sectionId) => {
     e.preventDefault();
+    if (location.pathname !== '/') {
+      navigate(`/#${sectionId}`);
+      return;
+    }
     const element = document.getElementById(sectionId);
     if (element) {
       element.scrollIntoView({ behavior: 'smooth' });
@@ -43,12 +49,20 @@ export function Header() {
             <a href="#privacy" onClick={(e) => scrollToSection(e, 'privacy')} className="pf-nav__link">
               Privacy
             </a>
-            <div className="pf-portal-menu">
-              <span className="pf-nav__link">Portals</span>
+            <div className={`pf-portal-menu${portalOpen ? ' is-open' : ''}`} onMouseLeave={() => setPortalOpen(false)}>
+              <button
+                type="button"
+                className="pf-nav__link pf-portal-menu__trigger"
+                aria-haspopup="true"
+                aria-expanded={portalOpen}
+                onClick={() => setPortalOpen(open => !open)}
+              >
+                Portals
+              </button>
               <div className="pf-portal-menu__items">
-                <button type="button" onClick={() => navigate(student ? (student.onboarding?.completed ? '/dashboard' : '/onboarding') : '/signin')}>Student portal</button>
-                <button type="button" onClick={() => navigate(student?.isRecruiter || student?.isAdmin ? '/recruiter' : '/signin?portal=recruiter')}>Recruiter portal</button>
-                <button type="button" onClick={() => navigate(student?.isAdmin ? '/admin' : '/signin?portal=admin')}>Admin portal</button>
+                <button type="button" onClick={() => { setPortalOpen(false); navigate(student ? (student.onboarding?.completed ? '/dashboard' : '/onboarding') : '/signin'); }}>Student portal</button>
+                <button type="button" onClick={() => { setPortalOpen(false); navigate(student?.isRecruiter || student?.isAdmin ? '/recruiter' : '/signin?portal=recruiter'); }}>Recruiter portal</button>
+                <button type="button" onClick={() => { setPortalOpen(false); navigate(student?.isAdmin ? '/admin' : '/signin?portal=admin'); }}>Admin portal</button>
               </div>
             </div>
           </nav>

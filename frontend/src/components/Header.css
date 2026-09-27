@@ -71,6 +71,8 @@
 }
 
 .pf-portal-menu { position: relative; padding: 4px 0; }
+.pf-portal-menu__trigger { background: transparent; border: 0; cursor: pointer; font-family: inherit; font-size: 0.9375rem; font-weight: 500; color: var(--text-secondary); padding: 4px 0; transition: color var(--transition-fast); }
+.pf-portal-menu__trigger:hover { color: var(--color-primary); }
 .pf-portal-menu__items { position: absolute; top: calc(100% + 12px); right: 0; display: grid; gap: 4px; min-width: 170px; padding: 8px; background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); box-shadow: var(--shadow-md); opacity: 0; pointer-events: none; transform: translateY(-4px); transition: opacity var(--transition-fast), transform var(--transition-fast); }
 .pf-portal-menu__items::before {
   content: '';
@@ -80,7 +82,7 @@
   left: 0;
   height: 12px;
 }
-.pf-portal-menu:hover .pf-portal-menu__items, .pf-portal-menu:focus-within .pf-portal-menu__items { opacity: 1; pointer-events: auto; transform: translateY(0); }
+.pf-portal-menu:hover .pf-portal-menu__items, .pf-portal-menu:focus-within .pf-portal-menu__items, .pf-portal-menu.is-open .pf-portal-menu__items { opacity: 1; pointer-events: auto; transform: translateY(0); }
 .pf-portal-menu__items button { padding: 9px 10px; color: var(--text-secondary); text-align: left; background: transparent; border: 0; border-radius: var(--radius-sm); cursor: pointer; }
 .pf-portal-menu__items button:hover { color: var(--color-primary); background: var(--bg-subtle); }
 
@@ -112,6 +114,16 @@
 }
 
 /* Mobile responsive */
+@media (max-width: 480px) {
+  /* Keep the header uncrowded: the primary CTA carries the action on small screens. */
+  .pf-header__signin {
+    display: none;
+  }
+  .pf-header__actions .pf-btn--sm {
+    padding: 8px 14px;
+  }
+}
+
 @media (max-width: 768px) {
   .pf-nav {
     display: flex;

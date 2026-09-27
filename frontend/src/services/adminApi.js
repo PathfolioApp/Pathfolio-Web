@@ -21,6 +21,7 @@ export const adminApi = {
   publishJobPost: id => request(`/job-posts/${id}/publish`, { method: 'POST' }),
   unpublishJobPost: id => request(`/job-posts/${id}/unpublish`, { method: 'POST' }),
   uploadSignature: () => request('/uploads/signature', { method: 'POST' }),
+  analyzeJobDescription: data => request('/jd/analyze', { method: 'POST', body: JSON.stringify(data) }),
   applications: jobPostId => request(`/applications${jobPostId ? `?jobPostId=${jobPostId}` : ''}`),
   updateApplication: (id, data) => request(`/applications/${id}`, { method: 'PATCH', body: JSON.stringify(data) })
 };

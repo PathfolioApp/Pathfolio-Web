@@ -19,6 +19,10 @@
   cursor: not-allowed;
 }
 
+.pf-btn:active:not(:disabled) {
+  transform: translateY(0) scale(0.98);
+}
+
 /* Sizes */
 .pf-btn--sm {
   padding: 6px 14px;

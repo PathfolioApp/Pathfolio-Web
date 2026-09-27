@@ -5,6 +5,7 @@ const content = require('../services/adminContent.service');
 const cloudinary = require('cloudinary').v2;
 const config = require('../config');
 const users = require('../services/adminUser.service');
+const jdAnalyzer = require('../services/jdAnalyzer.service');
 
 router.use(authenticate, requireAdmin);
 
@@ -38,6 +39,7 @@ router.post('/job-posts', (req, res) => send(res, async () => ({ jobPost: await 
 router.patch('/job-posts/:id', (req, res) => send(res, async () => ({ jobPost: await content.updateJob(req.params.id, req.body) })));
 router.post('/job-posts/:id/publish', (req, res) => send(res, async () => ({ jobPost: await content.publishJob(req.params.id) })));
 router.post('/job-posts/:id/unpublish', (req, res) => send(res, async () => ({ jobPost: await content.unpublishJob(req.params.id) })));
+router.post('/jd/analyze', (req, res) => send(res, async () => jdAnalyzer.analyze(req.body)));
 router.get('/applications', (req, res) => send(res, async () => ({ applications: await content.applications(req.query.jobPostId) })));
 router.patch('/applications/:id', (req, res) => send(res, async () => ({ application: await content.updateApplication(req.params.id, req.body) })));
 

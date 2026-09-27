@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { LayoutDashboard, User, BookOpen, Briefcase, Settings, LogOut, ArrowLeft, ShieldCheck, Building2, Home } from 'lucide-react';
 import { NotificationPanel } from './NotificationPanel';
 import { SignOutButton } from './SignOutButton';
@@ -30,7 +30,17 @@ export function AppLayout({ children }) {
   return (
     <div className="pf-dashboard">
       <aside className="pf-dashboard-side">
-        <div className="pf-dashboard-logo">Pathfolio<span>App</span></div>
+        <Link to="/" className="pf-brand pf-dashboard-brand" aria-label="PathfolioApp home">
+          <div className="pf-brand__logo">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z" />
+              <path d="M6 6h10" />
+              <path d="M6 10h10" />
+              <path d="m14 14 2 2 4-4" />
+            </svg>
+          </div>
+          <span className="pf-brand__name">Pathfolio<span className="pf-brand__sub">App</span></span>
+        </Link>
         <nav>
           {nav.map(([Icon, label, path]) => {
             const isActive = path && (location.pathname === path || (path !== '/dashboard' && location.pathname.startsWith(path)));
@@ -65,7 +75,17 @@ export function AppLayout({ children }) {
                 <ArrowLeft size={20} />
               </button>
             )}
-            <button className="pf-mobile-brand" onClick={()=>navigate('/dashboard')}>Pathfolio<span>App</span></button>
+            <Link to="/" className="pf-brand pf-mobile-dashboard-brand" aria-label="PathfolioApp home">
+              <div className="pf-brand__logo">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z" />
+                  <path d="M6 6h10" />
+                  <path d="M6 10h10" />
+                  <path d="m14 14 2 2 4-4" />
+                </svg>
+              </div>
+              <span className="pf-brand__name">Pathfolio<span className="pf-brand__sub">App</span></span>
+            </Link>
           </div>
           <div>
             <NotificationPanel/>

@@ -1,5 +1,5 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
 import { Button } from '../components/Button';
@@ -23,6 +23,17 @@ import './LandingPage.css';
 
 export function LandingPage() {
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Honour deep links such as /#how-it-works from the header, footer, or portal pages.
+  useEffect(() => {
+    if (!location.hash) return undefined;
+    const id = location.hash.slice(1);
+    const timer = setTimeout(() => {
+      document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 80);
+    return () => clearTimeout(timer);
+  }, [location.hash]);
 
   return (
     <div className="pf-landing">

@@ -1,18 +1,17 @@
 const studentStore = require('../models/studentStore');
+const { tokenize, createMatcher } = require('../utils/textMatch');
 
-const stopWords = new Set(['and', 'the', 'for', 'with', 'from', 'that', 'this', 'are', 'you', 'your', 'our', 'job', 'role', 'work', 'will', 'have', 'has', 'into', 'about', 'years', 'using']);
-const terms = value => [...new Set(String(value || '').toLowerCase().match(/[a-z][a-z0-9+#.-]{2,}/g)?.filter(term => !stopWords.has(term)) || [])].slice(0, 40);
-const textFrom = student => JSON.stringify({ personal: { fullName: student.personal.fullName }, academic: student.academic, interests: student.interests, achievements: student.achievements }).toLowerCase();
+const textFrom = student => JSON.stringify({ personal: { fullName: student.personal.fullName }, academic: student.academic, interests: student.interests, achievements: student.achievements });
 
 class RecruiterService {
   async search({ keywords = '', jobDescription = '', limit = 50 } = {}) {
-    const requestedTerms = terms(`${keywords} ${jobDescription}`);
+    const requestedTerms = tokenize(`${keywords} ${jobDescription}`, { minLength: 4, limit: 40 });
     const students = await studentStore.listStudents();
     return students
       .filter(student => !student.isAdmin && student.status !== 'suspended' && student.onboarding?.completed !== false)
       .map(student => {
-        const searchable = textFrom(student);
-        const matchedTerms = requestedTerms.filter(term => searchable.includes(term));
+        const matches = createMatcher(textFrom(student));
+        const matchedTerms = requestedTerms.filter(term => matches(term));
         const score = requestedTerms.length ? Math.round((matchedTerms.length / requestedTerms.length) * 100) : 0;
         return { score, matchedTerms, student };
       })

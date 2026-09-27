@@ -190,7 +190,7 @@ function JobProfile({ job, onBack }) {
                     <Button type="submit" loading={applying} icon={Send} variant="primary">
                       Submit application
                     </Button>
-                    <p style={{ fontSize: '0.75rem', color: '#718174', margin: 0 }}>
+                    <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: 0 }}>
                       Your current profile information will be securely attached to this application.
                     </p>
                   </>

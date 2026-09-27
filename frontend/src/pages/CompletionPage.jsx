@@ -141,6 +141,14 @@ export function CompletionPage() {
             
             <button
               type="button"
+              onClick={() => setShowNextModal(true)}
+              className="pf-completion-next-btn"
+            >
+              <Layers size={16} /> Preview what's next
+            </button>
+
+            <button
+              type="button"
               onClick={() => navigate('/')}
               className="pf-completion-return-btn"
             >
