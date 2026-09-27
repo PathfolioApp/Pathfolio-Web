@@ -2,7 +2,8 @@ const app = require('./app');
 const config = require('./config');
 
 const store = require('./models/studentStore');
-async function start() { await store.initialize(); const server = app.listen(config.port, () => {
+const adminContentStore = require('./models/adminContentStore');
+async function start() { await store.initialize(); await adminContentStore.initialize(); const server = app.listen(config.port, () => {
   console.log(`\n======================================================`);
   console.log(` [PathfolioApp Backend API]`);
   console.log(` Server URL:   http://localhost:${config.port}/api/health`);

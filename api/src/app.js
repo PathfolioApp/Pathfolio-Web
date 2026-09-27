@@ -40,6 +40,7 @@ app.use('/api/profile', require('./routes/profile.routes'));
 app.use('/api/settings', require('./routes/settings.routes'));
 app.use('/api/notifications', require('./routes/notification.routes'));
 app.use('/api/admin', require('./routes/admin.routes'));
+app.use('/api/opportunities', require('./routes/opportunity.routes'));
 
 // 404 Handler for undefined API routes
 app.use((req, res) => {

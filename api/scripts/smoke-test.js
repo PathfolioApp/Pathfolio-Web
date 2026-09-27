@@ -103,6 +103,15 @@ async function run() {
   expectStatus(result.response, 403, 'non-admin admin route');
   console.log('PASS non-admin admin route blocked');
 
+  result = await request('/admin/uploads/signature');
+  expectStatus(result.response, 403, 'non-admin upload signature');
+  console.log('PASS non-admin upload signature blocked');
+
+  result = await request('/opportunities');
+  expectStatus(result.response, 200, 'student opportunities');
+  assert.ok(Array.isArray(result.body.jobPosts));
+  console.log('PASS student opportunities');
+
   result = await request('/profile');
   expectStatus(result.response, 200, 'profile');
   assert.equal(result.body.student.personal.username, username);
@@ -233,6 +242,14 @@ async function run() {
   result = await request('/admin/me', {}, false);
   expectStatus(result.response, 401, 'unauthenticated admin route');
   console.log('PASS unauthenticated admin route blocked');
+
+  result = await request('/admin/uploads/signature', {}, false);
+  expectStatus(result.response, 401, 'unauthenticated upload signature');
+  console.log('PASS unauthenticated upload signature blocked');
+
+  result = await request('/opportunities', {}, false);
+  expectStatus(result.response, 401, 'unauthenticated opportunities');
+  console.log('PASS unauthenticated opportunities blocked');
 
   result = await request('/onboarding/complete', {
     method: 'POST',
