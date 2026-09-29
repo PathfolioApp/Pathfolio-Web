@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { BriefcaseBusiness, Building2, FileSearch, LayoutDashboard, UserPlus, Users, Search, Share2 } from 'lucide-react';
+import { BriefcaseBusiness, Building2, FileSearch, LayoutDashboard, UserPlus, Users, Search, Share2, History } from 'lucide-react';
 import { useAuth } from '../../app/providers/AuthProvider';
 import { OverviewCards } from '../../components/ui/StatCard';
 import { adminApi } from './adminApi';
@@ -11,16 +11,17 @@ import { UserWorkspace } from './components/UserWorkspace';
 import { JDWorkspace } from './components/JDWorkspace';
 import { StudentSearchWorkspace } from './components/StudentSearchWorkspace';
 import { SharesWorkspace } from './components/SharesWorkspace';
+import { LogsWorkspace } from './components/LogsWorkspace';
 import './AdminPage.css';
 
 const emptyCompany = { name: '', website: '', description: '', logoUrl: '', logoPublicId: '' };
-const emptyJob = { companyId: '', title: '', description: '', location: '', employmentType: 'Full-time', applicationUrl: '' };
-const TAB_IDS = ['overview', 'jobs', 'students', 'shares', 'companies', 'applications', 'users', 'jd'];
-const TAB_LABELS = { overview: 'Overview', jobs: 'Job posts', students: 'Student search', shares: 'Shares', companies: 'Companies', applications: 'Applications', users: 'Users', jd: 'JD analyser' };
-const TAB_ICONS = { overview: LayoutDashboard, jobs: BriefcaseBusiness, students: Search, shares: Share2, companies: Building2, applications: Users, users: UserPlus, jd: FileSearch };
+const emptyJob = { companyName: '', title: '', description: '', location: '', employmentType: 'Full-time', applicationUrl: '' };
+const TAB_IDS = ['overview', 'jobs', 'students', 'shares', 'companies', 'applications', 'users', 'logs', 'jd'];
+const TAB_LABELS = { overview: 'Overview', jobs: 'Job posts', students: 'Student search', shares: 'Shares', companies: 'Companies', applications: 'Applications', users: 'Users', logs: 'Logs', jd: 'JD analyser' };
+const TAB_ICONS = { overview: LayoutDashboard, jobs: BriefcaseBusiness, students: Search, shares: Share2, companies: Building2, applications: Users, users: UserPlus, logs: History, jd: FileSearch };
 
 /**
- * AdminPage — TnP admin portal container.
+ * AdminPage, TnP admin portal container.
  * Sections are reflected in the URL hash (/admin#jobs, #companies, ...).
  */
 export function AdminPage() {
@@ -105,7 +106,7 @@ export function AdminPage() {
   const editCompany = company => { window.location.hash = 'companies'; setEditingCompany(company.id); setCompanyForm({ name: company.name, website: company.website, description: company.description, logoUrl: company.logoUrl || '', logoPublicId: company.logoPublicId || '' }); setLogoFile(null); };
   const editJob = job => {
     window.location.hash = 'jobs'; setEditingJob(job.id);
-    setJobForm({ companyId: job.companyId, title: job.title, description: job.description, location: job.location, employmentType: job.employmentType, applicationUrl: job.applicationUrl });
+    setJobForm({ companyName: job.companyName || '', title: job.title, description: job.description, location: job.location, employmentType: job.employmentType, applicationUrl: job.applicationUrl });
     setSelectedFields((job.applicationForm?.fields || []).map(field => field.id));
     setNamedAttachments((job.attachments || []).map((item, i) => ({ id: `existing_${i}`, name: item.name, url: item.url, type: item.type, file: null })));
   };
@@ -232,6 +233,7 @@ export function AdminPage() {
       )}
       {tab === 'students' && <StudentSearchWorkspace jobs={jobs} />}
       {tab === 'shares' && <SharesWorkspace />}
+      {tab === 'logs' && <LogsWorkspace />}
       {tab === 'applications' && (
         <ApplicationWorkspace jobs={jobs} applicationJobFilter={applicationJobFilter} setApplicationJobFilter={setApplicationJobFilter} applications={visibleApplications} loading={loading} applicationFilter={applicationFilter} setApplicationFilter={setApplicationFilter} updateApplication={updateApplication} saving={saving} />
       )}

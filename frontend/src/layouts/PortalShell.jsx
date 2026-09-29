@@ -24,7 +24,7 @@ function Brand({ className }) {
 }
 
 /**
- * PortalShell — the shared workspace chrome (sidebar, top bar, notifications,
+ * PortalShell, the shared workspace chrome (sidebar, top bar, notifications,
  * footer) used by the Student, Recruiter and Admin layouts. Each portal layout
  * supplies its own navigation items and portal switcher; the shell keeps
  * behavior and visuals identical across portals.

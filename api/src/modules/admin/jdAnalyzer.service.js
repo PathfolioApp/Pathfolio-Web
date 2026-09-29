@@ -363,7 +363,7 @@ class JDAnalyzerService {
     };
   }
 
-  /** Analyse without student data — used by the recruiter portal preview. */
+  /** Analyse without student data, used by the recruiter portal preview. */
   analyzeOnly({ jobDescription = '', jobTitle = '' } = {}) {
     const analysis = analyzeDescription({ jobDescription, jobTitle });
     analysis.summary = buildSummary(analysis);

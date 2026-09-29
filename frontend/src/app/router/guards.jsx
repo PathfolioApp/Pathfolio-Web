@@ -13,7 +13,7 @@ export function LoadingScreen() {
 }
 
 /**
- * RequireAuth — authentication + onboarding gate.
+ * RequireAuth, authentication + onboarding gate.
  * Wraps any route that needs a signed-in, onboarded student account.
  */
 export function RequireAuth({ children }) {
@@ -25,7 +25,7 @@ export function RequireAuth({ children }) {
 }
 
 /**
- * RequireRole — portal authorization gate. Role checks live here (and in the
+ * RequireRole, portal authorization gate. Role checks live here (and in the
  * role helpers) instead of being duplicated inside individual pages.
  */
 export function RequireRole({ role, children }) {
@@ -41,7 +41,7 @@ export function RequireRole({ role, children }) {
 }
 
 /**
- * GuestRoute — keeps authenticated users out of auth forms, redirecting them
+ * GuestRoute, keeps authenticated users out of auth forms, redirecting them
  * to their workspace while still allowing intentional portal switching
  * (e.g. ?portal=admin on /signin).
  */
@@ -61,7 +61,7 @@ export function GuestRoute({ children }) {
   return children;
 }
 
-/** OnboardingRoute — blocks re-showing the registration form to existing users. */
+/** OnboardingRoute, blocks re-showing the registration form to existing users. */
 export function OnboardingRoute({ children }) {
   const { student, loading } = useAuth();
   if (loading) return <LoadingScreen />;
@@ -73,7 +73,7 @@ export function OnboardingRoute({ children }) {
   return children;
 }
 
-/** OnboardingCompleteRoute — guards the onboarding completion summary page. */
+/** OnboardingCompleteRoute, guards the onboarding completion summary page. */
 export function OnboardingCompleteRoute({ children }) {
   const { student, loading } = useAuth();
   if (loading) return <LoadingScreen />;

@@ -3,7 +3,7 @@ import { Header } from '../../components/layout/Header';
 import { Footer } from '../../components/layout/Footer';
 
 /**
- * PublicLayout — chrome for public marketing and policy pages.
+ * PublicLayout, chrome for public marketing and policy pages.
  */
 export function PublicLayout({ children }) {
   return (

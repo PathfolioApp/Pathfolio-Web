@@ -10,7 +10,7 @@ const proficiencyLabel = value => {
 
 /**
  * Recruiter-facing list of candidate shortlists shared by the placement team.
- * Only students explicitly shared with this recruiter appear here — there is
+ * Only students explicitly shared with this recruiter appear here, there is
  * no search or browsing of the wider student population.
  */
 export function SharedCandidates() {
@@ -85,13 +85,13 @@ export function SharedCandidates() {
         <Users size={22} />
       </div>
       <p className="pf-recruiter-overview-note">
-        These candidate lists were shared with your company by the Training &amp; Placement cell. You cannot search the wider student pool — the placement team curates who is shared.
+        Candidate lists shared with your company by the Training &amp; Placement cell. Feedback you record here goes straight back to the placement team.
       </p>
       {error && <div className="pf-recruiter-error" role="alert">{error}</div>}
       {shares.length === 0 && (
         <div className="pf-recruiter-empty">
           <h3>No shared candidates yet.</h3>
-          <p>The placement team will share relevant student profiles with your company here. You can also submit job posts for approval — approved roles help the team match candidates to your needs.</p>
+          <p>The placement team will share relevant student profiles with your company here. You can also submit job posts for approval, approved roles help the team match candidates to your needs.</p>
         </div>
       )}
 
@@ -152,7 +152,7 @@ export function SharedCandidates() {
                       <div className="pf-shared-student__feedback">
                         {existing && (
                           <span className="pf-shared-student__feedback-existing">
-                            <ThumbsUp size={13} /> Recorded: {existing.status || 'note'}{existing.feedback ? ` — “${existing.feedback}”` : ''}
+                            <ThumbsUp size={13} /> Recorded: {existing.status || 'note'}{existing.feedback ? `, “${existing.feedback}”` : ''}
                           </span>
                         )}
                         <input

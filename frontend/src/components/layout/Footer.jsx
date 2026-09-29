@@ -34,7 +34,7 @@ export function Footer({ compact = false } = {}) {
             <span className="pf-footer__name">Pathfolio<span>App</span></span>
           </Link>
           <p className="pf-footer__desc">
-            A living record of your academic profile, interests, achievements, and growth — from admission through graduation.
+            A living record of your academic profile, interests, achievements, and growth, from admission through graduation.
           </p>
           <p className="pf-footer__note">Student Lifecycle &amp; Career Portal</p>
         </div>

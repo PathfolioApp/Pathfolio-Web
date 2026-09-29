@@ -62,7 +62,7 @@ export function SettingsPage() {
         <Button variant="secondary" disabled={deleting} onClick={() => setConfirming(false)}>Cancel</Button>
         <Button variant="danger" loading={deleting} onClick={deleteAccount}>Delete permanently</Button>
       </>}>
-        <p>This will permanently erase your PathfolioApp record — profile, achievements, applications, and settings. There is no way to recover it.</p>
+        <p>This will permanently erase your PathfolioApp record, profile, achievements, applications, and settings. There is no way to recover it.</p>
         <p>Type <b>DELETE</b> to confirm.</p>
         <input className="pf-danger-input" value={confirmText} onChange={e => setConfirmText(e.target.value)} placeholder="DELETE" autoFocus />
         {deleteError && <p className="pf-error">{deleteError}</p>}

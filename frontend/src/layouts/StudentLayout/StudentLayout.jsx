@@ -5,7 +5,7 @@ import { PortalShell } from '../PortalShell';
 import { useAuth } from '../../app/providers/AuthProvider';
 
 /**
- * StudentLayout — navigation and chrome for the student portal.
+ * StudentLayout, navigation and chrome for the student portal.
  * Used as a layout route; matched pages render through <Outlet />.
  * Recruiters and admins can also reach the student workspace; they get the
  * portal switcher so they can move between workspaces.

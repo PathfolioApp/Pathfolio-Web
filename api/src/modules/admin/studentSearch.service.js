@@ -1,14 +1,8 @@
 const studentStore = require('../students/studentStore');
 
-const clean = value => String(value || '').trim();
-
-/**
- * Admin-only student discovery. This is the single sanctioned place in the
- * product where the student population can be searched or filtered —
- * recruiters have no equivalent endpoint (requirement 10/14).
- *
- * Filtering runs server-side against structured profile data; results are a
- * compact projection suitable for selection UIs rather than full dumps.
+const clean = value => String(value || '').trim();/**
+ * Admin-only student discovery over structured profile data. Results are a
+ * compact projection suited to selection UIs rather than full record dumps.
  */
 class StudentSearchService {
   parseList(value) {
@@ -37,11 +31,10 @@ class StudentSearchService {
     if (filters.batch && !String(student.academic?.batchYear || '').toLowerCase().includes(filters.batch.toLowerCase())) return false;
     if (filters.rollNumber && !(student.academic?.rollNumber || '').toLowerCase().includes(filters.rollNumber.toLowerCase())) return false;
 
-    if (filters.role) {
-      const role = student.isRecruiter ? 'recruiter' : 'student';
-      if (role !== filters.role) return false;
+    if (filters.status) {
+      const status = student.status || 'active';
+      if (status !== filters.status) return false;
     }
-    if (filters.status && (student.status || 'active') !== filters.status) return false;
     if (filters.blocked === 'true' && !student.blocked) return false;
     if (filters.blocked === 'false' && student.blocked) return false;
 
@@ -69,8 +62,8 @@ class StudentSearchService {
     if (filters.interests.length) {
       const interestText = [...(student.interests?.hobbies || []), ...(student.interests?.passions || [])]
         .map(item => this.textOfInterest(item)).join(' ');
-      const hasAll = filters.interests.every(term => interestText.includes(term.toLowerCase()));
-      if (!hasAll) return false;
+      const hasAny = filters.interests.some(term => interestText.includes(term.toLowerCase()));
+      if (!hasAny) return false;
     }
 
     return true;
@@ -82,7 +75,6 @@ class StudentSearchService {
       department: clean(query.department),
       batch: clean(query.batch),
       rollNumber: clean(query.rollNumber),
-      role: ['student', 'recruiter'].includes(clean(query.role)) ? clean(query.role) : 'student',
       status: clean(query.status),
       blocked: clean(query.blocked),
       minCgpa: query.minCgpa !== undefined && query.minCgpa !== '' && !Number.isNaN(Number(query.minCgpa)) ? Number(query.minCgpa) : null,

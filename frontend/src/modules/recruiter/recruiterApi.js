@@ -11,7 +11,7 @@ export const recruiterApi = {
   companies: () => request('/companies'),
   createJob: data => request('/jobs', { method: 'POST', body: JSON.stringify(data) }),
   updateJob: (id, data) => request(`/jobs/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
-  // Recruiters submit jobs for admin approval — publishing is admin-only.
+  // Recruiters submit jobs for admin approval, publishing is admin-only.
   submitJob: id => request(`/jobs/${id}/submit`, { method: 'POST' }),
   jobApplications: id => request(`/jobs/${id}/applications`),
   // Shared candidates: only students explicitly shared by the placement team.

@@ -121,7 +121,7 @@ export function UserWorkspace({ users, userImportRows, userImportErrors, userImp
             </div>
             <dl>
               <dt>Email</dt><dd>{viewingUser.email}</dd>
-              <dt>Phone</dt><dd>{viewingUser.phone || '—'}</dd>
+              <dt>Phone</dt><dd>{viewingUser.phone || '-'}</dd>
               <dt>Roll number</dt><dd>{viewingUser.rollNumber || 'Not specified'}</dd>
               <dt>Department</dt><dd>{viewingUser.department || 'Not specified'}</dd>
               <dt>Batch</dt><dd>{viewingUser.batchYear || 'Not specified'}</dd>

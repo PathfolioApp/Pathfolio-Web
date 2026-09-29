@@ -6,7 +6,7 @@ class AdminContentStore {
   constructor() { this.companies = new Map(); this.jobPosts = new Map(); this.applications = new Map(); this.pool = null; }
 
   async initialize() {
-    if (!config.databaseConfigured) return;
+    if (!config.databaseConfigured) { require('../../shared/logger').db.warn('Admin content store: database not configured, using volatile in-memory storage.'); return; }
     this.pool = mysql.createPool({ host: config.db.host, port: config.db.port, user: config.db.user, password: config.db.password, database: config.db.name, waitForConnections: true, connectionLimit: 10 });
     const connection = await this.pool.getConnection();
     try {

@@ -1,0 +1,51 @@
+.pf-logs-filters {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.pf-logs-filters form {
+  display: contents;
+}
+
+.pf-log-row {
+  align-items: flex-start;
+}
+
+.pf-log-icon {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--bg-subtle);
+  color: var(--color-primary);
+  flex-shrink: 0;
+}
+
+.pf-log-body {
+  min-width: 0;
+}
+
+.pf-log-title {
+  margin: 0 0 2px;
+  font-size: 0.92rem;
+  color: var(--text-primary);
+}
+
+.pf-log-title span {
+  color: var(--text-secondary);
+}
+
+.pf-log-detail {
+  margin: 0 0 2px;
+  font-size: 0.84rem;
+  color: var(--text-secondary);
+}
+
+.pf-log-meta {
+  margin: 0;
+  font-size: 0.76rem;
+  color: var(--text-muted);
+}

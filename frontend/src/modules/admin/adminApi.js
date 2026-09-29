@@ -33,6 +33,7 @@ export const adminApi = {
   recruiters: () => request('/recruiters'),
   shares: () => request('/shares'),
   createShare: data => request('/shares', { method: 'POST', body: JSON.stringify(data) }),
+  logs: params => request(`/logs?${new URLSearchParams(Object.entries(params).filter(([, value]) => String(value).trim() !== '')).toString()}`),
   uploadSignature: () => request('/uploads/signature', { method: 'POST' }),
   analyzeJobDescription: data => request('/jd/analyze', { method: 'POST', body: JSON.stringify(data) }),
   applications: jobPostId => request(`/applications${jobPostId ? `?jobPostId=${jobPostId}` : ''}`),

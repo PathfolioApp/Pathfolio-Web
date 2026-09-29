@@ -1,11 +1,11 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, BriefcaseBusiness, Building2, Users, UserRound, FileSearch, GraduationCap, ShieldCheck, Search, Share2 } from 'lucide-react';
+import { LayoutDashboard, BriefcaseBusiness, Building2, Users, UserRound, FileSearch, GraduationCap, ShieldCheck, Search, Share2, History } from 'lucide-react';
 import { PortalShell } from '../PortalShell';
 import { useAuth } from '../../app/providers/AuthProvider';
 
 /**
- * AdminLayout — navigation and chrome for the TnP admin portal.
+ * AdminLayout, navigation and chrome for the TnP admin portal.
  * Route access is enforced by RequireRole in the central route table.
  */
 export function AdminLayout({ children }) {
@@ -21,6 +21,7 @@ export function AdminLayout({ children }) {
     [Building2, 'Companies', '/admin', 'companies'],
     [Users, 'Applications', '/admin', 'applications'],
     [UserRound, 'Users', '/admin', 'users'],
+    [History, 'Logs', '/admin', 'logs'],
     [FileSearch, 'JD analyser', '/admin', 'jd']
   ];
 

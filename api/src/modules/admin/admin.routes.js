@@ -8,6 +8,7 @@ const users = require('./adminUser.service');
 const jdAnalyzer = require('./jdAnalyzer.service');
 const studentSearch = require('./studentSearch.service');
 const shares = require('../recruiters/recruiterShare.service');
+const auditLog = require('../../shared/auditLog.service');
 
 router.use(authenticate, requireAdmin);
 
@@ -21,7 +22,7 @@ router.get('/users', (req, res) => send(res, async () => ({ users: await users.l
 router.get('/overview', (req, res) => send(res, async () => ({ overview: await users.overview(), jobs: await content.jobs(), companies: await content.companies(), applications: await content.applications() })));
 router.post('/users', (req, res) => send(res, async () => ({ user: await users.create(req.body) })));
 router.post('/users/import', (req, res) => send(res, async () => ({ summary: await users.importRows(req.body.rows) })));
-router.patch('/users/:id/role', (req, res) => send(res, async () => ({ user: await users.setRole(req.params.id, req.body.role) })));
+router.patch('/users/:id/role', (req, res) => send(res, async () => ({ user: await users.setRole(req.params.id, req.body.role, req.student.id) })));
 router.patch('/users/:id/block', (req, res) => send(res, async () => ({ user: await users.setBlocked(req.params.id, Boolean(req.body.blocked), req.student.id) })));
 router.delete('/users/:id', (req, res) => send(res, async () => ({ deleted: await users.deleteAccount(req.params.id, req.student.id) })));
 
@@ -50,7 +51,7 @@ router.get('/job-posts/:id', (req, res) => send(res, async () => ({ jobPost: awa
 // Review a pending job: approve / reject with an optional note.
 router.post('/job-posts/:id/review', (req, res) => send(res, async () => ({ jobPost: await content.reviewJob(req.params.id, req.student.id, { decision: req.body.decision, note: req.body.note }) })));
 // Publish is admin-only; requires prior approval unless the admin created the job.
-router.post('/job-posts/:id/publish', (req, res) => send(res, async () => ({ jobPost: await content.publishJob(req.params.id) })));
+router.post('/job-posts/:id/publish', (req, res) => send(res, async () => ({ jobPost: await content.publishJob(req.params.id, req.student.id) })));
 router.post('/job-posts/:id/unpublish', (req, res) => send(res, async () => ({ jobPost: await content.unpublishJob(req.params.id) })));
 router.post('/job-posts/:id/reopen', (req, res) => send(res, async () => ({ jobPost: await content.reopenJob(req.params.id) })));
 router.post('/jd/analyze', (req, res) => send(res, async () => jdAnalyzer.analyze(req.body)));
@@ -58,7 +59,7 @@ router.get('/applications', (req, res) => send(res, async () => ({ applications:
 router.patch('/applications/:id', (req, res) => send(res, async () => ({ application: await content.updateApplication(req.params.id, req.body) })));
 
 // ---------------------------------------------------------------------------
-// Student search & discovery (admin-only by design — recruiters have no
+// Student search & discovery (admin-only by design, recruiters have no
 // equivalent endpoint anywhere in the API).
 // ---------------------------------------------------------------------------
 router.get('/students', (req, res) => send(res, async () => studentSearch.search(req.query)));
@@ -70,5 +71,8 @@ router.get('/students/:id', (req, res) => send(res, async () => ({ student: awai
 router.get('/shares', (req, res) => send(res, async () => ({ shares: await shares.listForAdmin() })));
 router.post('/shares', (req, res) => send(res, async () => ({ share: await shares.createShare({ ...req.body, createdBy: req.student.id }) })));
 router.get('/recruiters', (req, res) => send(res, async () => ({ recruiters: await users.list().then(list => list.filter(user => user.role === 'recruiter')) })));
+
+// Audit trail for administrative and workflow events.
+router.get('/logs', (req, res) => send(res, async () => ({ logs: await auditLog.list(req.query), actions: await auditLog.actions() })));
 
 module.exports = router;

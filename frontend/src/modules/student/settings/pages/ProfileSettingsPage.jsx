@@ -108,8 +108,8 @@ export function ProfileSettingsPage() {
               onChange={e => setVisibility(e.target.value)}
               className="pf-settings-select"
             >
-              <option value="private">🔒 Private — Only you and authorized college administrators</option>
-              <option value="shareable">🌐 Shareable — Accessible to recruiters based on section rules below</option>
+              <option value="private">🔒 Private, Only you and authorized college administrators</option>
+              <option value="shareable">🌐 Shareable, Accessible to recruiters based on section rules below</option>
             </select>
           </div>
         </div>

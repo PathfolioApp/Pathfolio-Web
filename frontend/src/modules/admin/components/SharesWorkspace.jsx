@@ -6,9 +6,8 @@ import { PanelHeading, Empty } from '../utils/adminHelpers';
 const STATUS_TONE = { shared: 'draft', viewed: 'published', feedback: 'published' };
 
 /**
- * Admin-facing history of recruiter shares ("student shortlists"): who they
- * were shared with, for which job, and whether the recruiter has viewed or
- * responded (requirement 18 audit trail).
+ * History of recruiter shares: who they were shared with, for which job,
+ * and whether the recruiter has viewed or responded.
  */
 export function SharesWorkspace() {
   const [shares, setShares] = useState([]);
@@ -45,7 +44,7 @@ export function SharesWorkspace() {
               <p>
                 {share.jobTitle ? <><Building2 size={13} /> {share.jobTitle} · </> : null}
                 Created {new Date(share.createdAt).toLocaleDateString()}
-                {share.note ? <> — “{share.note}”</> : null}
+                {share.note ? <>, “{share.note}”</> : null}
               </p>
             </div>
           </article>

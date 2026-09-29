@@ -1,6 +1,7 @@
 const studentStore = require('../students/studentStore');
 const onboarding = require('../onboarding/onboarding.service');
 const auth = require('../auth/auth.service');
+const auditLog = require('../../shared/auditLog.service');
 
 const clean = value => String(value || '').trim();
 const publicUser = student => ({ id: student.id, fullName: student.personal?.fullName || '', email: student.personal?.email || '', phone: student.personal?.phone || '', dateOfBirth: student.personal?.dateOfBirth || '', avatarUrl: student.personal?.avatarUrl || '', department: student.academic?.department || '', batchYear: student.academic?.batchYear || '', rollNumber: student.academic?.rollNumber || '', role: student.isAdmin ? 'admin' : student.isRecruiter ? 'recruiter' : 'student', status: student.status || 'active', blocked: Boolean(student.blocked), achievementsCount: (student.achievements || []).length, internshipsCount: (student.internships || []).length, interestsCount: ((student.interests?.hobbies || []).length + (student.interests?.passions || []).length), createdAt: student.createdAt, onboarding: student.onboarding || {} });
@@ -45,7 +46,7 @@ class AdminUserService {
     return publicUser(record);
   }
 
-  async setRole(id, role) {
+  async setRole(id, role, adminId) {
     const nextRole = clean(role).toLowerCase();
     if (!['student', 'recruiter'].includes(nextRole)) throw new Error('Role must be student or recruiter.');
     const student = await studentStore.getStudentById(id);
@@ -53,6 +54,7 @@ class AdminUserService {
     if (student.isAdmin) throw new Error('The bootstrap admin cannot be changed here.');
     student.isRecruiter = nextRole === 'recruiter';
     await studentStore.saveStudent(student);
+    await auditLog.record({ actorId: adminId, action: 'user.role', entityType: 'user', entityId: student.id, entityLabel: student.personal?.fullName || student.personal?.email, detail: `Role changed to ${nextRole}.` });
     return publicUser(student);
   }
 
@@ -64,6 +66,7 @@ class AdminUserService {
     student.blocked = Boolean(blocked);
     if (student.blocked) await studentStore.deleteSessionsForUser(student.id);
     await studentStore.saveStudent(student);
+    await auditLog.record({ actorId: adminId, action: blocked ? 'user.block' : 'user.unblock', entityType: 'user', entityId: student.id, entityLabel: student.personal?.fullName || student.personal?.email, detail: blocked ? 'Account access blocked.' : 'Account access restored.' });
     await studentStore.createNotification(student.id, {
       title: student.blocked ? 'Account access blocked' : 'Account access restored',
       message: student.blocked ? 'Your account has been blocked by the institution. Contact your PathfolioApp administrator for help.' : 'Your account has been unblocked. Welcome back!',
@@ -78,6 +81,7 @@ class AdminUserService {
     if (student.isAdmin) throw new Error('Administrators cannot be deleted here.');
     if (student.id === adminId) throw new Error('Use account settings to delete your own account.');
     await studentStore.deleteUser(student.id);
+    await auditLog.record({ actorId: adminId, action: 'user.delete', entityType: 'user', entityId: student.id, entityLabel: student.personal?.fullName || student.personal?.email, detail: 'Account permanently deleted.' });
     return { id: student.id, fullName: student.personal?.fullName || '' };
   }
 

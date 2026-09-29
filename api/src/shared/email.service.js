@@ -1,7 +1,7 @@
 /**
  * Transactional email delivery via SMTP (nodemailer).
  *
- * Credentials come exclusively from environment variables — they are never
+ * Credentials come exclusively from environment variables, they are never
  * hardcoded and never sent to the frontend. When SMTP is not configured the
  * service reports `configured: false` so callers can degrade gracefully
  * (strict verification refuses to issue tokens instead of silently skipping).

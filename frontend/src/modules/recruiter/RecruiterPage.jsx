@@ -12,7 +12,7 @@ const RECRUITER_TAB_LABELS = { overview: 'Overview', jobs: 'My job posts', candi
 const TAB_ICONS = { overview: LayoutDashboard, jobs: BriefcaseBusiness, candidates: Users };
 
 /**
- * RecruiterPage — recruiter portal container.
+ * RecruiterPage, recruiter portal container.
  * Route sections are reflected in the URL hash (/recruiter#jobs, #candidates).
  * There is no talent-search section: recruiters only see candidates the
  * placement team explicitly shares with them.
@@ -58,7 +58,8 @@ export function RecruiterPage() {
       const data = isEditing
         ? await recruiterApi.updateJob(editingJob.id, payload)
         : await recruiterApi.createJob(payload);
-      setJobMessage(payload.submit
+      const status = data.jobPost.status;
+      setJobMessage(status === 'pending_approval'
         ? `${data.jobPost.title} submitted for placement team approval.`
         : `${data.jobPost.title} saved as draft.`);
       setComposerOpen(false); setEditingJob(null); await loadJobs();
@@ -81,7 +82,7 @@ export function RecruiterPage() {
     <main className="pf-recruiter-page">
       <header className="pf-recruiter-header pf-recruiter-header--compact">
         <div>
-          <p className="pf-recruiter-eyebrow">Pathfolio talent desk</p>
+          <p className="pf-recruiter-eyebrow">Recruiter portal</p>
           <h1>{headerTitle}</h1>
         </div>
       </header>

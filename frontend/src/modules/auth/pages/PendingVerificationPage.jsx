@@ -83,7 +83,7 @@ export function PendingVerificationPage() {
             </>
           ) : (
             <p className="pf-completion-sub">
-              We sent a verification link{email ? <> to <b>{email}</b></> : ''}. Open it to finish creating your account — the link is time-limited and can be used once.
+              We sent a verification link{email ? <> to <b>{email}</b></> : ''}. Open it to finish creating your account, the link is time-limited and can be used once.
             </p>
           )}
 

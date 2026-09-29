@@ -9,11 +9,10 @@ export function JobPostList({ jobs, jobsLoading, companies, onOpenComposer, onEd
     <section className="pf-recruiter-results">
       <div className="pf-recruiter-results-heading">
         <div><p className="pf-recruiter-eyebrow">Opportunities</p><h2>My job posts</h2></div>
-        <Button icon={Plus} onClick={() => onOpenComposer()} disabled={companies.length === 0}>New job post</Button>
+        <Button icon={Plus} onClick={() => onOpenComposer()}>New job post</Button>
       </div>
-      {companies.length === 0 && <div className="pf-recruiter-empty"><h3>No companies yet.</h3><p>Ask the placement team to add your company before posting a job.</p></div>}
       {jobsLoading && <p className="pf-recruiter-loading">Loading your job posts…</p>}
-      {!jobsLoading && jobs.length === 0 && <div className="pf-recruiter-empty"><h3>No job posts yet.</h3><p>Create your first opportunity — it goes live for students once the placement team reviews and publishes it.</p></div>}
+      {!jobsLoading && jobs.length === 0 && <div className="pf-recruiter-empty"><h3>No job posts yet.</h3><p>Create your first opportunity, it goes live for students once the placement team reviews and publishes it.</p></div>}
       <div className="pf-recruiter-jobs">
         {jobs.map(job => <JobPostCard key={job.id} job={job} onEdit={onEdit} onSubmit={onSubmit} onViewApplications={onViewApplications} />)}
       </div>

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { HOBBY_PROFICIENCY_LEVELS, PASSION_FAMILIARITY_LEVELS } from '../types/config';
 import './InterestDetailList.css';
@@ -8,13 +8,13 @@ const VARIANTS = {
     levels: HOBBY_PROFICIENCY_LEVELS,
     skillQuestion: 'How good are you?',
     reasonQuestion: 'Why did you choose it?',
-    reasonPlaceholder: 'Optional — e.g. I enjoy documenting places and people.'
+    reasonPlaceholder: 'Optional, e.g. I enjoy documenting places and people.'
   },
   passion: {
     levels: PASSION_FAMILIARITY_LEVELS,
     skillQuestion: 'How familiar are you with this field?',
     reasonQuestion: 'Why does this interest you?',
-    reasonPlaceholder: 'Optional — e.g. I want to build systems that learn.'
+    reasonPlaceholder: 'Optional, e.g. I want to build systems that learn.'
   }
 };
 
@@ -22,11 +22,11 @@ const VARIANTS = {
  * Per-selection detail editor for onboarding interests/curiosities.
  * Each selected item can expand to collect a proficiency level (required,
  * defaulted) and an optional reason. Selection chips themselves remain in the
- * TagSelector — this component only manages the extra detail.
+ * TagSelector; this component manages the extra detail only.
  */
 export function InterestDetailList({ items = [], onChange, variant = 'hobby', error }) {
   const config = VARIANTS[variant] || VARIANTS.hobby;
-  const [expanded, setExpanded] = React.useState(() => new Set());
+  const [expanded, setExpanded] = useState(() => new Set());
 
   const toggleExpand = name => {
     setExpanded(prev => {
@@ -48,11 +48,11 @@ export function InterestDetailList({ items = [], onChange, variant = 'hobby', er
         A little more about your selections {missingProficiency && <em>(required)</em>}
       </span>
       <div className="pf-interest-details__list">
-        {items.map(item => {
+        {items.map((item, index) => {
           const isOpen = expanded.has(item.name);
-          const level = config.levels.find(level => level.value === item.proficiency) || config.levels[0];
+          const level = config.levels.find(option => option.value === item.proficiency) || config.levels[0];
           return (
-            <div key={item.name} className={`pf-interest-detail ${isOpen ? 'is-open' : ''} ${!item.proficiency ? 'is-incomplete' : ''}`}>
+            <div key={index} className={`pf-interest-detail ${isOpen ? 'is-open' : ''} ${!item.proficiency ? 'is-incomplete' : ''}`}>
               <button
                 type="button"
                 className="pf-interest-detail__header"
@@ -68,7 +68,7 @@ export function InterestDetailList({ items = [], onChange, variant = 'hobby', er
               {isOpen && (
                 <div className="pf-interest-detail__body">
                   <span className="pf-interest-detail__question">{config.skillQuestion}</span>
-                  <div className="pf-interest-detail__levels" role="radiogroup" aria-label={`${config.skillQuestion} — ${item.name}`}>
+                  <div className="pf-interest-detail__levels" role="radiogroup" aria-label={`${config.skillQuestion}: ${item.name}`}>
                     {config.levels.map(option => (
                       <button
                         key={option.value}
@@ -83,11 +83,11 @@ export function InterestDetailList({ items = [], onChange, variant = 'hobby', er
                     ))}
                   </div>
 
-                  <label className="pf-interest-detail__reason-label" htmlFor={`reason-${variant}-${item.name}`}>
+                  <label className="pf-interest-detail__reason-label" htmlFor={`reason-${variant}-${index}`}>
                     {config.reasonQuestion} <small>(optional)</small>
                   </label>
                   <input
-                    id={`reason-${variant}-${item.name}`}
+                    id={`reason-${variant}-${index}`}
                     type="text"
                     className="pf-interest-detail__reason-input"
                     value={item.reason || ''}
@@ -101,7 +101,7 @@ export function InterestDetailList({ items = [], onChange, variant = 'hobby', er
               {!isOpen && item.proficiency && (
                 <div className="pf-interest-detail__summary">
                   <span className="pf-interest-detail__level-pill">{level.label}</span>
-                  {item.reason && <span className="pf-interest-detail__reason-preview">“{item.reason}”</span>}
+                  {item.reason && <span className="pf-interest-detail__reason-preview">"{item.reason}"</span>}
                 </div>
               )}
             </div>

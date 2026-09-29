@@ -35,10 +35,10 @@ export function formatDateMonthYear(dateStr) {
 /**
  * Formats the full internship timeline string cleanly without redundancies.
  * Examples:
- * - Same month: "Sep 2026 (1 mo)" (Fixes "Sep 2026 — Sep 2026 (1 mo)")
- * - Same year:  "Jun — Aug 2026 (3 mos)"
- * - Cross year: "Nov 2025 — Feb 2026 (4 mos)"
- * - Active:     "Sep 2026 — Present (1 mo)"
+ * - Same month: "Sep 2026 (1 mo)" (Fixes "Sep 2026, Sep 2026 (1 mo)")
+ * - Same year:  "Jun, Aug 2026 (3 mos)"
+ * - Cross year: "Nov 2025, Feb 2026 (4 mos)"
+ * - Active:     "Sep 2026, Present (1 mo)"
  */
 export function formatInternshipTimeline(startDateStr, endDateStr, currentlyWorking) {
   if (!startDateStr) return '';
@@ -51,7 +51,7 @@ export function formatInternshipTimeline(startDateStr, endDateStr, currentlyWork
   const durationSuffix = duration ? ` (${duration})` : '';
 
   if (currentlyWorking) {
-    return `${startMonth} ${startYear} — Present${durationSuffix}`;
+    return `${startMonth} ${startYear}, Present${durationSuffix}`;
   }
 
   if (!endDateStr) {
@@ -60,7 +60,7 @@ export function formatInternshipTimeline(startDateStr, endDateStr, currentlyWork
 
   const end = new Date(endDateStr);
   if (isNaN(end.getTime())) {
-    return `${startMonth} ${startYear} — ${endDateStr}${durationSuffix}`;
+    return `${startMonth} ${startYear}, ${endDateStr}${durationSuffix}`;
   }
 
   const endMonth = end.toLocaleDateString('en-US', { month: 'short' });
@@ -73,11 +73,11 @@ export function formatInternshipTimeline(startDateStr, endDateStr, currentlyWork
 
   // If in the same year:
   if (startYear === endYear) {
-    return `${startMonth} — ${endMonth} ${endYear}${durationSuffix}`;
+    return `${startMonth}, ${endMonth} ${endYear}${durationSuffix}`;
   }
 
   // Cross-year:
-  return `${startMonth} ${startYear} — ${endMonth} ${endYear}${durationSuffix}`;
+  return `${startMonth} ${startYear}, ${endMonth} ${endYear}${durationSuffix}`;
 }
 
 /**

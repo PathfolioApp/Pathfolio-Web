@@ -83,7 +83,7 @@ export function LandingPage() {
               </div>
 
               <p className="pf-hero__audience">
-                Built for <b>talent havers</b> and <b>talent hunters</b> — students grow a verified
+                Built for <b>talent havers</b> and <b>talent hunters</b>, students grow a verified
                 record, while the placement team curates matches and connects recruiters with the people behind the potential.
               </p>
             </div>
@@ -274,7 +274,7 @@ export function LandingPage() {
               <span className="editorial-eyebrow">For talent hunters</span>
               <h2 className="pf-section-title">Recruiting? Meet your shortest path to the right people.</h2>
               <p className="pf-section-subtitle">
-                Submit your roles for placement-team review and receive curated candidate referrals — the living records students build, matched and shared by the TnP cell.
+                Submit your roles for placement-team review and receive curated candidate referrals, the living records students build, matched and shared by the TnP cell.
               </p>
             </div>
 
@@ -287,12 +287,12 @@ export function LandingPage() {
               <div className="pf-recruiter-feature animate-fade-in delay-200">
                 <div className="pf-recruiter-feature__icon"><Users size={20} /></div>
                 <h3>Receive curated candidates</h3>
-                <p>The placement team shares matched student profiles with your company — no database digging, just relevant referrals.</p>
+                <p>The placement team shares matched student profiles with your company, no database digging, just relevant referrals.</p>
               </div>
               <div className="pf-recruiter-feature animate-fade-in delay-300">
                 <div className="pf-recruiter-feature__icon"><FileSearch size={20} /></div>
                 <h3>Review living records</h3>
-                <p>Shared candidates arrive with interests, achievements, experience, and resumes — evidence, not static resumes.</p>
+                <p>Shared candidates arrive with interests, achievements, experience, and resumes, evidence, not static resumes.</p>
               </div>
               <div className="pf-recruiter-feature animate-fade-in delay-400">
                 <div className="pf-recruiter-feature__icon"><Building2 size={20} /></div>

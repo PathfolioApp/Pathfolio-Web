@@ -4,7 +4,7 @@ import { Modal } from '../../../components/ui/Modal';
 import { Button } from '../../../components/ui/Button';
 
 export const EMPTY_JOB_FORM = {
-  companyId: '', title: '', description: '', location: '', employmentType: 'Full-time', workMode: 'On-site',
+  companyName: '', title: '', description: '', location: '', employmentType: 'Full-time', workMode: 'On-site',
   applicationUrl: '', salaryMin: '', salaryMax: '', requiredSkills: '',
   minCgpa: '', maxActiveBacklogs: '', allowedDepartments: '', allowedBatches: '', applicationDeadline: '', submit: true
 };
@@ -18,7 +18,7 @@ export function JobPostComposer({ open, job, companies, saving, onClose, onSubmi
     if (!open) return;
     if (job) {
       setJobForm({
-        companyId: job.companyId, title: job.title, description: job.description, location: job.location,
+        companyName: job.companyName || '', title: job.title, description: job.description, location: job.location,
         employmentType: job.employmentType || 'Full-time', workMode: job.workMode || 'On-site',
         applicationUrl: job.applicationUrl, salaryMin: job.salaryMin ?? '', salaryMax: job.salaryMax ?? '',
         requiredSkills: (job.requiredSkills || []).join(', '),
@@ -28,7 +28,7 @@ export function JobPostComposer({ open, job, companies, saving, onClose, onSubmi
         applicationDeadline: job.applicationDeadline ? job.applicationDeadline.slice(0, 10) : '', submit: false
       });
     } else {
-      setJobForm({ ...EMPTY_JOB_FORM, companyId: companies[0]?.id || '' });
+      setJobForm({ ...EMPTY_JOB_FORM });
     }
   }, [open, job, companies]);
 
@@ -53,10 +53,11 @@ export function JobPostComposer({ open, job, companies, saving, onClose, onSubmi
   return (
     <Modal isOpen={open} onClose={() => !saving && onClose()} title={isEditing ? `Edit ${job.title}` : 'Create a job post'}>
       <form className="pf-recruiter-job-form" onSubmit={handleSubmit}>
-        <label>Company *<select required value={jobForm.companyId} onChange={update('companyId')}>
-          <option value="">Choose a company</option>
-          {companies.map(company => <option key={company.id} value={company.id}>{company.name}</option>)}
-        </select></label>
+        <label>Company *<input required list="recruiter-company-options" value={jobForm.companyName} onChange={update('companyName')} placeholder="e.g. Acme Systems" maxLength={180} />
+          <datalist id="recruiter-company-options">
+            {companies.map(company => <option key={company.id} value={company.name} />)}
+          </datalist>
+        </label>
         <label>Job title *<input required value={jobForm.title} onChange={update('title')} placeholder="e.g. Frontend Engineer" /></label>
         <label>Job description *<textarea required rows="5" value={jobForm.description} onChange={update('description')} placeholder="Responsibilities, culture, interview process…" /></label>
         <div className="pf-recruiter-job-grid">
@@ -82,7 +83,7 @@ export function JobPostComposer({ open, job, companies, saving, onClose, onSubmi
           {isEditing ? 'Submit for admin approval after saving' : 'Submit for admin approval immediately'}
         </label>
         <p className="pf-recruiter-job-hint" style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '-6px' }}>
-          Jobs go live only after the placement team reviews and publishes them — students never see drafts.
+          Jobs go live once the placement team reviews and publishes them.
         </p>
         <div className="pf-recruiter-job-form-actions">
           <Button type="button" variant="secondary" onClick={onClose} disabled={saving}>Cancel</Button>

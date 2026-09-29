@@ -18,7 +18,7 @@ export const ONBOARDING_STAGES = [
     stageNumber: 2,
     title: 'What is your institutional email?',
     eyebrow: 'Step 2 of 12 • Identity',
-    description: 'Use your college email — it follows the format rollnumber@kiit.ac.in, and your roll number is taken straight from it.',
+    description: 'Use your college email, it follows the format rollnumber@kiit.ac.in, and your roll number is taken straight from it.',
     isSkippable: false
   },
   {
@@ -58,7 +58,7 @@ export const ONBOARDING_STAGES = [
     stageNumber: 7,
     title: 'What do you enjoy outside the classroom?',
     eyebrow: 'Step 7 of 12 • Personal Interests',
-    description: 'Select a few things you love doing in your free time — then tell us how good you are at each.',
+    description: 'Select a few things you love doing in your free time, then tell us how good you are at each.',
     isSkippable: false
   },
   {

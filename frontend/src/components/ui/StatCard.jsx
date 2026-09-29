@@ -8,7 +8,7 @@ export function StatCard({ label, value, hint, icon: Icon }) {
   return (
     <article className="pf-stat-card">
       {Icon && <span className="pf-stat-card__icon"><Icon size={18} /></span>}
-      <span className="pf-stat-card__value">{value ?? '—'}</span>
+      <span className="pf-stat-card__value">{value ?? '-'}</span>
       <span className="pf-stat-card__label">{label}</span>
       {hint && <span className="pf-stat-card__hint">{hint}</span>}
     </article>

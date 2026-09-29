@@ -22,13 +22,10 @@ export function JobWorkspace({ companies, jobs, jobForm, setJobForm, editingJob,
         <PanelHeading eyebrow="Opportunity composer" title={editingJob ? 'Edit draft' : 'Create a post'} action={editingJob && <Button variant="ghost" size="sm" onClick={resetJob}>Cancel</Button>} />
         <form className="pf-admin-form" onSubmit={saveJob}>
           <Input label="Company">
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '.4rem' }}>
-              <input type="search" placeholder="Filter companies..." value={jobForm._companySearch || ''} onChange={update(setJobForm, '_companySearch')} />
-              <select required value={jobForm.companyId} onChange={update(setJobForm, 'companyId')}>
-                <option value="">Choose a company</option>
-                {companies.filter(c => c.name.toLowerCase().includes((jobForm._companySearch || '').toLowerCase())).map(company => <option value={company.id} key={company.id}>{company.name}</option>)}
-              </select>
-            </div>
+            <input required list="admin-company-options" value={jobForm.companyName || ''} onChange={update(setJobForm, 'companyName')} placeholder="e.g. Acme Systems" maxLength={180} />
+            <datalist id="admin-company-options">
+              {companies.map(company => <option key={company.id} value={company.name} />)}
+            </datalist>
           </Input>
           <Input label="Title"><input required value={jobForm.title} onChange={update(setJobForm, 'title')} placeholder="e.g. Software Engineer" /></Input>
           <Input label="Location"><input value={jobForm.location} onChange={update(setJobForm, 'location')} placeholder="Bengaluru / Remote" /></Input>
@@ -63,7 +60,7 @@ export function JobWorkspace({ companies, jobs, jobForm, setJobForm, editingJob,
               <h3>{job.title}</h3>
               <p>{job.companyName} · {job.location || 'Location flexible'} <span className="pf-admin-date"><Clock size={12} /> {formatISTDate(job.updatedAt)} IST</span></p>
               {job.status === 'pending_approval' && (
-                <p className="pf-admin-review-note">Submitted by the recruiter — review before publishing to students.</p>
+                <p className="pf-admin-review-note">Submitted by the recruiter, review before publishing to students.</p>
               )}
               {job.reviewNote && (
                 <p className="pf-admin-review-note">Last note: “{job.reviewNote}”</p>
@@ -85,8 +82,8 @@ export function JobWorkspace({ companies, jobs, jobForm, setJobForm, editingJob,
               {job.status === 'closed' && (
                 <Button variant="ghost" size="sm" loading={saving} icon={RotateCcw} onClick={() => reopenJob(job)}>Reopen</Button>
               )}
-              {['draft', 'rejected'].includes(job.status) && (
-                <Button variant="ghost" size="sm" onClick={() => editJob(job)}>Edit</Button>
+              {job.status !== 'archived' && (
+                <Button variant="ghost" size="sm" onClick={() => editJob(job)} disabled={job.status === 'published'}>Edit</Button>
               )}
             </div>
           </article>

@@ -58,7 +58,7 @@ export function PlacementPage() {
           {loading ? (
             <p className="pf-placement-loading">Loading opportunities…</p>
           ) : jobs.length === 0 ? (
-            <div className="pf-placement-empty"><BriefcaseBusiness size={22} /><h3>No active opportunities right now.</h3><p>Check back soon — new roles from hiring partners appear here the moment they are published.</p></div>
+            <div className="pf-placement-empty"><BriefcaseBusiness size={22} /><h3>No active opportunities right now.</h3><p>Check back soon, new roles from hiring partners appear here the moment they are published.</p></div>
           ) : (
             jobs.map(job => (
               <button key={job.id} className="pf-job-card" onClick={() => setSelectedJob(job)}>

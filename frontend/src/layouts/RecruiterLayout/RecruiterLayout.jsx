@@ -5,9 +5,9 @@ import { PortalShell } from '../PortalShell';
 import { useAuth } from '../../app/providers/AuthProvider';
 
 /**
- * RecruiterLayout — navigation and chrome for the recruiter portal.
+ * RecruiterLayout, navigation and chrome for the recruiter portal.
  * Route access is enforced by RequireRole in the central route table.
- * Note: recruiters have no talent-search navigation — student discovery is
+ * Note: recruiters have no talent-search navigation, student discovery is
  * mediated by the placement team through shared candidate lists.
  */
 export function RecruiterLayout({ children }) {

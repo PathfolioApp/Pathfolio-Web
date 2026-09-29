@@ -4,7 +4,7 @@ import { Button } from '../../../components/ui/Button';
 import { adminApi } from '../adminApi';
 import { Input, PanelHeading, Empty, downloadCsvFile } from '../utils/adminHelpers';
 
-const SAMPLE_JD = `Software Engineer (Frontend) — Full-time, Bengaluru\n\nWe are looking for a frontend engineer to build polished, accessible web experiences for our placement platform.\n\nWhat you will do:\n- Build responsive interfaces using React, JavaScript, and modern CSS.\n- Collaborate with designers to translate Figma flows into production UI.\n- Integrate REST APIs and manage component state with Redux.\n- Write unit tests and participate in code reviews.\n\nWhat we look for:\n- Strong knowledge of HTML, CSS, and TypeScript.\n- Experience with Git and CI/CD workflows.\n- Minimum CGPA of 7.0 with no active backlogs.\n- Bachelor of Technology or equivalent engineering degree.`;
+const SAMPLE_JD = `Software Engineer (Frontend), Full-time, Bengaluru\n\nWe are looking for a frontend engineer to build polished, accessible web experiences for our placement platform.\n\nWhat you will do:\n- Build responsive interfaces using React, JavaScript, and modern CSS.\n- Collaborate with designers to translate Figma flows into production UI.\n- Integrate REST APIs and manage component state with Redux.\n- Write unit tests and participate in code reviews.\n\nWhat we look for:\n- Strong knowledge of HTML, CSS, and TypeScript.\n- Experience with Git and CI/CD workflows.\n- Minimum CGPA of 7.0 with no active backlogs.\n- Bachelor of Technology or equivalent engineering degree.`;
 
 export function JDWorkspace() {
   const [jobTitle, setJobTitle] = useState('');
@@ -59,7 +59,7 @@ export function JDWorkspace() {
         <form className="pf-admin-form pf-admin-jd-form" onSubmit={analyze}>
           <Input label="Role title (optional)"><input value={jobTitle} onChange={event => setJobTitle(event.target.value)} placeholder="e.g. Frontend Engineer" /></Input>
           <Input label="Job description" full>
-            <textarea required rows="12" value={jobDescription} onChange={event => setJobDescription(event.target.value)} placeholder="Paste the full job description here — responsibilities, skills, and qualifications..." />
+            <textarea required rows="12" value={jobDescription} onChange={event => setJobDescription(event.target.value)} placeholder="Paste the full job description here, responsibilities, skills, and qualifications..." />
           </Input>
           <label className="pf-admin-jd-upload"><Upload size={14} />Upload .txt or .md<input type="file" accept=".txt,.md,text/plain,text/markdown" onChange={loadFile} /></label>
           <div className="pf-admin-jd-actions">

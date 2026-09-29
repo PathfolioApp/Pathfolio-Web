@@ -2,6 +2,7 @@ const crypto = require('crypto');
 const mysql = require('mysql2/promise');
 const config = require('../../config');
 const studentStore = require('../students/studentStore');
+const auditLog = require('../../shared/auditLog.service');
 const { checkEligibility } = require('../admin/adminContent.service');
 
 const clean = value => String(value || '').trim();
@@ -13,19 +14,18 @@ const SHARE_STATUSES = ['shared', 'viewed', 'feedback'];
  * This is the controlled bridge between the admin's student search and the
  * recruiter portal: an admin selects students and shares them with a specific
  * recruiter (optionally tied to a job posting). Recruiters can only ever see
- * students explicitly listed in a share created for them — never the broader
+ * students explicitly listed in a share created for them, never the broader
  * student population.
  *
- * Recruiter-facing student fields are deliberately whitelisted (requirement 16):
- * name, roll number, department, batch, structured interests, achievements,
- * internships and the default resume link. Internal flags, family context,
- * authentication data and internal admin notes are never included.
+ * Recruiter-facing student fields are whitelisted: name, roll number,
+ * department, batch, structured interests, achievements, internships and the
+ * default resume link. Family context and authentication data stay private.
  */
 class RecruiterShareService {
   constructor() { this.shares = new Map(); this.pool = null; }
 
   async initialize() {
-    if (!config.databaseConfigured) return;
+    if (!config.databaseConfigured) { require('../../shared/logger').db.warn('Recruiter shares: database not configured, using volatile in-memory storage.'); return; }
     this.pool = mysql.createPool({ host: config.db.host, port: config.db.port, user: config.db.user, password: config.db.password, database: config.db.name, waitForConnections: true, connectionLimit: 5 });
     const connection = await this.pool.getConnection();
     try {
@@ -123,6 +123,7 @@ class RecruiterShareService {
       if (!student) throw new Error(`Student ${id} was not found.`);
     }
     const share = await this.saveShare({ recruiterId, jobPostId: jobPostId || null, studentIds: ids, note: clean(note).slice(0, 500), status: 'shared', createdBy });
+    await auditLog.record({ actorId: createdBy, action: 'share.create', entityType: 'recruiter_share', entityId: share.id, entityLabel: `${ids.length} student(s)`, detail: `Shared with a recruiter${jobPostId ? ' for a specific job' : ''}.` });
     await studentStore.createNotification(recruiterId, { title: 'New candidates shared with you', message: `The placement team shared ${ids.length} candidate${ids.length === 1 ? '' : 's'} with your company.`, type: 'share' });
     return share;
   }
@@ -201,6 +202,7 @@ class RecruiterShareService {
     const entry = { studentId, status, feedback, at: new Date().toISOString() };
     const existing = (share.recruiterFeedback || []).filter(item => item.studentId !== studentId);
     const updated = await this.saveShare({ ...share, recruiterFeedback: [...existing, entry], status: 'feedback' });
+    await auditLog.record({ actorId: recruiterId, action: 'share.feedback', entityType: 'recruiter_share', entityId: updated.id, entityLabel: 'Candidate feedback', detail: status ? `Status set to ${status}.` : 'Feedback recorded.' });
     await studentStore.createNotification(share.createdBy, { title: 'Recruiter feedback recorded', message: `Feedback was recorded on a shared candidate list.`, type: 'share' });
     return { id: updated.id, status: updated.status, feedback: updated.recruiterFeedback };
   }

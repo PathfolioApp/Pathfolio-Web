@@ -27,7 +27,8 @@ export function StageRenderer() {
     updateInterests,
     setAchievements,
     updateFamilyContext,
-    rollNumber
+    rollNumber,
+    jumpToStage
   } = useOnboarding();
 
   const [showPassword, setShowPassword] = useState(false);
@@ -95,7 +96,7 @@ export function StageRenderer() {
             />
             {errors.email && <p className="pf-stage-error">{errors.email}</p>}
             <p className="pf-stage-hint">
-              Use your institutional email in the format <b>rollnumber@kiit.ac.in</b> — your roll number is taken directly from it, so you don't need to enter it separately.
+              Use your institutional email in the format <b>rollnumber@kiit.ac.in</b>, your roll number is taken directly from it, so you don't need to enter it separately.
             </p>
           </div>
         </div>
@@ -364,7 +365,7 @@ export function StageRenderer() {
               className="pf-stage-hero-input"
               maxLength={20}
             />
-            <p className="pf-stage-hint">Optional — the placement team can also reach you through notifications.</p>
+            <p className="pf-stage-hint">Optional, the placement team can also reach you through notifications.</p>
           </div>
         </div>
       );

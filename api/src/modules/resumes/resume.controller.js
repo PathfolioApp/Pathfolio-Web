@@ -183,7 +183,7 @@ const resumeController = {
         try {
           await r2Service.deleteFile(resume.filepath);
         } catch (err) {
-          console.warn('Failed to delete R2 resume object:', resume.filepath, err?.message || err);
+          require('../../shared/logger').storage.warn(`Failed to delete R2 resume object ${resume.filepath}: ${err?.message || err}`);
         }
       }
 

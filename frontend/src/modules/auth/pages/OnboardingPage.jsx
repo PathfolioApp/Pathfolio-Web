@@ -58,7 +58,7 @@ export function OnboardingPage() {
                   <GraduationCap size={26} />
                 </div>
                 <h2>Join Pathfolio as a Student</h2>
-                <p>Build your living record — interests, milestones, academics — through a guided journey.</p>
+                <p>Build your living record, interests, milestones, academics, through a guided journey.</p>
                 <span className="pf-onboarding-choice-card__cta">Begin onboarding <ArrowRight size={15} /></span>
               </button>
 

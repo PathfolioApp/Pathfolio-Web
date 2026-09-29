@@ -46,9 +46,9 @@ export function JobPostCard({ job, onEdit, onSubmit, onViewApplications }) {
       )}
       <div className="pf-recruiter-job-actions">
         <span className="pf-recruiter-job-meta">
-          {job.status === 'published' ? 'Live for students' : job.status === 'pending_approval' ? 'Awaiting placement team review' : job.status === 'approved' ? 'Approved — the placement team will publish it' : 'Manage this opportunity'}
+          {job.status === 'published' ? 'Live for students' : job.status === 'pending_approval' ? 'Awaiting placement team review' : job.status === 'approved' ? 'Approved, the placement team will publish it' : 'Manage this opportunity'}
         </span>
-        {['draft', 'rejected'].includes(job.status) && <Button variant="ghost" size="sm" icon={Pencil} onClick={() => onEdit(job)}>Edit</Button>}
+        {['draft', 'rejected', 'pending_approval'].includes(job.status) && <Button variant="ghost" size="sm" icon={Pencil} onClick={() => onEdit(job)}>Edit</Button>}
         {['draft', 'rejected'].includes(job.status) && <Button size="sm" icon={Send} onClick={() => onSubmit(job)}>Submit for approval</Button>}
         {['pending_approval', 'approved', 'published', 'closed'].includes(job.status) && onViewApplications && (
           <Button variant="ghost" size="sm" icon={Eye} onClick={() => onViewApplications(job)}>Applications</Button>

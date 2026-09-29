@@ -9,12 +9,7 @@ router.use(authenticate, requireRecruiter);
 const send = async (res, action) => { try { res.json({ success: true, ...(await action()) }); } catch (error) { res.status(error.statusCode || 400).json({ success: false, message: error.message }); } };
 const notFound = label => { const error = new Error(`${label} not found.`); error.statusCode = 404; return error; };
 
-/**
- * Recruiters may only manage their own job posts.
- * NOTE: there is deliberately no /students route here. Recruiters cannot
- * search or browse the student population — the admin mediates discovery
- * through explicit recruiter shares.
- */
+/** Recruiters may only manage their own job posts. */
 async function ownJob(req) {
   const job = await content.getJobPost(req.params.id);
   if (!job) throw notFound('Job post');
@@ -68,14 +63,14 @@ router.delete('/jobs/:id', (req, res) => send(res, async () => {
   return { jobPost: job };
 }));
 
-// Recruiter asks the admin to review/publish — they cannot publish directly.
+// Recruiter asks the admin to review/publish, they cannot publish directly.
 router.post('/jobs/:id/submit', (req, res) => send(res, async () => { await ownJob(req); return { jobPost: await content.submitJobForApproval(req.params.id, req.student.id) }; }));
 
 // Direct publish/unpublish endpoints were removed: publishing is admin-only.
 router.get('/jobs/:id/applications', (req, res) => send(res, async () => { await ownJob(req); return { applications: await content.applications(req.params.id) }; }));
 
 // ---------------------------------------------------------------------------
-// Shared candidates — only students an admin explicitly shared with this
+// Shared candidates, only students an admin explicitly shared with this
 // recruiter. There is no route to search or list the broader student body.
 // ---------------------------------------------------------------------------
 router.get('/shared-candidates', (req, res) => send(res, async () => ({ shares: await shares.listForRecruiter(req.student.id) })));

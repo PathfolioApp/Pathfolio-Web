@@ -150,11 +150,11 @@ export function ProfilePage() {
           </div>
           <div className="pf-info-row">
             <span className="pf-info-label">Date of birth</span>
-            <span className="pf-info-value">{personal.dateOfBirth ? new Date(`${personal.dateOfBirth}T00:00:00`).toLocaleDateString() : '—'}</span>
+            <span className="pf-info-value">{personal.dateOfBirth ? new Date(`${personal.dateOfBirth}T00:00:00`).toLocaleDateString() : '-'}</span>
           </div>
           <div className="pf-info-row">
             <span className="pf-info-label">Phone number</span>
-            <span className="pf-info-value">{personal.phone || '—'}</span>
+            <span className="pf-info-value">{personal.phone || '-'}</span>
           </div>
           <div className="pf-info-row">
             <span className="pf-info-label">Institutional email</span>
@@ -413,17 +413,17 @@ export function ProfilePage() {
                       {sem.sgpa !== null && sem.sgpa !== undefined ? (
                         <span className="pf-sgpa-pill">{Number(sem.sgpa).toFixed(2)}</span>
                       ) : (
-                        '—'
+                        '-'
                       )}
                     </td>
                     <td>
                       {sem.cgpa !== null && sem.cgpa !== undefined ? (
                         <span style={{ fontWeight: 600 }}>{Number(sem.cgpa).toFixed(2)}</span>
                       ) : (
-                        '—'
+                        '-'
                       )}
                     </td>
-                    <td>{sem.academicYear || '—'}</td>
+                    <td>{sem.academicYear || '-'}</td>
                     <td>
                       {sem.transcript?.fileUrl ? (
                         <a

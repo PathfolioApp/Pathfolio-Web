@@ -603,11 +603,11 @@ export function ProfileEditPage() {
               <div className="pf-semester-scores">
                 <div className="pf-score-item">
                   <span>Semester SGPA</span>
-                  <strong>{sem.sgpa !== null && sem.sgpa !== undefined ? Number(sem.sgpa).toFixed(2) : '—'}</strong>
+                  <strong>{sem.sgpa !== null && sem.sgpa !== undefined ? Number(sem.sgpa).toFixed(2) : '-'}</strong>
                 </div>
                 <div className="pf-score-item">
                   <span>Cumulative CGPA</span>
-                  <strong>{sem.cgpa !== null && sem.cgpa !== undefined ? Number(sem.cgpa).toFixed(2) : '—'}</strong>
+                  <strong>{sem.cgpa !== null && sem.cgpa !== undefined ? Number(sem.cgpa).toFixed(2) : '-'}</strong>
                 </div>
               </div>
 
