@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, User, BookOpen, Briefcase, BriefcaseBusiness, Building2, Settings, LogOut, ArrowLeft, ShieldCheck, Search, Users, UserRound, FileSearch } from 'lucide-react';
+import { LayoutDashboard, User, BookOpen, Briefcase, BriefcaseBusiness, Building2, Settings, LogOut, ArrowLeft, ShieldCheck, Search, Users, UserRound, FileSearch, GraduationCap } from 'lucide-react';
 import { NotificationPanel } from './NotificationPanel';
 import { SignOutButton } from './SignOutButton';
 import { useAuth } from '../context/AuthContext';
@@ -85,16 +85,40 @@ export function AppLayout({ children }) {
             );
           })}
         </nav>
-        {!isPortal && <div className="pf-portal-links" aria-label="Portal access">
-          <span>Portals</span>
-          {(student.isRecruiter || student.isAdmin) && <button onClick={() => navigate('/recruiter')}><Building2 size={16} /> Recruiter</button>}
-          {student.isAdmin && <button onClick={() => navigate('/admin')}><ShieldCheck size={16} /> Admin</button>}
-        </div>}
-        <div className="pf-portal-links" aria-label="Portal access">
-          <span>Portals</span>
-          {(student.isRecruiter || student.isAdmin) && <button onClick={() => navigate('/recruiter')}><Building2 size={16} /> Recruiter</button>}
-          {student.isAdmin && <button onClick={() => navigate('/admin')}><ShieldCheck size={16} /> Admin</button>}
-        </div>
+        {(student.isRecruiter || student.isAdmin) && (
+          <div className="pf-portal-links" aria-label="Portal access">
+            <span>Portals</span>
+            <button
+              onClick={() => {
+                navigate('/dashboard');
+                setActiveSection('');
+              }}
+              className={!isPortal ? 'active' : ''}
+            >
+              <GraduationCap size={16} /> Student
+            </button>
+            <button
+              onClick={() => {
+                navigate('/recruiter');
+                setActiveSection('');
+              }}
+              className={location.pathname.startsWith('/recruiter') ? 'active' : ''}
+            >
+              <Building2 size={16} /> Recruiter
+            </button>
+            {student.isAdmin && (
+              <button
+                onClick={() => {
+                  navigate('/admin');
+                  setActiveSection('');
+                }}
+                className={location.pathname.startsWith('/admin') ? 'active' : ''}
+              >
+                <ShieldCheck size={16} /> Admin
+              </button>
+            )}
+          </div>
+        )}
         <SignOutButton className="pf-side-signout">
           <LogOut size={18}/>Sign out
         </SignOutButton>

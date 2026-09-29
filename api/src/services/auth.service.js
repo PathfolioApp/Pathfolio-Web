@@ -1,9 +1,47 @@
 const crypto = require('crypto');
 const studentStore = require('../models/studentStore');
 
+const enrichAcademicDocuments = (academic) => {
+  if (!academic) return academic;
+  const enriched = { ...academic };
+  if (enriched.tenthMarksheet?.fileId) {
+    enriched.tenthMarksheet = {
+      ...enriched.tenthMarksheet,
+      fileUrl: '/api/profile/academic/documents/tenth_marksheet/file?mode=view',
+      downloadUrl: '/api/profile/academic/documents/tenth_marksheet/file?mode=download'
+    };
+  }
+  if (enriched.twelfthMarksheet?.fileId) {
+    enriched.twelfthMarksheet = {
+      ...enriched.twelfthMarksheet,
+      fileUrl: '/api/profile/academic/documents/twelfth_marksheet/file?mode=view',
+      downloadUrl: '/api/profile/academic/documents/twelfth_marksheet/file?mode=download'
+    };
+  }
+  if (Array.isArray(enriched.semesters)) {
+    enriched.semesters = enriched.semesters.map(s => {
+      if (s.transcript?.fileId) {
+        return {
+          ...s,
+          transcript: {
+            ...s.transcript,
+            fileUrl: `/api/profile/academic/semesters/${s.id}/file?mode=view`,
+            downloadUrl: `/api/profile/academic/semesters/${s.id}/file?mode=download`
+          }
+        };
+      }
+      return s;
+    });
+  }
+  return enriched;
+};
+
 const publicStudent = (student) => {
   if (!student) return null;
   const { passwordHash, ...safe } = student;
+  if (safe.academic) {
+    safe.academic = enrichAcademicDocuments(safe.academic);
+  }
   return { ...safe, onboarding: safe.onboarding || { completed: safe.status === 'onboarding_completed' || safe.status === 'active_onboarded', completedAt: safe.completedAt || safe.createdAt } };
 };
 

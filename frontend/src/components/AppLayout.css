@@ -16,10 +16,11 @@
 .pf-portal-links span { padding: 0 10px 4px; color: var(--text-muted); font-size: .68rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
 .pf-portal-links button { display: flex; align-items: center; gap: 9px; padding: 9px 10px; color: var(--text-secondary); font-size: .8rem; text-align: left; background: transparent; border: 0; border-radius: var(--radius-sm); cursor: pointer; transition: color var(--transition-fast), background var(--transition-fast); }
 .pf-portal-links button:hover { color: var(--color-primary); background: var(--bg-subtle); }
+.pf-portal-links button.active { color: var(--color-primary); background: var(--color-primary-light); font-weight: 700; }
 .pf-portal-links button svg { flex: 0 0 auto; }
 .pf-portal-links button:not(:has(svg)) { padding-left: 16px; }
 
-.pf-dashboard-main { margin-left: 245px; width: calc(100% - 245px); padding: 0 5.5vw 52px; }
+.pf-dashboard-main { margin-left: 245px; width: calc(100% - 245px); padding: 0 40px 52px; }
 
 .pf-dashboard-top { height: 78px; display: flex; align-items: center; justify-content: flex-end; border-bottom: 1px solid var(--border-subtle); }
 .pf-dashboard-top > div { display: flex; gap: 12px; align-items: center; }

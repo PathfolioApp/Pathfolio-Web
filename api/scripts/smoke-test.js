@@ -163,6 +163,103 @@ async function run() {
   expectStatus(result.response, 400, 'invalid academic update');
   console.log('PASS invalid academic update rejected');
 
+  // Valid schooling details update
+  result = await request('/profile/academic', {
+    method: 'PATCH',
+    body: JSON.stringify({
+      tenthBoard: 'CBSE',
+      tenthSchool: 'Delhi Public School',
+      tenthYear: 2020,
+      tenthPercentage: 92.5,
+      twelfthBoard: 'CBSE',
+      twelfthSchool: 'Delhi Public School',
+      twelfthYear: 2022,
+      twelfthStream: 'Science (PCM)',
+      twelfthPercentage: 90.0,
+      cgpa: 8.9,
+      currentSemester: 6
+    })
+  });
+  expectStatus(result.response, 200, 'academic schooling update');
+  assert.equal(result.body.student.academic.tenthBoard, 'CBSE');
+  assert.equal(result.body.student.academic.tenthYear, 2020);
+  assert.equal(result.body.student.academic.twelfthStream, 'Science (PCM)');
+  console.log('PASS academic schooling update');
+
+  // Upload 10th Marksheet PDF
+  const testMarksheetBytes = Buffer.from('%PDF-1.4\n%MarksheetTest\n1 0 obj\n<<>>\nendobj\ntrailer\n<<>>\n%%EOF');
+  const marksheetFormData = new FormData();
+  marksheetFormData.append('file', new Blob([testMarksheetBytes], { type: 'application/pdf' }), '10th_marksheet_test.pdf');
+  marksheetFormData.append('type', 'tenth_marksheet');
+
+  let docUploadRes = await fetch(`${baseUrl}/profile/academic/documents/upload`, {
+    method: 'POST',
+    headers: cookie ? { Cookie: cookie } : {},
+    body: marksheetFormData,
+  });
+  expectStatus(docUploadRes, 200, '10th marksheet upload');
+  let docUploadBody = await docUploadRes.json();
+  assert.ok(docUploadBody.student.academic.tenthMarksheet?.fileId, 'tenth marksheet fileId missing');
+  assert.equal(docUploadBody.student.academic.tenthMarksheet?.filename, '10th_marksheet_test.pdf');
+  console.log('PASS 10th marksheet pdf upload');
+
+  // Stream 10th Marksheet PDF
+  let streamRes = await fetch(`${baseUrl}/profile/academic/documents/tenth_marksheet/file?mode=view`, {
+    headers: cookie ? { Cookie: cookie } : {},
+  });
+  expectStatus(streamRes, 200, '10th marksheet pdf stream');
+  assert.equal(streamRes.headers.get('content-type'), 'application/pdf');
+  console.log('PASS 10th marksheet pdf stream retrieval');
+
+  // Delete 10th Marksheet PDF
+  result = await request('/profile/academic/documents/tenth_marksheet', { method: 'DELETE' });
+  expectStatus(result.response, 200, '10th marksheet delete');
+  assert.equal(result.body.student.academic.tenthMarksheet, undefined);
+  console.log('PASS 10th marksheet delete');
+
+  // Add Semester record
+  result = await request('/profile/academic/semesters', {
+    method: 'POST',
+    body: JSON.stringify({ semester: 1, sgpa: 8.85, cgpa: 8.85, academicYear: '2023-2024' })
+  });
+  expectStatus(result.response, 200, 'add semester record');
+  const sem1 = result.body.student.academic.semesters.find(s => s.semester === 1);
+  assert.ok(sem1, 'semester 1 record should exist');
+  assert.equal(sem1.sgpa, 8.85);
+  console.log('PASS add semester record');
+
+  // Upload semester transcript
+  const transcriptFormData = new FormData();
+  transcriptFormData.append('file', new Blob([testMarksheetBytes], { type: 'application/pdf' }), 'Semester1_Transcript.pdf');
+  transcriptFormData.append('type', 'semester_transcript');
+  transcriptFormData.append('semester', '1');
+
+  let transUploadRes = await fetch(`${baseUrl}/profile/academic/documents/upload`, {
+    method: 'POST',
+    headers: cookie ? { Cookie: cookie } : {},
+    body: transcriptFormData,
+  });
+  expectStatus(transUploadRes, 200, 'semester transcript upload');
+  let transUploadBody = await transUploadRes.json();
+  const semWithTranscript = transUploadBody.student.academic.semesters.find(s => s.semester === 1);
+  assert.ok(semWithTranscript.transcript?.fileId, 'semester transcript fileId missing');
+  assert.equal(semWithTranscript.transcript?.filename, 'Semester1_Transcript.pdf');
+  console.log('PASS semester transcript upload');
+
+  // Stream semester transcript
+  let transStreamRes = await fetch(`${baseUrl}/profile/academic/semesters/${semWithTranscript.id}/file?mode=view`, {
+    headers: cookie ? { Cookie: cookie } : {},
+  });
+  expectStatus(transStreamRes, 200, 'semester transcript stream');
+  assert.equal(transStreamRes.headers.get('content-type'), 'application/pdf');
+  console.log('PASS semester transcript stream retrieval');
+
+  // Delete semester
+  result = await request(`/profile/academic/semesters/${semWithTranscript.id}`, { method: 'DELETE' });
+  expectStatus(result.response, 200, 'delete semester');
+  assert.equal(result.body.student.academic.semesters.some(s => s.id === semWithTranscript.id), false);
+  console.log('PASS delete semester record');
+
   result = await request('/profile/achievements', {
     method: 'POST',
     body: JSON.stringify({ title: 'Automated Test Achievement', category: 'Project', year: '2026' })

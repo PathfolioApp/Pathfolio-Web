@@ -1,18 +1,106 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Award, ArrowLeft } from 'lucide-react';
+import { Award, ArrowLeft, FileText, UploadCloud, Trash2, Eye, Plus, Edit2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { profileApi } from '../services/profileApi';
+import { profileApi, uploadAcademicDocument } from '../services/profileApi';
 import { Modal } from '../components/Modal';
 import { AvatarEditor } from '../components/AvatarEditor';
+import { PdfIcon } from '../components/PdfIcon';
+import { AchievementIcon } from '../components/AchievementIcon';
 import { ACHIEVEMENT_CATEGORIES } from '../features/onboarding/types/config';
 import './ProfilePages.css';
 import './ProfileEditEnhancements.css';
 import './AchievementModal.css';
+import './AcademicStyles.css';
 
 const split = value => value.split(',').map(item => item.trim()).filter(Boolean);
 const cleanDescription = value => String(value || '').replace(/\*\*(.*?)\*\*/g, '$1');
+
+const formatSize = (bytes) => {
+  if (!bytes) return '';
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+};
+
+function AcademicDocUploader({ label, doc, onUpload, onDelete, uploading }) {
+  const fileInputRef = useRef(null);
+
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    onUpload(file);
+    e.target.value = '';
+  };
+
+  return (
+    <div className="pf-doc-box">
+      <span className="pf-doc-box__label">{label}</span>
+      {doc?.fileId ? (
+        <div className="pf-doc-card">
+          <div className="pf-doc-card__info">
+            <div className="pf-doc-card__icon">
+              <PdfIcon size={26} />
+            </div>
+            <div className="pf-doc-card__meta">
+              <span className="pf-doc-card__name" title={doc.filename}>{doc.filename}</span>
+              <div className="pf-doc-card__sub">
+                <span>{formatSize(doc.size)}</span>
+                {doc.uploadedAt && <span> · {new Date(doc.uploadedAt).toLocaleDateString()}</span>}
+              </div>
+            </div>
+          </div>
+          <div className="pf-doc-card__actions">
+            <a
+              href={doc.fileUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="pf-doc-btn"
+              title="Preview PDF"
+            >
+              <Eye size={13} /> View
+            </a>
+            <button
+              type="button"
+              className="pf-doc-btn"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploading}
+              title="Replace file"
+            >
+              <UploadCloud size={13} /> {uploading ? '...' : 'Replace'}
+            </button>
+            <button
+              type="button"
+              className="pf-doc-btn pf-doc-btn--danger"
+              onClick={onDelete}
+              disabled={uploading}
+              title="Remove document"
+            >
+              <Trash2 size={13} />
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div
+          className="pf-doc-upload-dropzone"
+          onClick={() => fileInputRef.current?.click()}
+        >
+          <UploadCloud size={20} />
+          <span>{uploading ? 'Uploading PDF...' : `Upload ${label} (PDF)`}</span>
+          <small>Max file size 10MB · Official PDF only</small>
+        </div>
+      )}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="application/pdf,.pdf"
+        style={{ display: 'none' }}
+        onChange={handleFileChange}
+      />
+    </div>
+  );
+}
 
 export function ProfileEditPage() {
   const { student, refresh } = useAuth();
@@ -21,6 +109,7 @@ export function ProfileEditPage() {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [savingSection, setSavingSection] = useState('');
+  const [uploadingDocType, setUploadingDocType] = useState('');
   const [personal, setPersonal] = useState(student.personal);
   const [academic, setAcademic] = useState({ degreeProgram: 'B.Tech', graduationYear: 2027, ...student.academic });
   const [interests, setInterests] = useState(student.interests);
@@ -29,6 +118,18 @@ export function ProfileEditPage() {
   const [editingAchievement, setEditingAchievement] = useState(null);
   const [isAddAchievementOpen, setIsAddAchievementOpen] = useState(false);
   const [toastLeaving, setToastLeaving] = useState(false);
+
+  // Semester Modal State
+  const [isSemesterModalOpen, setIsSemesterModalOpen] = useState(false);
+  const [semesterModalData, setSemesterModalData] = useState({ semester: 1, sgpa: '', cgpa: '', academicYear: '', file: null });
+  const [savingSemester, setSavingSemester] = useState(false);
+
+  useEffect(() => {
+    setPersonal(student.personal);
+    setAcademic({ degreeProgram: 'B.Tech', graduationYear: 2027, ...student.academic });
+    setInterests(student.interests);
+    setFamily(student.familyContext || { details: '', consentGiven: false });
+  }, [student]);
 
   const save = async (section, data) => {
     setError('');
@@ -42,6 +143,84 @@ export function ProfileEditPage() {
       setError(saveError.message);
     } finally {
       setSavingSection('');
+    }
+  };
+
+  const handleUploadDoc = async (file, type, semester) => {
+    if (!file) return;
+    if (file.type !== 'application/pdf' && !/\.pdf$/i.test(file.name)) {
+      setError('Only PDF documents are allowed.');
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      setError('File size must be under 10MB.');
+      return;
+    }
+
+    const uploadKey = semester ? `semester_${semester}` : type;
+    setUploadingDocType(uploadKey);
+    setError('');
+    setMessage('');
+    try {
+      await uploadAcademicDocument(file, type, semester);
+      await refresh();
+      setMessage(`${type === 'tenth_marksheet' ? '10th Marksheet' : type === 'twelfth_marksheet' ? '12th Marksheet' : `Semester ${semester} transcript`} uploaded successfully.`);
+    } catch (uploadError) {
+      setError(uploadError.message || 'Failed to upload document.');
+    } finally {
+      setUploadingDocType('');
+    }
+  };
+
+  const handleDeleteDoc = async (type, semesterId, semester) => {
+    if (!window.confirm('Are you sure you want to remove this document?')) return;
+    setError('');
+    setMessage('');
+    try {
+      await profileApi.deleteAcademicDocument(type, { semesterId, semester });
+      await refresh();
+      setMessage('Document removed.');
+    } catch (delError) {
+      setError(delError.message || 'Failed to remove document.');
+    }
+  };
+
+  const handleSaveSemesterSubmit = async () => {
+    setError('');
+    setMessage('');
+    setSavingSemester(true);
+    try {
+      await profileApi.saveSemester({
+        semester: Number(semesterModalData.semester),
+        sgpa: semesterModalData.sgpa,
+        cgpa: semesterModalData.cgpa,
+        academicYear: semesterModalData.academicYear,
+      });
+
+      if (semesterModalData.file) {
+        await uploadAcademicDocument(semesterModalData.file, 'semester_transcript', semesterModalData.semester);
+      }
+
+      await refresh();
+      setIsSemesterModalOpen(false);
+      setMessage(`Semester ${semesterModalData.semester} record saved.`);
+    } catch (semError) {
+      setError(semError.message || 'Failed to save semester record.');
+    } finally {
+      setSavingSemester(false);
+    }
+  };
+
+  const handleDeleteSemester = async (semesterId) => {
+    if (!window.confirm('Delete this semester record and any attached transcript?')) return;
+    setError('');
+    setMessage('');
+    try {
+      await profileApi.deleteSemester(semesterId);
+      await refresh();
+      setMessage('Semester record deleted.');
+    } catch (delError) {
+      setError(delError.message || 'Failed to delete semester record.');
     }
   };
 
@@ -139,13 +318,350 @@ export function ProfileEditPage() {
       <label>Institutional email<input value={personal.email} disabled /></label>
     </EditSection>
 
+    {/* Schooling 10+2 Section */}
+    <EditSection
+      id="schooling"
+      title="Schooling (10+2 Details & Marksheets)"
+      note="Add your 10th (Matriculation) and 12th (Higher Secondary) schooling records and upload your official marksheets."
+      onSave={() => save('academic', academic)}
+      saving={savingSection === 'academic'}
+      saveLabel="Save schooling details"
+    >
+      <div className="pf-academic-schooling-grid">
+        {/* 10th Standard Card */}
+        <div className="pf-schooling-card">
+          <div className="pf-schooling-card__header">
+            <div className="pf-schooling-card__title">
+              10th Standard / Secondary
+            </div>
+            <span className="pf-schooling-card__badge">Matriculation</span>
+          </div>
+
+          <div className="pf-schooling-card__fields">
+            <label>
+              School name
+              <input
+                placeholder="e.g. St. Xavier's High School"
+                value={academic.tenthSchool || ''}
+                onChange={e => updateAcademic('tenthSchool', e.target.value)}
+              />
+            </label>
+            <label>
+              Board / Council
+              <input
+                placeholder="e.g. CBSE, ICSE, State Board"
+                value={academic.tenthBoard || ''}
+                onChange={e => updateAcademic('tenthBoard', e.target.value)}
+              />
+            </label>
+            <label>
+              Passing year
+              <input
+                type="number"
+                placeholder="e.g. 2020"
+                min="1950"
+                max="2100"
+                value={academic.tenthYear || ''}
+                onChange={e => updateAcademic('tenthYear', e.target.value)}
+              />
+            </label>
+            <label>
+              10th Percentage (%)
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                max="100"
+                placeholder="e.g. 91.50"
+                value={academic.tenthPercentage ?? ''}
+                onChange={e => updateAcademic('tenthPercentage', e.target.value)}
+              />
+            </label>
+          </div>
+
+          <AcademicDocUploader
+            label="10th Marksheet"
+            doc={academic.tenthMarksheet}
+            uploading={uploadingDocType === 'tenth_marksheet'}
+            onUpload={file => handleUploadDoc(file, 'tenth_marksheet')}
+            onDelete={() => handleDeleteDoc('tenth_marksheet')}
+          />
+        </div>
+
+        {/* 12th Standard Card */}
+        <div className="pf-schooling-card">
+          <div className="pf-schooling-card__header">
+            <div className="pf-schooling-card__title">
+              12th Standard / Higher Secondary
+            </div>
+            <span className="pf-schooling-card__badge">10+2 / Diploma</span>
+          </div>
+
+          <div className="pf-schooling-card__fields">
+            <label>
+              School / College name
+              <input
+                placeholder="e.g. Delhi Public School"
+                value={academic.twelfthSchool || ''}
+                onChange={e => updateAcademic('twelfthSchool', e.target.value)}
+              />
+            </label>
+            <label>
+              Board / Council
+              <input
+                placeholder="e.g. CBSE, ISC, State Board"
+                value={academic.twelfthBoard || ''}
+                onChange={e => updateAcademic('twelfthBoard', e.target.value)}
+              />
+            </label>
+            <label>
+              Stream / Specialization
+              <input
+                placeholder="e.g. Science (PCM), Commerce"
+                value={academic.twelfthStream || ''}
+                onChange={e => updateAcademic('twelfthStream', e.target.value)}
+              />
+            </label>
+            <label>
+              Passing year
+              <input
+                type="number"
+                placeholder="e.g. 2022"
+                min="1950"
+                max="2100"
+                value={academic.twelfthYear || ''}
+                onChange={e => updateAcademic('twelfthYear', e.target.value)}
+              />
+            </label>
+            <label style={{ gridColumn: '1 / -1' }}>
+              12th Percentage (%)
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                max="100"
+                placeholder="e.g. 89.20"
+                value={academic.twelfthPercentage ?? ''}
+                onChange={e => updateAcademic('twelfthPercentage', e.target.value)}
+              />
+            </label>
+          </div>
+
+          <AcademicDocUploader
+            label="12th Marksheet"
+            doc={academic.twelfthMarksheet}
+            uploading={uploadingDocType === 'twelfth_marksheet'}
+            onUpload={file => handleUploadDoc(file, 'twelfth_marksheet')}
+            onDelete={() => handleDeleteDoc('twelfth_marksheet')}
+          />
+        </div>
+      </div>
+    </EditSection>
+
+    {/* College Semesters & Transcripts Section */}
+    <EditSection
+      id="semesters"
+      title="College Semesters & Transcripts"
+      note="Record your semester SGPA, cumulative CGPA, and upload official semester grade cards / transcripts."
+      headerAction={
+        <button
+          type="button"
+          className="pf-add-semester-btn"
+          onClick={() => {
+            const nextSem = (academic.semesters?.length || 0) + 1;
+            setSemesterModalData({
+              semester: nextSem <= 8 ? nextSem : 1,
+              sgpa: '',
+              cgpa: '',
+              academicYear: '',
+              file: null,
+            });
+            setIsSemesterModalOpen(true);
+          }}
+        >
+          <Plus size={15} /> Add semester
+        </button>
+      }
+    >
+      {academic.semesters && academic.semesters.length > 0 ? (
+        <div className="pf-semester-grid" style={{ gridColumn: '1 / -1' }}>
+          {academic.semesters.map(sem => (
+            <div className="pf-semester-card" key={sem.id || sem.semester}>
+              <div className="pf-semester-card__top">
+                <div className="pf-semester-badge">
+                  Semester {sem.semester}
+                  {sem.academicYear && (
+                    <span style={{ fontSize: '0.78rem', color: '#7b857a', fontWeight: 500 }}>
+                      · {sem.academicYear}
+                    </span>
+                  )}
+                </div>
+                <div className="pf-semester-actions">
+                  <button
+                    type="button"
+                    className="pf-doc-btn"
+                    onClick={() => {
+                      setSemesterModalData({
+                        id: sem.id,
+                        semester: sem.semester,
+                        sgpa: sem.sgpa ?? '',
+                        cgpa: sem.cgpa ?? '',
+                        academicYear: sem.academicYear || '',
+                        file: null,
+                      });
+                      setIsSemesterModalOpen(true);
+                    }}
+                    title="Edit scores"
+                  >
+                    <Edit2 size={13} /> Edit
+                  </button>
+                  <button
+                    type="button"
+                    className="pf-doc-btn pf-doc-btn--danger"
+                    onClick={() => handleDeleteSemester(sem.id)}
+                    title="Delete semester record"
+                  >
+                    <Trash2 size={13} />
+                  </button>
+                </div>
+              </div>
+
+              <div className="pf-semester-scores">
+                <div className="pf-score-item">
+                  <span>Semester SGPA</span>
+                  <strong>{sem.sgpa !== null && sem.sgpa !== undefined ? Number(sem.sgpa).toFixed(2) : '—'}</strong>
+                </div>
+                <div className="pf-score-item">
+                  <span>Cumulative CGPA</span>
+                  <strong>{sem.cgpa !== null && sem.cgpa !== undefined ? Number(sem.cgpa).toFixed(2) : '—'}</strong>
+                </div>
+              </div>
+
+              <div className="pf-semester-transcript">
+                <AcademicDocUploader
+                  label={`Semester ${sem.semester} Transcript`}
+                  doc={sem.transcript}
+                  uploading={uploadingDocType === `semester_${sem.semester}`}
+                  onUpload={file => handleUploadDoc(file, 'semester_transcript', sem.semester)}
+                  onDelete={() => handleDeleteDoc('semester_transcript', sem.id, sem.semester)}
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="pf-semester-empty" style={{ gridColumn: '1 / -1' }}>
+          <FileText size={32} style={{ color: 'var(--color-primary)', opacity: 0.6 }} />
+          <p>
+            No semester results or grade sheets added yet. Keep your academic record current to verify placement eligibility.
+          </p>
+          <button
+            type="button"
+            className="pf-add-semester-btn"
+            onClick={() => {
+              setSemesterModalData({
+                semester: 1,
+                sgpa: '',
+                cgpa: '',
+                academicYear: '',
+                file: null,
+              });
+              setIsSemesterModalOpen(true);
+            }}
+          >
+            <Plus size={15} /> Add Semester 1
+          </button>
+        </div>
+      )}
+    </EditSection>
+
+    {/* Semester Modal */}
+    <Modal
+      isOpen={isSemesterModalOpen}
+      onClose={() => setIsSemesterModalOpen(false)}
+      title={semesterModalData?.id ? `Edit Semester ${semesterModalData.semester}` : 'Add Semester Result'}
+      footer={
+        <>
+          <button type="button" className="pf-secondary" onClick={() => setIsSemesterModalOpen(false)}>
+            Cancel
+          </button>
+          <button
+            type="button"
+            className="pf-save"
+            disabled={savingSemester}
+            onClick={handleSaveSemesterSubmit}
+          >
+            {savingSemester ? 'Saving...' : 'Save semester'}
+          </button>
+        </>
+      }
+    >
+      <p className="pf-achievement-modal-intro">
+        Enter your SGPA for this semester and cumulative CGPA as issued on your grade card.
+      </p>
+      <div className="pf-semester-modal-form">
+        <label>
+          Semester
+          <select
+            value={semesterModalData.semester}
+            onChange={e => setSemesterModalData({ ...semesterModalData, semester: Number(e.target.value) })}
+            disabled={Boolean(semesterModalData.id)}
+          >
+            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(num => (
+              <option key={num} value={num}>Semester {num}</option>
+            ))}
+          </select>
+        </label>
+        <label>
+          Academic Session / Year
+          <input
+            placeholder="e.g. 2023 - 2024"
+            value={semesterModalData.academicYear}
+            onChange={e => setSemesterModalData({ ...semesterModalData, academicYear: e.target.value })}
+          />
+        </label>
+        <label>
+          Semester SGPA (0 - 10)
+          <input
+            type="number"
+            step="0.01"
+            min="0"
+            max="10"
+            placeholder="e.g. 8.75"
+            value={semesterModalData.sgpa}
+            onChange={e => setSemesterModalData({ ...semesterModalData, sgpa: e.target.value })}
+          />
+        </label>
+        <label>
+          Cumulative CGPA (0 - 10)
+          <input
+            type="number"
+            step="0.01"
+            min="0"
+            max="10"
+            placeholder="e.g. 8.80"
+            value={semesterModalData.cgpa}
+            onChange={e => setSemesterModalData({ ...semesterModalData, cgpa: e.target.value })}
+          />
+        </label>
+        {!semesterModalData.id && (
+          <label className="pf-full-width">
+            Transcript / Grade Card PDF (optional)
+            <input
+              type="file"
+              accept="application/pdf,.pdf"
+              onChange={e => setSemesterModalData({ ...semesterModalData, file: e.target.files?.[0] || null })}
+            />
+          </label>
+        )}
+      </div>
+    </Modal>
+
     <EditSection title="Academic eligibility" note="These fields help TNP determine eligibility for placement opportunities. Leave fields blank until you have verified information." onSave={() => save('academic', academic)} saving={savingSection === 'academic'}>
       <label>Degree / program<input placeholder="B.Tech" value={academic.degreeProgram || ''} onChange={event => updateAcademic('degreeProgram', event.target.value)} /></label>
       <label>Graduation year<input type="number" min="2027" placeholder="2027" value={academic.graduationYear || ''} onChange={event => updateAcademic('graduationYear', event.target.value)} /></label>
       <label>Current semester<input type="number" min="1" max="20" value={academic.currentSemester || ''} onChange={event => updateAcademic('currentSemester', event.target.value)} /></label>
       <label>CGPA<input type="number" min="0" max="10" step="0.01" value={academic.cgpa ?? ''} onChange={event => updateAcademic('cgpa', event.target.value)} /></label>
-      <label>10th percentage<input type="number" min="0" max="100" step="0.01" value={academic.tenthPercentage ?? ''} onChange={event => updateAcademic('tenthPercentage', event.target.value)} /></label>
-      <label>12th percentage<input type="number" min="0" max="100" step="0.01" value={academic.twelfthPercentage ?? ''} onChange={event => updateAcademic('twelfthPercentage', event.target.value)} /></label>
       <label>Active backlogs<input type="number" min="0" max="100" value={academic.activeBacklogs ?? ''} onChange={event => updateAcademic('activeBacklogs', event.target.value)} /></label>
       <label>Historical backlogs<input type="number" min="0" max="100" value={academic.historicalBacklogs ?? ''} onChange={event => updateAcademic('historicalBacklogs', event.target.value)} /></label>
       <label>Gap years<input type="number" min="0" max="20" step="0.5" value={academic.gapYears ?? ''} onChange={event => updateAcademic('gapYears', event.target.value)} /></label>
@@ -160,7 +676,99 @@ export function ProfileEditPage() {
     </EditSection>
 
     <EditSection id="achievements" title="Achievements" note="Your certifications, hackathons, projects, and milestones." headerAction={<button type="button" className="pf-achievement-add-button" onClick={() => setIsAddAchievementOpen(true)}><Award size={16} /> Add achievement</button>}>
-      <div className="pf-achievement-editor-list">{student.achievements.map(achievement => editingAchievement?.id === achievement.id ? <div className="pf-achievement-editor" key={achievement.id}><div className="pf-edit-fields"><label>Title<input value={editingAchievement.title} onChange={event => setEditingAchievement({ ...editingAchievement, title: event.target.value })} /></label><label>Type / category<input value={editingAchievement.category} onChange={event => setEditingAchievement({ ...editingAchievement, category: event.target.value })} /></label><label>Completion year<input type="number" value={editingAchievement.year || ''} onChange={event => setEditingAchievement({ ...editingAchievement, year: event.target.value })} /></label><label>Description<textarea value={editingAchievement.description || ''} onChange={event => setEditingAchievement({ ...editingAchievement, description: event.target.value })} /></label></div><div className="pf-achievement-editor__actions"><button type="button" disabled={savingSection === 'achievement-edit'} onClick={editAchievement}>{savingSection === 'achievement-edit' ? 'Saving...' : 'Save edit'}</button><button type="button" disabled={savingSection === 'achievement-edit'} onClick={() => setEditingAchievement(null)}>Cancel</button></div></div> : <article className="pf-achievement-editor" key={achievement.id}><div className="pf-achievement-editor__icon"><Award size={19} /></div><div className="pf-achievement-editor__body"><div className="pf-achievement-editor__header"><div><strong>{achievement.title}</strong><span className="pf-achievement-editor__meta"><span className="pf-achievement-editor__category">{achievement.category || 'General'}</span>{achievement.year ? `Completed ${achievement.year}` : 'Year not added'}</span></div><div className="pf-achievement-editor__actions"><button type="button" onClick={() => setEditingAchievement({ ...achievement })}>Edit</button><button type="button" onClick={() => removeAchievement(achievement.id)}>Remove</button></div></div>{achievement.description && <p className="pf-achievement-editor__description">{cleanDescription(achievement.description)}</p>}</div></article>)}</div>
+      <div className="pf-achievement-editor-list">
+        {student.achievements.map(achievement =>
+          editingAchievement?.id === achievement.id ? (
+            <div className="pf-achievement-editor pf-achievement-editor--editing" key={achievement.id}>
+              <div className="pf-achievement-editor__edit-header">
+                <AchievementIcon category={editingAchievement.category} size={18} variant="badge" />
+                <div className="pf-achievement-editor__edit-title-wrap">
+                  <strong>Edit achievement</strong>
+                  <span>Update milestone credentials, category, and description.</span>
+                </div>
+              </div>
+
+              <div className="pf-achievement-edit-form">
+                <div className="pf-achievement-edit-grid">
+                  <label className="pf-achievement-field pf-field-title">
+                    Title
+                    <input
+                      value={editingAchievement.title}
+                      onChange={event => setEditingAchievement({ ...editingAchievement, title: event.target.value })}
+                      placeholder="e.g. AWS Certified Solutions Architect"
+                    />
+                  </label>
+                  <label className="pf-achievement-field pf-field-category">
+                    Type / category
+                    <input
+                      value={editingAchievement.category}
+                      onChange={event => setEditingAchievement({ ...editingAchievement, category: event.target.value })}
+                      placeholder="e.g. Certification, Hackathon"
+                    />
+                  </label>
+                  <label className="pf-achievement-field pf-field-year">
+                    Completion year
+                    <input
+                      type="number"
+                      value={editingAchievement.year || ''}
+                      onChange={event => setEditingAchievement({ ...editingAchievement, year: event.target.value })}
+                      placeholder="e.g. 2025"
+                    />
+                  </label>
+                </div>
+
+                <label className="pf-achievement-field pf-field-desc">
+                  Description
+                  <textarea
+                    value={editingAchievement.description || ''}
+                    onChange={event => setEditingAchievement({ ...editingAchievement, description: event.target.value })}
+                    placeholder="What did you achieve, build, or learn?"
+                  />
+                </label>
+              </div>
+
+              <div className="pf-achievement-edit-footer">
+                <button
+                  type="button"
+                  className="pf-achievement-btn pf-achievement-btn--cancel"
+                  disabled={savingSection === 'achievement-edit'}
+                  onClick={() => setEditingAchievement(null)}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="pf-achievement-btn pf-achievement-btn--save"
+                  disabled={savingSection === 'achievement-edit'}
+                  onClick={editAchievement}
+                >
+                  {savingSection === 'achievement-edit' ? 'Saving...' : 'Save edit'}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <article className="pf-achievement-editor" key={achievement.id}>
+              <AchievementIcon category={achievement.category} size={18} variant="badge" />
+              <div className="pf-achievement-editor__body">
+                <div className="pf-achievement-editor__header">
+                  <div>
+                    <strong>{achievement.title}</strong>
+                    <span className="pf-achievement-editor__meta">
+                      <span className="pf-achievement-editor__category">{achievement.category || 'General'}</span>
+                      {achievement.year ? `Completed ${achievement.year}` : 'Year not added'}
+                    </span>
+                  </div>
+                  <div className="pf-achievement-editor__actions">
+                    <button type="button" onClick={() => setEditingAchievement({ ...achievement })}>Edit</button>
+                    <button type="button" onClick={() => removeAchievement(achievement.id)}>Remove</button>
+                  </div>
+                </div>
+                {achievement.description && <p className="pf-achievement-editor__description">{cleanDescription(achievement.description)}</p>}
+              </div>
+            </article>
+          )
+        )}
+      </div>
     </EditSection>
 
     <Modal isOpen={isAddAchievementOpen} onClose={() => setIsAddAchievementOpen(false)} title="Add an achievement" footer={<><button type="button" className="pf-secondary" onClick={() => setIsAddAchievementOpen(false)}>Cancel</button><button type="button" className="pf-save" disabled={savingSection === 'achievements'} onClick={add}>{savingSection === 'achievements' ? 'Adding...' : 'Save achievement'}</button></>}>

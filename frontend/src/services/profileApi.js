@@ -1,5 +1,42 @@
 async function request(path, options = {}) { const res = await fetch(path, { ...options, credentials: 'include', headers: { 'Content-Type': 'application/json', ...(options.headers || {}) } }); const data = await res.json().catch(() => ({})); if (!res.ok) throw new Error(data.message || 'Unable to save your changes.'); return data; }
-export const profileApi = { get: () => request('/api/profile'), update: (section, data) => request(`/api/profile/${section}`, { method: 'PATCH', body: JSON.stringify(data) }), addAchievement: data => request('/api/profile/achievements', { method: 'POST', body: JSON.stringify(data) }), editAchievement: (id,data) => request(`/api/profile/achievements/${id}`, { method: 'PATCH', body: JSON.stringify(data) }), deleteAchievement: id => request(`/api/profile/achievements/${id}`, { method: 'DELETE' }), settings: data => request('/api/profile/settings', { method: 'PATCH', body: JSON.stringify(data) }), password: data => request('/api/settings/security/password', { method: 'PATCH', body: JSON.stringify(data) }), uploadSignature: () => request('/api/profile/uploads/signature', { method: 'POST' }), setAvatar: avatarUrl => request('/api/profile/avatar', { method: 'POST', body: JSON.stringify({ avatarUrl }) }), deleteAccount: () => request('/api/profile/account', { method: 'DELETE' }) };
+export const profileApi = {
+  get: () => request('/api/profile'),
+  update: (section, data) => request(`/api/profile/${section}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  addAchievement: data => request('/api/profile/achievements', { method: 'POST', body: JSON.stringify(data) }),
+  editAchievement: (id,data) => request(`/api/profile/achievements/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  deleteAchievement: id => request(`/api/profile/achievements/${id}`, { method: 'DELETE' }),
+  settings: data => request('/api/profile/settings', { method: 'PATCH', body: JSON.stringify(data) }),
+  password: data => request('/api/settings/security/password', { method: 'PATCH', body: JSON.stringify(data) }),
+  uploadSignature: () => request('/api/profile/uploads/signature', { method: 'POST' }),
+  setAvatar: avatarUrl => request('/api/profile/avatar', { method: 'POST', body: JSON.stringify({ avatarUrl }) }),
+  deleteAccount: () => request('/api/profile/account', { method: 'DELETE' }),
+  deleteAcademicDocument: (docType, params = {}) => {
+    const qs = new URLSearchParams();
+    if (params.semester) qs.set('semester', params.semester);
+    if (params.semesterId) qs.set('semesterId', params.semesterId);
+    const query = qs.toString() ? `?${qs.toString()}` : '';
+    return request(`/api/profile/academic/documents/${docType}${query}`, { method: 'DELETE' });
+  },
+  saveSemester: data => request('/api/profile/academic/semesters', { method: 'POST', body: JSON.stringify(data) }),
+  deleteSemester: semesterId => request(`/api/profile/academic/semesters/${semesterId}`, { method: 'DELETE' }),
+};
+
+export async function uploadAcademicDocument(file, type, semester) {
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('type', type);
+  if (semester) formData.append('semester', semester);
+
+  const res = await fetch('/api/profile/academic/documents/upload', {
+    method: 'POST',
+    credentials: 'include',
+    body: formData,
+  });
+
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.message || 'Unable to upload document.');
+  return data;
+}
 
 export async function uploadAvatarImage(file) {
   const signed = await profileApi.uploadSignature();

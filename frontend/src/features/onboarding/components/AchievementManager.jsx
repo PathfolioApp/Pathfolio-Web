@@ -3,6 +3,7 @@ import { Plus, Trash2, Award, Calendar, Tag } from 'lucide-react';
 import { ACHIEVEMENT_CATEGORIES } from '../types/config';
 import { Button } from '../../../components/Button';
 import { Badge } from '../../../components/Badge';
+import { AchievementIcon } from '../../../components/AchievementIcon';
 import './AchievementManager.css';
 
 export function AchievementManager({ achievements = [], onChange }) {
@@ -49,9 +50,7 @@ export function AchievementManager({ achievements = [], onChange }) {
         <div className="pf-achievement-list">
           {achievements.map((item) => (
             <div key={item.id} className="pf-achievement-card">
-              <div className="pf-achievement-card__icon">
-                <Award size={20} />
-              </div>
+              <AchievementIcon category={item.category} size={20} variant="badge" />
               <div className="pf-achievement-card__content">
                 <div className="pf-achievement-card__header">
                   <h4 className="pf-achievement-card__title">{item.title}</h4>

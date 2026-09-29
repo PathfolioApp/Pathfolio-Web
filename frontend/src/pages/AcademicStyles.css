@@ -1,0 +1,833 @@
+/* Academic Schooling & Semester Transcripts Styles */
+
+.pf-academic-schooling-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+  grid-column: 1 / -1;
+  margin-bottom: 20px;
+}
+
+.pf-schooling-card {
+  background: #f4f7f4;
+  border: 1px solid #e1e7e0;
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.pf-schooling-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e1e7e0;
+}
+
+.pf-schooling-card__title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #18221b;
+}
+
+.pf-schooling-card__badge {
+  font-size: 0.74rem;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: rgba(38, 78, 54, 0.08);
+  color: #264e36;
+}
+
+.pf-schooling-card__fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.pf-schooling-card__fields label {
+  font-size: 0.84rem;
+  font-weight: 500;
+  color: #364438;
+}
+
+.pf-schooling-card__fields input {
+  width: 100%;
+  margin-top: 5px;
+  padding: 9px 11px;
+  border: 1px solid #cad4c8;
+  border-radius: 6px;
+  background: #ffffff;
+  font-size: 0.9rem;
+  color: #18221b;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.pf-schooling-card__fields input:focus {
+  outline: none;
+  border-color: #264e36;
+  box-shadow: 0 0 0 3px rgba(38, 78, 54, 0.12);
+}
+
+/* Document Attachment Box */
+.pf-doc-box {
+  margin-top: 6px;
+}
+
+.pf-doc-box__label {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: #556658;
+  margin-bottom: 6px;
+}
+
+.pf-doc-upload-dropzone {
+  border: 1px dashed #cbd6c8;
+  background: #ffffff;
+  border-radius: 8px;
+  padding: 18px 14px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.pf-doc-upload-dropzone:hover {
+  border-color: #264e36;
+  background: rgba(38, 78, 54, 0.03);
+}
+
+.pf-doc-upload-dropzone svg {
+  color: #264e36;
+}
+
+.pf-doc-upload-dropzone span {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #173824;
+}
+
+.pf-doc-upload-dropzone small {
+  font-size: 0.74rem;
+  color: #728274;
+}
+
+/* Uploaded Document Card */
+.pf-doc-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  background: #ffffff;
+  border: 1px solid #e1e7e0;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(24, 32, 28, 0.02);
+}
+
+.pf-doc-card__info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.pf-doc-card__icon {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+}
+
+.pf-doc-card__meta {
+  min-width: 0;
+}
+
+.pf-doc-card__name {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #18221b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 170px;
+  display: block;
+}
+
+.pf-doc-card__sub {
+  font-size: 0.75rem;
+  color: #6d7b6e;
+  margin-top: 2px;
+}
+
+.pf-doc-card__actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.pf-doc-btn {
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  text-decoration: none;
+  border: 1px solid #cbd7c8;
+  background: #ffffff;
+  color: #173824;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.pf-doc-btn:hover {
+  background: #f0f4f0;
+  border-color: #b5c7b3;
+}
+
+.pf-doc-btn--danger {
+  border-color: #f0d0cb;
+  color: #b42318;
+}
+
+.pf-doc-btn--danger:hover {
+  background: #fff5f5;
+  border-color: #e7a89f;
+}
+
+/* Semester Management Section */
+.pf-semester-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.pf-add-semester-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: #173824;
+  color: #ffffff !important;
+  border: 1px solid #173824;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.pf-add-semester-btn:hover {
+  background: #0f2718;
+  border-color: #0f2718;
+}
+
+.pf-semester-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+  gap: 16px;
+  margin-top: 14px;
+}
+
+.pf-semester-card {
+  background: #f4f7f4;
+  border: 1px solid #e1e7e0;
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.pf-semester-card:hover {
+  border-color: #cbd7c6;
+  box-shadow: 0 4px 14px rgba(24, 32, 28, 0.03);
+}
+
+.pf-semester-card__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.pf-semester-badge {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #18221b;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pf-semester-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pf-semester-scores {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  background: #ffffff;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid #e1e7e0;
+}
+
+.pf-score-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.pf-score-item span {
+  font-size: 0.72rem;
+  color: #627164;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 600;
+}
+
+.pf-score-item strong {
+  font-size: 1.15rem;
+  color: #142e20;
+  font-weight: 700;
+}
+
+.pf-semester-transcript {
+  margin-top: 4px;
+}
+
+.pf-semester-empty {
+  padding: 32px 20px;
+  text-align: center;
+  background: #f4f7f4;
+  border: 1px dashed #cbd6c8;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.pf-semester-empty p {
+  margin: 0;
+  color: #627164;
+  font-size: 0.9rem;
+  max-width: 420px;
+}
+
+/* Modal styling for Semesters */
+.pf-semester-modal-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-top: 14px;
+}
+
+.pf-semester-modal-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: #3b463a;
+}
+
+.pf-semester-modal-form input,
+.pf-semester-modal-form select {
+  padding: 9px 11px;
+  border: 1px solid var(--border-medium, #cbd7c6);
+  border-radius: 6px;
+  font-size: 0.92rem;
+  background: #ffffff;
+}
+
+.pf-semester-modal-form input:focus,
+.pf-semester-modal-form select:focus {
+  outline: none;
+  border-color: var(--color-primary, #294a31);
+  box-shadow: 0 0 0 3px rgba(41, 74, 49, 0.12);
+}
+
+.pf-semester-modal-form .pf-full-width {
+  grid-column: 1 / -1;
+}
+
+/* Profile Page Academic Showcase */
+.pf-academic-schooling-showcase {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+  margin-top: 14px;
+}
+
+.pf-schooling-showcase-card {
+  background: var(--bg-page-warm, #fbfaf6);
+  border: 1px solid var(--border-subtle, #ebe9df);
+  border-radius: 10px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pf-schooling-showcase-card h3 {
+  font-size: 0.96rem;
+  font-weight: 700;
+  color: var(--color-text, #202b24);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.pf-schooling-showcase-card dl {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 6px 12px;
+  font-size: 0.88rem;
+  margin: 0;
+}
+
+.pf-schooling-showcase-card dt {
+  color: var(--text-muted, #7b857a);
+}
+
+.pf-schooling-showcase-card dd {
+  margin: 0;
+  font-weight: 500;
+  color: #202b24;
+}
+
+/* Transcripts Table in Profile Page */
+.pf-transcripts-table-wrapper {
+  overflow-x: auto;
+  margin-top: 14px;
+  border: 1px solid #e1e7e0;
+  border-radius: 10px;
+  background: #ffffff;
+}
+
+.pf-transcripts-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 0.88rem;
+}
+
+.pf-transcripts-table th {
+  background: #f4f7f4;
+  padding: 10px 16px;
+  font-size: 0.76rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #556658;
+  font-weight: 600;
+  border-bottom: 1px solid #e1e7e0;
+}
+
+.pf-transcripts-table td {
+  padding: 11px 16px;
+  border-bottom: 1px solid #edf1eb;
+  color: #1c261e;
+  font-weight: 400;
+}
+
+.pf-transcripts-table tr:last-child td {
+  border-bottom: none;
+}
+
+.pf-transcripts-table tr:hover td {
+  background: #f9fbf9;
+}
+
+.pf-sgpa-pill {
+  display: inline-block;
+  font-weight: 600;
+  color: #1e5e34;
+  background: #dcf2e3;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+}
+
+@media (max-width: 800px) {
+  .pf-academic-schooling-grid,
+  .pf-academic-schooling-showcase {
+    grid-template-columns: 1fr;
+  }
+  .pf-semester-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Enhanced Profile Section Headers */
+.pf-title-row-enhanced {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 18px;
+}
+
+.pf-title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.pf-title-with-icon {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: 1.28rem;
+  font-weight: 500;
+  color: #163624;
+  letter-spacing: -0.015em;
+  line-height: 1.25;
+}
+
+.pf-title-with-icon svg {
+  color: #264e36;
+  flex-shrink: 0;
+}
+
+.pf-card-subtitle {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  color: #69786a;
+  line-height: 1.4;
+  font-weight: 400;
+}
+
+.pf-section-link {
+  font-family: var(--font-sans);
+  font-size: 0.84rem;
+  font-weight: 500;
+  color: #2b563a;
+  text-decoration: none;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.pf-section-link:hover {
+  text-decoration: underline;
+  color: #173822;
+}
+
+/* Verified Pill Badge */
+.pf-verified-badge {
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  font-weight: 500;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: #edf1ed;
+  color: #607062;
+  border: 1px solid #dce3db;
+  letter-spacing: 0.015em;
+  white-space: nowrap;
+}
+
+/* Two-column Key-Value List Layout (Personal & Academic) */
+.pf-info-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.pf-info-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 11px 0;
+  border-bottom: 1px solid #edf2ec;
+  font-size: 0.89rem;
+  line-height: 1.45;
+}
+
+.pf-info-row:first-child {
+  padding-top: 2px;
+}
+
+.pf-info-row:last-child {
+  border-bottom: none;
+  padding-bottom: 2px;
+}
+
+.pf-info-label {
+  font-family: var(--font-sans);
+  color: #556658;
+  font-weight: 400;
+  letter-spacing: -0.005em;
+}
+
+.pf-info-value {
+  font-family: var(--font-sans);
+  color: #18221b;
+  font-weight: 500; /* Clean medium weight, not bold 700 */
+  text-align: right;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  letter-spacing: -0.005em;
+}
+
+.pf-email-verified {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.pf-verified-icon {
+  color: #277941;
+  flex-shrink: 0;
+}
+
+/* Resume Inner Card (Matching Mockup) */
+.pf-resume-inner-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 13px 18px;
+  background: #f4f7f4;
+  border: 1px solid #e1e7e0;
+  border-radius: 12px;
+}
+
+.pf-resume-inner-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+  flex: 1;
+}
+
+.pf-resume-pdf-box {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: #dfe6df;
+  border: 1px solid #d2ded2;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+.pf-resume-pdf-icon {
+  color: #0b2416;
+}
+
+.pf-resume-details {
+  min-width: 0;
+  flex: 1;
+}
+
+.pf-resume-filename {
+  font-family: var(--font-sans);
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: #152219;
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  line-height: 1.35;
+}
+
+.pf-resume-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  font-size: 0.79rem;
+  color: #637265;
+  margin-top: 3px;
+  line-height: 1.3;
+}
+
+.pf-resume-status-badge {
+  color: #245834;
+  font-weight: 500;
+}
+
+.pf-resume-tag-pill {
+  background: #e2e8e2;
+  color: #3b4e3e;
+  padding: 1px 7px;
+  border-radius: 4px;
+  font-size: 0.72rem;
+  font-weight: 500;
+  border: 1px solid #d4ded3;
+}
+
+.pf-resume-btn-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.pf-btn-subtle {
+  padding: 6px 14px;
+  border-radius: 6px;
+  background: #e2e8e1;
+  border: 1px solid transparent;
+  color: #233327;
+  font-weight: 500;
+  font-size: 0.8rem;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pf-btn-subtle:hover {
+  background: #d5ddd4;
+  color: #152219;
+}
+
+.pf-btn-primary-pill {
+  padding: 6px 15px;
+  border-radius: 6px;
+  background: #173824;
+  color: #ffffff !important;
+  font-weight: 500;
+  font-size: 0.8rem;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+}
+
+.pf-btn-primary-pill:hover {
+  background: #0f2718;
+}
+
+/* Schooling Sub-Cards (10th & 12th) */
+.pf-schooling-showcase {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin-top: 14px;
+}
+
+.pf-schooling-subcard {
+  background: #f4f7f4;
+  border: 1px solid #e1e7e0;
+  border-radius: 12px;
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pf-schooling-subcard__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e3e9e1;
+}
+
+.pf-schooling-subcard__header h3 {
+  font-family: var(--font-sans);
+  font-size: 0.94rem;
+  font-weight: 600;
+  color: #18221b;
+  margin: 0;
+}
+
+.pf-mint-badge {
+  font-size: 0.74rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #d6ecdb;
+  color: #1a622f;
+  border: 1px solid #c2e2ca;
+}
+
+.pf-schooling-subcard__rows {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.pf-schooling-subcard__rows .pf-info-row {
+  padding: 5px 0;
+  border-bottom: none !important;
+  font-size: 0.86rem;
+}
+
+.pf-schooling-subcard__rows .pf-info-label {
+  color: #556658;
+  font-weight: 400;
+}
+
+.pf-schooling-subcard__rows .pf-info-value {
+  color: #18221b;
+  font-weight: 500;
+}
+
+.pf-attached-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #246a39;
+  font-weight: 500;
+  text-decoration: none;
+  font-size: 0.84rem;
+  transition: opacity 0.15s ease;
+}
+
+.pf-attached-link:hover {
+  text-decoration: underline;
+  opacity: 0.85;
+}
+
+.pf-not-attached {
+  color: #8c978b;
+  font-weight: 400;
+  font-size: 0.84rem;
+}
+
+@media (max-width: 800px) {
+  .pf-schooling-showcase {
+    grid-template-columns: 1fr;
+  }
+  .pf-resume-inner-card {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .pf-resume-btn-group {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}

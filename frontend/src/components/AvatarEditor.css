@@ -36,17 +36,17 @@
   width: 30px;
   height: 30px;
   border-radius: 50%;
-  border: 2px solid var(--bg-surface);
-  background: var(--color-primary);
-  color: #fff;
+  border: 2px solid #ffffff;
+  background: #173824;
+  color: #ffffff;
   display: grid;
   place-items: center;
   cursor: pointer;
-  transition: background var(--transition-fast), transform var(--transition-fast);
+  transition: background 0.15s ease, transform 0.15s ease;
 }
 
 .pf-avatar-editor__camera:hover:not(:disabled) {
-  background: var(--color-primary-hover);
+  background: #0f2718;
   transform: scale(1.06);
 }
 
@@ -69,28 +69,30 @@
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 7px 12px;
+  padding: 7px 13px;
   font-size: 0.82rem;
-  font-weight: 600;
-  color: var(--color-primary);
-  background: var(--bg-surface);
-  border: 1px solid var(--border-medium);
-  border-radius: var(--radius-sm);
+  font-weight: 500;
+  color: #173824;
+  background: #ffffff;
+  border: 1px solid #cbd7c8;
+  border-radius: 6px;
   cursor: pointer;
-  transition: background var(--transition-fast);
+  transition: background 0.15s ease, border-color 0.15s ease;
 }
 
 .pf-avatar-editor__btn:hover:not(:disabled) {
-  background: var(--bg-subtle);
+  background: #f0f4f0;
+  border-color: #b5c7b3;
 }
 
 .pf-avatar-editor__btn--danger {
-  color: var(--color-error);
-  border-color: var(--color-error-border);
+  color: #b42318;
+  border-color: #f0d0cb;
 }
 
 .pf-avatar-editor__btn--danger:hover:not(:disabled) {
-  background: var(--color-error-bg);
+  background: #fff5f5;
+  border-color: #e7a89f;
 }
 
 .pf-avatar-editor__hint {

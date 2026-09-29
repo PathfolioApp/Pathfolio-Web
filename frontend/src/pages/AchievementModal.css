@@ -1,1 +1,110 @@
-.pf-edit-section__heading{display:flex;align-items:center;justify-content:space-between;gap:18px}.pf-edit-section__heading h2{margin-bottom:0}.pf-achievement-add-button{display:inline-flex;align-items:center;gap:7px;border:1px solid #315a36;border-radius:8px;padding:9px 13px;background:#315a36;color:#fff;font-weight:700;cursor:pointer;transition:transform .16s ease,background .16s ease,box-shadow .16s ease}.pf-achievement-add-button:hover{background:#26482d;box-shadow:0 5px 12px rgba(49,90,54,.2);transform:translateY(-1px)}.pf-achievement-add-button:active{transform:translateY(0) scale(.98)}.pf-achievement-modal-intro{margin:0 0 18px;color:#667168;font-size:.9rem;line-height:1.5}.pf-achievement-modal-form{display:grid;grid-template-columns:1.35fr .9fr;gap:14px}.pf-achievement-modal-form label{display:block;font-size:.86rem;font-weight:600;color:#3f493e}.pf-achievement-modal-form input,.pf-achievement-modal-form select,.pf-achievement-modal-form textarea{display:block;width:100%;margin-top:6px;padding:10px 11px;border:1px solid #ced7ca;border-radius:7px;background:#fff;font:inherit;color:#202b24}.pf-achievement-modal-form textarea{min-height:105px;resize:vertical}.pf-achievement-modal-form__description{grid-column:1/-1}.pf-modal-footer .pf-secondary,.pf-modal-footer .pf-save{font-size:.88rem}@media(max-width:600px){.pf-edit-section__heading{align-items:flex-start;flex-direction:column}.pf-achievement-add-button{width:100%;justify-content:center}.pf-achievement-modal-form{grid-template-columns:1fr}.pf-achievement-modal-form__description{grid-column:auto}}
+/* Achievement Modal Styles */
+
+.pf-edit-section__heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.pf-edit-section__heading h2 {
+  margin-bottom: 0;
+}
+
+.pf-achievement-add-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid #173824;
+  border-radius: 8px;
+  padding: 8px 14px;
+  background: #173824;
+  color: #ffffff;
+  font-weight: 500;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.pf-achievement-add-button:hover {
+  background: #0f2718;
+  border-color: #0f2718;
+}
+
+.pf-achievement-add-button:active {
+  transform: scale(0.98);
+}
+
+.pf-achievement-modal-intro {
+  margin: 0 0 18px;
+  color: #627164;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.pf-achievement-modal-form {
+  display: grid;
+  grid-template-columns: 1.35fr 0.9fr;
+  gap: 14px;
+}
+
+.pf-achievement-modal-form label {
+  display: block;
+  font-size: 0.86rem;
+  font-weight: 500;
+  color: #364438;
+}
+
+.pf-achievement-modal-form input,
+.pf-achievement-modal-form select,
+.pf-achievement-modal-form textarea {
+  display: block;
+  width: 100%;
+  margin-top: 6px;
+  padding: 9px 12px;
+  border: 1px solid #cad4c8;
+  border-radius: 6px;
+  background: #ffffff;
+  font: inherit;
+  font-size: 0.92rem;
+  color: #18221b;
+}
+
+.pf-achievement-modal-form input:focus,
+.pf-achievement-modal-form select:focus,
+.pf-achievement-modal-form textarea:focus {
+  outline: none;
+  border-color: #264e36;
+  box-shadow: 0 0 0 3px rgba(38, 78, 54, 0.12);
+}
+
+.pf-achievement-modal-form textarea {
+  min-height: 105px;
+  resize: vertical;
+}
+
+.pf-achievement-modal-form__description {
+  grid-column: 1 / -1;
+}
+
+.pf-modal-footer .pf-secondary,
+.pf-modal-footer .pf-save {
+  font-size: 0.88rem;
+}
+
+@media (max-width: 600px) {
+  .pf-edit-section__heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .pf-achievement-add-button {
+    width: 100%;
+    justify-content: center;
+  }
+  .pf-achievement-modal-form {
+    grid-template-columns: 1fr;
+  }
+  .pf-achievement-modal-form__description {
+    grid-column: auto;
+  }
+}

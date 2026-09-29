@@ -1,7 +1,14 @@
+const crypto = require('crypto');
 const store = require('../models/studentStore');
 const auth = require('./auth.service');
+const r2Service = require('./r2.service');
 const email = value => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value || '');
-const academicFields = ['department', 'batchYear', 'degreeProgram', 'graduationYear', 'currentSemester', 'cgpa', 'tenthPercentage', 'twelfthPercentage', 'activeBacklogs', 'historicalBacklogs', 'gapYears'];
+const academicFields = [
+  'department', 'batchYear', 'degreeProgram', 'graduationYear', 'currentSemester',
+  'cgpa', 'tenthPercentage', 'twelfthPercentage', 'activeBacklogs', 'historicalBacklogs', 'gapYears',
+  'tenthBoard', 'tenthSchool', 'tenthYear',
+  'twelfthBoard', 'twelfthSchool', 'twelfthYear', 'twelfthStream'
+];
 const numericRules = {
   graduationYear: [1900, 2200, 'Graduation year'],
   currentSemester: [1, 20, 'Current semester'],
@@ -10,7 +17,24 @@ const numericRules = {
   twelfthPercentage: [0, 100, '12th percentage'],
   activeBacklogs: [0, 100, 'Active backlogs'],
   historicalBacklogs: [0, 100, 'Historical backlogs'],
-  gapYears: [0, 20, 'Gap years']
+  gapYears: [0, 20, 'Gap years'],
+  tenthYear: [1950, 2100, '10th passing year'],
+  twelfthYear: [1950, 2100, '12th passing year'],
+};
+
+const validatePdfBuffer = (buffer) => {
+  if (!Buffer.isBuffer(buffer) || buffer.length < 5 || buffer.subarray(0, 5).toString() !== '%PDF-') {
+    const error = new Error('Uploaded file must be a valid PDF document.');
+    error.statusCode = 400;
+    throw error;
+  }
+};
+
+const sanitizeDocFilename = (filename, defaultName = 'document.pdf') => {
+  const value = String(filename || '').trim();
+  if (!value) return defaultName;
+  const base = value.replace(/[/\\]/g, '').replace(/[\u0000<>:"|?*]/g, '').trim();
+  return base.toLowerCase().endsWith('.pdf') ? base : `${base}.pdf`;
 };
 const normalizeAcademicValue = (field, value) => {
   if (value === '' || value === null || value === undefined) return undefined;
@@ -66,10 +90,265 @@ class ProfileService {
     student.personal = { ...student.personal, avatarUrl: url };
     await store.saveStudent(student); return this.safe(student);
   }
+  safe(student) { return auth.publicStudent ? auth.publicStudent(student) : student; }
   async deleteAccount(id) {
     const student = await store.getStudentById(id); if (!student) throw new Error('Student not found.');
     if (student.isAdmin) throw new Error('The administrator account cannot be deleted here.');
     await store.deleteUser(id);
+  }
+
+  async uploadAcademicDocument(id, { type, semester, file }) {
+    if (!file) {
+      const error = new Error('No file was uploaded.');
+      error.statusCode = 400;
+      throw error;
+    }
+    validatePdfBuffer(file.buffer);
+
+    const student = await store.getStudentById(id);
+    if (!student) {
+      const error = new Error('Student not found.');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    student.academic = student.academic || {};
+    const sanitizedName = sanitizeDocFilename(file.originalname);
+    const fileId = `doc_${Date.now()}_${crypto.randomBytes(3).toString('hex')}`;
+
+    if (type === 'tenth_marksheet') {
+      const oldKey = student.academic.tenthMarksheet?.key;
+      const key = `students/${id}/academic/10th_marksheet_${Date.now()}.pdf`;
+      await r2Service.uploadFile(file.buffer, key, 'application/pdf');
+      if (oldKey) await r2Service.deleteFile(oldKey).catch(() => {});
+      student.academic.tenthMarksheet = {
+        fileId,
+        key,
+        filename: sanitizedName,
+        size: file.size,
+        uploadedAt: new Date().toISOString(),
+      };
+    } else if (type === 'twelfth_marksheet') {
+      const oldKey = student.academic.twelfthMarksheet?.key;
+      const key = `students/${id}/academic/12th_marksheet_${Date.now()}.pdf`;
+      await r2Service.uploadFile(file.buffer, key, 'application/pdf');
+      if (oldKey) await r2Service.deleteFile(oldKey).catch(() => {});
+      student.academic.twelfthMarksheet = {
+        fileId,
+        key,
+        filename: sanitizedName,
+        size: file.size,
+        uploadedAt: new Date().toISOString(),
+      };
+    } else if (type === 'semester_transcript') {
+      const semNum = Number(semester);
+      if (!Number.isInteger(semNum) || semNum < 1 || semNum > 20) {
+        const error = new Error('A valid semester number (1-20) is required.');
+        error.statusCode = 400;
+        throw error;
+      }
+      const semesters = Array.isArray(student.academic.semesters) ? [...student.academic.semesters] : [];
+      let semIndex = semesters.findIndex(s => Number(s.semester) === semNum);
+      const semId = semIndex >= 0 ? semesters[semIndex].id : `sem_${semNum}_${Date.now()}`;
+      const oldKey = semIndex >= 0 ? semesters[semIndex].transcript?.key : null;
+      const key = `students/${id}/academic/sem_${semNum}_transcript_${Date.now()}.pdf`;
+
+      await r2Service.uploadFile(file.buffer, key, 'application/pdf');
+      if (oldKey) await r2Service.deleteFile(oldKey).catch(() => {});
+
+      const transcriptMeta = {
+        fileId,
+        key,
+        filename: sanitizedName,
+        size: file.size,
+        uploadedAt: new Date().toISOString(),
+      };
+
+      if (semIndex >= 0) {
+        semesters[semIndex] = { ...semesters[semIndex], transcript: transcriptMeta };
+      } else {
+        semesters.push({
+          id: semId,
+          semester: semNum,
+          sgpa: null,
+          cgpa: null,
+          academicYear: '',
+          transcript: transcriptMeta,
+        });
+      }
+      semesters.sort((a, b) => Number(a.semester) - Number(b.semester));
+      student.academic.semesters = semesters;
+    } else {
+      const error = new Error('Invalid academic document type. Expected tenth_marksheet, twelfth_marksheet, or semester_transcript.');
+      error.statusCode = 400;
+      throw error;
+    }
+
+    await store.saveStudent(student);
+    return this.get(id);
+  }
+
+  async deleteAcademicDocument(id, { type, semesterId, semester }) {
+    const student = await store.getStudentById(id);
+    if (!student) {
+      const error = new Error('Student not found.');
+      error.statusCode = 404;
+      throw error;
+    }
+    student.academic = student.academic || {};
+
+    if (type === 'tenth_marksheet') {
+      const oldKey = student.academic.tenthMarksheet?.key;
+      if (oldKey) await r2Service.deleteFile(oldKey).catch(() => {});
+      delete student.academic.tenthMarksheet;
+    } else if (type === 'twelfth_marksheet') {
+      const oldKey = student.academic.twelfthMarksheet?.key;
+      if (oldKey) await r2Service.deleteFile(oldKey).catch(() => {});
+      delete student.academic.twelfthMarksheet;
+    } else if (type === 'semester_transcript') {
+      const semesters = Array.isArray(student.academic.semesters) ? [...student.academic.semesters] : [];
+      const semIndex = semesters.findIndex(s => s.id === semesterId || Number(s.semester) === Number(semester));
+      if (semIndex >= 0 && semesters[semIndex].transcript?.key) {
+        await r2Service.deleteFile(semesters[semIndex].transcript.key).catch(() => {});
+        semesters[semIndex] = { ...semesters[semIndex], transcript: null };
+        student.academic.semesters = semesters;
+      }
+    } else {
+      const error = new Error('Invalid document type.');
+      error.statusCode = 400;
+      throw error;
+    }
+
+    await store.saveStudent(student);
+    return this.get(id);
+  }
+
+  async getAcademicDocument(id, { type, semesterId, semester }) {
+    const student = await store.getStudentById(id);
+    if (!student) {
+      const error = new Error('Student not found.');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    let doc = null;
+    if (type === 'tenth_marksheet') {
+      doc = student.academic?.tenthMarksheet;
+    } else if (type === 'twelfth_marksheet') {
+      doc = student.academic?.twelfthMarksheet;
+    } else if (type === 'semester_transcript') {
+      const semesters = student.academic?.semesters || [];
+      const sem = semesters.find(s => s.id === semesterId || (semester && Number(s.semester) === Number(semester)));
+      doc = sem?.transcript;
+    }
+
+    if (!doc || !doc.key) {
+      const error = new Error('Academic document not found.');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    const object = await r2Service.getFile(doc.key);
+    if (!object.Body) {
+      const error = new Error('Document file is unavailable in storage.');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    return {
+      body: object.Body,
+      contentType: object.ContentType || 'application/pdf',
+      contentLength: object.ContentLength,
+      filename: doc.filename || `${type}.pdf`,
+    };
+  }
+
+  async saveSemester(id, { semester, sgpa, cgpa, academicYear }) {
+    const semNum = Number(semester);
+    if (!Number.isInteger(semNum) || semNum < 1 || semNum > 20) {
+      const error = new Error('A valid semester number between 1 and 20 is required.');
+      error.statusCode = 400;
+      throw error;
+    }
+
+    const parseScore = (val, label) => {
+      if (val === '' || val === null || val === undefined) return null;
+      const num = Number(val);
+      if (!Number.isFinite(num) || num < 0 || num > 10) {
+        const error = new Error(`${label} must be a number between 0 and 10.`);
+        error.statusCode = 400;
+        throw error;
+      }
+      return Math.round(num * 100) / 100;
+    };
+
+    const cleanSgpa = parseScore(sgpa, 'SGPA');
+    const cleanCgpa = parseScore(cgpa, 'CGPA');
+    const cleanYear = academicYear ? String(academicYear).trim().slice(0, 30) : '';
+
+    const student = await store.getStudentById(id);
+    if (!student) {
+      const error = new Error('Student not found.');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    student.academic = student.academic || {};
+    const semesters = Array.isArray(student.academic.semesters) ? [...student.academic.semesters] : [];
+    const semIndex = semesters.findIndex(s => Number(s.semester) === semNum);
+
+    if (semIndex >= 0) {
+      semesters[semIndex] = {
+        ...semesters[semIndex],
+        semester: semNum,
+        sgpa: cleanSgpa,
+        cgpa: cleanCgpa,
+        academicYear: cleanYear,
+      };
+    } else {
+      semesters.push({
+        id: `sem_${semNum}_${Date.now()}`,
+        semester: semNum,
+        sgpa: cleanSgpa,
+        cgpa: cleanCgpa,
+        academicYear: cleanYear,
+        transcript: null,
+      });
+    }
+
+    semesters.sort((a, b) => Number(a.semester) - Number(b.semester));
+    student.academic.semesters = semesters;
+
+    await store.saveStudent(student);
+    return this.get(id);
+  }
+
+  async deleteSemester(id, semesterId) {
+    const student = await store.getStudentById(id);
+    if (!student) {
+      const error = new Error('Student not found.');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    student.academic = student.academic || {};
+    const semesters = Array.isArray(student.academic.semesters) ? [...student.academic.semesters] : [];
+    const semIndex = semesters.findIndex(s => s.id === semesterId || String(s.semester) === String(semesterId));
+
+    if (semIndex < 0) {
+      const error = new Error('Semester record not found.');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    const [removed] = semesters.splice(semIndex, 1);
+    if (removed?.transcript?.key) {
+      await r2Service.deleteFile(removed.transcript.key).catch(() => {});
+    }
+
+    student.academic.semesters = semesters;
+    await store.saveStudent(student);
+    return this.get(id);
   }
 }
 module.exports = new ProfileService();

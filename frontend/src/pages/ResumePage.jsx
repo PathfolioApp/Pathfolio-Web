@@ -17,6 +17,7 @@ import {
   Plus,
 } from 'lucide-react';
 import { Button } from '../components/Button';
+import { PdfIcon } from '../components/PdfIcon';
 import './ResumePage.css';
 
 const SUGGESTED_ROLES = [
@@ -207,7 +208,7 @@ export function ResumePage() {
           </div>
         ) : resumes.length === 0 ? (
           <div className="pf-resume-empty">
-            <FileText size={48} />
+            <PdfIcon size={48} className="pf-resume-pdf-icon" />
             <h3>No resumes uploaded yet</h3>
             <p>Upload your PDF resumes (e.g. SDE, Data Analyst, Core) to get started.</p>
             <label className="pf-upload-btn" style={{ marginTop: '1.25rem' }}>
@@ -231,7 +232,7 @@ export function ResumePage() {
                 className={`pf-resume-card ${resume.isDefault ? 'is-default' : ''}`}
               >
                 <div className="pf-resume-card-icon">
-                  <FileText size={24} />
+                  <PdfIcon size={26} className="pf-resume-pdf-icon" />
                 </div>
                 <div className="pf-resume-card-content">
                   <div className="pf-resume-title-row">
@@ -454,7 +455,7 @@ export function ResumePage() {
           <div className="pf-preview-modal" onClick={(e) => e.stopPropagation()}>
             <div className="pf-preview-modal-header">
               <div className="pf-preview-modal-title">
-                <FileText size={20} />
+                <PdfIcon size={20} className="pf-resume-pdf-icon" />
                 <span>{previewResume.filename}</span>
               </div>
               <div className="pf-preview-modal-actions">

@@ -1,0 +1,32 @@
+/* Achievement Icon & Category Badge Styles */
+
+.pf-achievement-icon-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--ach-badge-size, 36px);
+  height: var(--ach-badge-size, 36px);
+  flex: 0 0 var(--ach-badge-size, 36px);
+  border-radius: 9px;
+  border: 1px solid var(--ach-badge-border, #d0dfd3);
+  background: var(--ach-badge-bg, #edf4ef);
+  color: var(--ach-badge-color, #1c452c);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.pf-achievement-icon-badge:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(24, 32, 28, 0.06);
+}
+
+.pf-achievement-icon-badge svg {
+  display: block;
+}
+
+.pf-achievement-icon-glyph {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ach-badge-color, #1c452c);
+  flex-shrink: 0;
+}

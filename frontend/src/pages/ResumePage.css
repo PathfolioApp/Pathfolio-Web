@@ -1,69 +1,80 @@
+/* Modern, Clean & Sleek Resume Page Styling */
+
 .pf-resume-page {
-  max-width: 800px;
+  max-width: 1360px;
   margin: 0 auto;
-  padding: 2rem;
-  animation: fadeIn 0.4s ease-out;
+  padding: 36px 0 80px;
+  animation: fadeIn 0.3s ease-out;
 }
 
 .pf-back-link {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  color: var(--color-text-light);
+  gap: 6px;
+  color: #5a6b5d;
   text-decoration: none;
-  font-size: 0.875rem;
-  margin-bottom: 1.5rem;
-  transition: color 0.2s ease;
+  font-size: 0.86rem;
+  font-weight: 500;
+  margin-bottom: 14px;
+  transition: color 0.15s ease;
 }
 
 .pf-back-link:hover {
-  color: var(--color-primary);
+  color: #173824;
 }
 
 .pf-resume-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 2rem;
+  align-items: flex-end;
+  margin-bottom: 28px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #e5eae3;
 }
 
 .pf-resume-header h1 {
-  font-size: 2rem;
-  font-weight: 700;
-  color: var(--color-text);
-  margin: 0 0 0.5rem 0;
+  font-family: var(--font-serif);
+  font-size: 2.2rem;
+  font-weight: 500;
+  color: #142e20;
   letter-spacing: -0.02em;
+  margin: 0 0 6px 0;
+  line-height: 1.2;
 }
 
 .pf-resume-header p {
-  color: var(--color-text-light);
+  color: #556658;
+  font-size: 0.92rem;
   margin: 0;
+  font-family: var(--font-sans);
 }
 
 .pf-resume-actions {
   display: flex;
-  gap: 1rem;
+  gap: 12px;
+  align-items: center;
+  flex-shrink: 0;
 }
 
 .pf-upload-btn {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  background-color: var(--color-primary);
-  color: white;
-  padding: 0.5rem 1rem;
-  border-radius: var(--radius-md);
+  gap: 8px;
+  background-color: #173824;
+  color: #ffffff !important;
+  padding: 10px 20px;
+  border-radius: 8px;
   font-weight: 500;
-  font-size: 0.875rem;
+  font-size: 0.88rem;
   cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: 0 4px 12px rgba(var(--color-primary-rgb), 0.2);
+  transition: all 0.15s ease;
+  box-shadow: 0 1px 3px rgba(24, 32, 28, 0.08);
 }
 
 .pf-upload-btn:hover {
-  background-color: var(--color-primary-dark);
+  background-color: #0f2718;
   transform: translateY(-1px);
-  box-shadow: 0 6px 16px rgba(var(--color-primary-rgb), 0.3);
+  box-shadow: 0 3px 10px rgba(24, 32, 28, 0.14);
 }
 
 .pf-upload-btn:active {
@@ -72,7 +83,7 @@
 
 .pf-upload-btn[disabled],
 .pf-upload-btn:has(input:disabled) {
-  opacity: 0.7;
+  opacity: 0.65;
   cursor: not-allowed;
   transform: none;
 }
@@ -87,13 +98,188 @@
 }
 
 .pf-resume-error {
-  background: var(--color-error-bg, #fef2f2);
-  color: var(--color-error, #dc2626);
-  padding: 1rem;
-  border-radius: var(--radius-md);
-  margin-bottom: 2rem;
-  font-size: 0.875rem;
-  border: 1px solid var(--color-error-border, #fecaca);
+  background: #fdf1f1;
+  color: #9a301d;
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  font-size: 0.88rem;
+  border: 1px solid #f3c3c3;
+}
+
+/* Resume Cards List */
+.pf-resume-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.pf-resume-loading,
+.pf-resume-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 50px 24px;
+  text-align: center;
+  color: #5a6b5d;
+  background: #ffffff;
+  border: 1px dashed #cbd6c8;
+  border-radius: 16px;
+}
+
+.pf-resume-empty h3 {
+  color: #16221a;
+  font-family: var(--font-serif);
+  font-size: 1.35rem;
+  font-weight: 500;
+  margin: 12px 0 6px 0;
+}
+
+.pf-resume-empty p {
+  color: #637265;
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+/* Single Resume Card */
+.pf-resume-card {
+  display: flex;
+  align-items: center;
+  background: #ffffff;
+  border: 1px solid #e5eae3;
+  padding: 18px 24px;
+  border-radius: 16px;
+  box-shadow: 0 1px 3px rgba(24, 32, 28, 0.02), 0 4px 14px rgba(24, 32, 28, 0.015);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.pf-resume-card:hover {
+  border-color: #cbd7cb;
+  box-shadow: 0 2px 8px rgba(24, 32, 28, 0.04);
+}
+
+.pf-resume-card.is-default {
+  border-color: #c7ded0;
+  background: #ffffff;
+}
+
+.pf-resume-card-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  background: #dfe6df;
+  border: 1px solid #d2ded2;
+  display: grid;
+  place-items: center;
+  margin-right: 18px;
+  flex-shrink: 0;
+  color: #0b2416;
+}
+
+.pf-resume-card-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.pf-resume-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.pf-resume-title-row h3 {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #16221a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pf-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #dcf2e3;
+  color: #175e30;
+  border: 1px solid #bce4ca;
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-size: 0.74rem;
+  font-weight: 600;
+}
+
+.pf-inline-rename-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  color: #768478;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  opacity: 0.7;
+  transition: all 0.15s ease;
+}
+
+.pf-inline-rename-btn:hover {
+  opacity: 1;
+  color: #173824;
+  background: #f0f4f0;
+  border-color: #dce4dc;
+}
+
+.pf-rename-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+}
+
+.pf-rename-input {
+  font-size: 0.95rem;
+  padding: 5px 10px;
+  border: 1px solid #264e36;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #18221b;
+  outline: none;
+  flex: 1;
+  max-width: 320px;
+  box-shadow: 0 0 0 2px rgba(38, 78, 54, 0.1);
+}
+
+.pf-icon-btn {
+  background: transparent;
+  border: 1px solid #dce4dc;
+  padding: 6px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #556658;
+  transition: all 0.15s ease;
+}
+
+.pf-icon-btn:hover {
+  background: #f4f7f4;
+  color: #18221b;
+}
+
+.pf-save-btn {
+  color: #1b6330;
+  border-color: #bce4ca;
+  background: #edf7ef;
+}
+
+.pf-save-btn:hover {
+  background: #dcf2e3;
+  color: #175e30;
 }
 
 /* Role Tags on Resume Card */
@@ -101,21 +287,21 @@
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 0.4rem;
-  margin: 0.35rem 0 0.4rem 0;
+  gap: 6px;
+  margin: 6px 0 6px 0;
 }
 
 .pf-role-tag {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
-  background: rgba(41, 74, 49, 0.08);
-  color: var(--color-primary, #294a31);
-  border: 1px solid rgba(41, 74, 49, 0.16);
-  padding: 0.15rem 0.55rem;
+  gap: 5px;
+  background: #f0f4f0;
+  color: #245236;
+  border: 1px solid #dce4dc;
+  padding: 3px 10px;
   border-radius: 999px;
-  font-size: 0.76rem;
-  font-weight: 600;
+  font-size: 0.78rem;
+  font-weight: 500;
   letter-spacing: 0.01em;
   transition: all 0.15s ease;
 }
@@ -123,63 +309,105 @@
 .pf-role-tag button {
   background: transparent;
   border: none;
-  color: var(--color-primary, #294a31);
-  opacity: 0.65;
+  color: #245236;
+  opacity: 0.6;
   cursor: pointer;
   padding: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  transition: opacity 0.15s ease, color 0.15s ease;
 }
 
 .pf-role-tag button:hover {
   opacity: 1;
-  color: #dc2626;
+  color: #c53030;
 }
 
 .pf-role-tags-empty {
-  font-size: 0.78rem;
-  color: var(--color-text-light);
+  font-size: 0.8rem;
+  color: #7d8b7e;
   font-style: italic;
 }
 
 .pf-add-tag-trigger {
   display: inline-flex;
   align-items: center;
-  gap: 0.3rem;
+  gap: 4px;
   background: transparent;
-  border: 1px dashed var(--color-border);
-  color: var(--color-text-light);
-  padding: 0.15rem 0.55rem;
+  border: 1px dashed #cbd6c8;
+  color: #4e6052;
+  padding: 3px 10px;
   border-radius: 999px;
-  font-size: 0.74rem;
+  font-size: 0.76rem;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .pf-add-tag-trigger:hover {
-  border-color: var(--color-primary);
-  color: var(--color-primary);
-  background: rgba(41, 74, 49, 0.04);
+  border-color: #264e36;
+  color: #173824;
+  background: #f4f7f4;
 }
 
-.pf-role-tag--large {
-  font-size: 0.85rem;
-  padding: 0.3rem 0.75rem;
-  gap: 0.5rem;
+.pf-resume-meta {
+  margin: 0;
+  font-size: 0.82rem;
+  color: #69786a;
+}
+
+/* Actions Group */
+.pf-resume-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: 20px;
+  flex-shrink: 0;
+}
+
+.pf-resume-card-actions button,
+.pf-resume-card-actions a {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: #ffffff;
+  border: 1px solid #e1e7e0;
+  color: #4e5e52;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  padding: 0;
+}
+
+.pf-resume-card-actions button:hover,
+.pf-resume-card-actions a:hover {
+  background: #f4f7f4;
+  border-color: #cbd5cb;
+  color: #173824;
+  transform: translateY(-1px);
+  box-shadow: 0 1px 3px rgba(24, 32, 28, 0.04);
+}
+
+.pf-resume-card-actions button.pf-danger:hover {
+  background: #fdf1f1;
+  color: #9a301d;
+  border-color: #f3c3c3;
 }
 
 /* Tag Management Modal */
 .pf-tag-modal {
-  background: var(--color-surface, #ffffff);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg, 12px);
+  background: #ffffff;
+  border: 1px solid #e5eae3;
+  border-radius: 16px;
   width: 100%;
   max-width: 520px;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 16px 40px rgba(24, 32, 28, 0.14);
   overflow: hidden;
   animation: slideDown 0.25s ease-out;
 }
@@ -189,21 +417,22 @@
   align-items: flex-start;
   justify-content: space-between;
   padding: 1.25rem 1.5rem;
-  border-bottom: 1px solid var(--color-border);
-  background: var(--color-surface);
+  border-bottom: 1px solid #e5eae3;
+  background: #ffffff;
 }
 
 .pf-tag-modal-header h3 {
   margin: 0;
-  font-size: 1.15rem;
-  font-weight: 700;
-  color: var(--color-text);
+  font-family: var(--font-serif);
+  font-size: 1.25rem;
+  font-weight: 500;
+  color: #142e20;
 }
 
 .pf-tag-modal-subtitle {
   margin: 0.25rem 0 0 0;
   font-size: 0.85rem;
-  color: var(--color-text-light);
+  color: #556658;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -214,18 +443,18 @@
   padding: 1.5rem;
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 0.85rem;
   max-height: 65vh;
   overflow-y: auto;
 }
 
 .pf-tag-section-label {
-  font-size: 0.8rem;
-  font-weight: 700;
+  font-size: 0.78rem;
+  font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: var(--color-text-light);
-  margin-top: 0.5rem;
+  color: #556658;
+  margin-top: 0.4rem;
 }
 
 .pf-tag-section-label:first-child {
@@ -236,16 +465,16 @@
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
-  min-height: 38px;
-  padding: 0.5rem;
-  border: 1px dashed var(--color-border);
-  border-radius: var(--radius-md);
-  background: var(--color-background);
+  min-height: 42px;
+  padding: 0.6rem;
+  border: 1px dashed #cad5c8;
+  border-radius: 8px;
+  background: #f7faf7;
 }
 
 .pf-tag-empty-msg {
   font-size: 0.82rem;
-  color: var(--color-text-light);
+  color: #7d8b7e;
   margin: 0;
   padding: 0.2rem;
 }
@@ -260,9 +489,9 @@
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  background: var(--color-background);
-  border: 1px solid var(--color-border);
-  color: var(--color-text);
+  background: #f4f7f4;
+  border: 1px solid #e1e7e0;
+  color: #263629;
   padding: 0.35rem 0.75rem;
   border-radius: 999px;
   font-size: 0.8rem;
@@ -272,15 +501,15 @@
 }
 
 .pf-suggested-chip:hover {
-  border-color: var(--color-primary);
-  color: var(--color-primary);
-  background: rgba(41, 74, 49, 0.05);
+  border-color: #264e36;
+  color: #173824;
+  background: #eaf2eb;
 }
 
 .pf-suggested-chip.is-selected {
-  background: rgba(41, 74, 49, 0.12);
-  border-color: var(--color-primary);
-  color: var(--color-primary);
+  background: #dcf2e3;
+  border-color: #bce4ca;
+  color: #175e30;
   font-weight: 600;
 }
 
@@ -292,17 +521,18 @@
 .pf-custom-tag-form input {
   flex: 1;
   padding: 0.55rem 0.85rem;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  background: var(--color-background);
-  color: var(--color-text);
+  border: 1px solid #cad5c8;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #18221b;
   font-size: 0.88rem;
   outline: none;
   transition: border-color 0.2s ease;
 }
 
 .pf-custom-tag-form input:focus {
-  border-color: var(--color-primary);
+  border-color: #264e36;
+  box-shadow: 0 0 0 3px rgba(38, 78, 54, 0.1);
 }
 
 .pf-tag-modal-footer {
@@ -310,208 +540,15 @@
   justify-content: flex-end;
   gap: 0.75rem;
   padding: 1rem 1.5rem;
-  border-top: 1px solid var(--color-border);
-  background: var(--color-surface);
-}
-
-.pf-resume-list {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.pf-resume-loading,
-.pf-resume-empty {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 4rem 2rem;
-  text-align: center;
-  color: var(--color-text-light);
-  background: var(--color-surface);
-  border: 1px dashed var(--color-border);
-  border-radius: var(--radius-lg);
-}
-
-.pf-resume-empty svg {
-  color: var(--color-border);
-  margin-bottom: 1rem;
-}
-
-.pf-resume-empty h3 {
-  color: var(--color-text);
-  margin: 0 0 0.5rem 0;
-}
-
-.pf-resume-card {
-  display: flex;
-  align-items: center;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  padding: 1.25rem;
-  border-radius: var(--radius-lg);
-  transition: all 0.2s ease;
-}
-
-.pf-resume-card:hover {
-  border-color: var(--color-primary-light);
-  box-shadow: var(--shadow-sm);
-}
-
-.pf-resume-card.is-default {
-  border-color: var(--color-primary);
-  background: linear-gradient(to right, var(--color-surface), rgba(var(--color-primary-rgb), 0.02));
-}
-
-.pf-resume-card-icon {
-  background: var(--color-background);
-  color: var(--color-primary);
-  width: 48px;
-  height: 48px;
-  border-radius: var(--radius-md);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-right: 1rem;
-  flex-shrink: 0;
-}
-
-.pf-resume-card-content {
-  flex: 1;
-  min-width: 0;
-}
-
-.pf-resume-title-row {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  margin-bottom: 0.25rem;
-}
-
-.pf-resume-title-row h3 {
-  margin: 0;
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--color-text);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.pf-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  background: rgba(var(--color-primary-rgb), 0.1);
-  color: var(--color-primary);
-  padding: 0.125rem 0.5rem;
-  border-radius: 999px;
-  font-size: 0.75rem;
-  font-weight: 500;
-}
-
-.pf-resume-meta {
-  margin: 0;
-  font-size: 0.875rem;
-  color: var(--color-text-light);
-}
-
-.pf-resume-card-actions {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-left: 1rem;
-}
-
-.pf-resume-card-actions button,
-.pf-resume-card-actions a {
-  background: transparent;
-  border: none;
-  color: var(--color-text-light);
-  padding: 0.5rem;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.pf-resume-card-actions button:hover,
-.pf-resume-card-actions a:hover {
-  background: var(--color-background);
-  color: var(--color-text);
-}
-
-.pf-resume-card-actions button.pf-danger:hover {
-  background: var(--color-error-bg, #fef2f2);
-  color: var(--color-error, #dc2626);
-}
-
-.pf-inline-rename-btn {
-  background: transparent;
-  border: none;
-  color: var(--color-text-light);
-  cursor: pointer;
-  padding: 0.2rem;
-  border-radius: var(--radius-sm);
-  display: inline-flex;
-  align-items: center;
-  opacity: 0.6;
-  transition: all 0.2s ease;
-}
-
-.pf-inline-rename-btn:hover {
-  opacity: 1;
-  color: var(--color-primary);
-  background: var(--color-background);
-}
-
-.pf-rename-row {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  width: 100%;
-}
-
-.pf-rename-input {
-  font-size: 0.95rem;
-  padding: 0.25rem 0.5rem;
-  border: 1px solid var(--color-primary);
-  border-radius: var(--radius-sm);
-  background: var(--color-background);
-  color: var(--color-text);
-  outline: none;
-  flex: 1;
-  max-width: 320px;
-}
-
-.pf-icon-btn {
-  background: transparent;
-  border: none;
-  padding: 0.3rem;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--color-text-light);
-}
-
-.pf-save-btn {
-  color: #10b981;
-}
-
-.pf-save-btn:hover {
-  background: rgba(16, 185, 129, 0.1);
+  border-top: 1px solid #e5eae3;
+  background: #ffffff;
 }
 
 /* PDF Preview Modal */
 .pf-preview-modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.65);
+  background: rgba(15, 25, 18, 0.6);
   backdrop-filter: blur(4px);
   z-index: 1000;
   display: flex;
@@ -522,15 +559,15 @@
 }
 
 .pf-preview-modal {
-  background: var(--color-surface, #ffffff);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg, 12px);
+  background: #ffffff;
+  border: 1px solid #e5eae3;
+  border-radius: 16px;
   width: 100%;
-  max-width: 900px;
+  max-width: 960px;
   height: 85vh;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 20px 48px rgba(24, 32, 28, 0.2);
   overflow: hidden;
 }
 
@@ -539,17 +576,18 @@
   align-items: center;
   justify-content: space-between;
   padding: 1rem 1.5rem;
-  border-bottom: 1px solid var(--color-border);
-  background: var(--color-surface);
+  border-bottom: 1px solid #e5eae3;
+  background: #ffffff;
 }
 
 .pf-preview-modal-title {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  font-weight: 600;
-  color: var(--color-text);
-  font-size: 1.05rem;
+  font-family: var(--font-serif);
+  font-weight: 500;
+  color: #142e20;
+  font-size: 1.15rem;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -565,44 +603,44 @@
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  padding: 0.4rem 0.8rem;
-  font-size: 0.825rem;
-  color: var(--color-text);
-  background: var(--color-background);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
+  padding: 0.4rem 0.85rem;
+  font-size: 0.82rem;
+  color: #203324;
+  background: #f4f7f4;
+  border: 1px solid #dce4dc;
+  border-radius: 6px;
   text-decoration: none;
   font-weight: 500;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
 }
 
 .pf-modal-btn:hover {
-  background: var(--color-surface);
-  border-color: var(--color-primary);
-  color: var(--color-primary);
+  background: #eaf2eb;
+  border-color: #264e36;
+  color: #173824;
 }
 
 .pf-close-btn {
   background: transparent;
   border: none;
-  color: var(--color-text-light);
+  color: #556658;
   padding: 0.4rem;
-  border-radius: var(--radius-sm);
+  border-radius: 6px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
 }
 
 .pf-close-btn:hover {
-  color: var(--color-text);
-  background: var(--color-background);
+  color: #18221b;
+  background: #f4f7f4;
 }
 
 .pf-preview-modal-body {
   flex: 1;
-  background: #525659;
+  background: #474b4e;
   position: relative;
 }
 
@@ -625,14 +663,24 @@
 @media (max-width: 640px) {
   .pf-resume-header {
     flex-direction: column;
-    gap: 1.5rem;
+    align-items: flex-start;
+    gap: 1.25rem;
   }
   .pf-resume-actions {
     width: 100%;
-    flex-direction: column;
   }
-  .pf-upload-btn, .pf-resume-actions button {
+  .pf-upload-btn {
     width: 100%;
     justify-content: center;
+  }
+  .pf-resume-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .pf-resume-card-actions {
+    margin-left: 0;
+    width: 100%;
+    justify-content: flex-end;
   }
 }
