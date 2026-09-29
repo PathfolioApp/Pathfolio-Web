@@ -14,5 +14,15 @@ module.exports = {
   bootstrapAdminName: process.env.BOOTSTRAP_ADMIN_NAME,
   bootstrapAdminUsername: process.env.BOOTSTRAP_ADMIN_USERNAME?.trim().toLowerCase(),
   cloudinary: { cloudName: process.env.CLOUDINARY_CLOUD_NAME, apiKey: process.env.CLOUDINARY_API_KEY, apiSecret: process.env.CLOUDINARY_API_SECRET, uploadFolder: process.env.CLOUDINARY_UPLOAD_FOLDER || 'pathfolio/tnp', configured: Boolean(process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET) },
+  r2: {
+    accountId: process.env.R2_ACCOUNT_ID,
+    accessKeyId: process.env.R2_ACCESS_KEY_ID,
+    secretAccessKey: process.env.R2_SECRET_ACCESS_KEY,
+    bucket: process.env.R2_BUCKET || process.env.R2_BUCKET_NAME,
+    endpoint: process.env.R2_ENDPOINT,
+    region: process.env.R2_REGION || 'auto',
+    publicUrl: process.env.R2_PUBLIC_URL,
+    configured: Boolean(process.env.R2_ACCESS_KEY_ID && process.env.R2_SECRET_ACCESS_KEY && (process.env.R2_ENDPOINT || process.env.R2_ACCOUNT_ID) && (process.env.R2_BUCKET || process.env.R2_BUCKET_NAME))
+  },
   databaseConfigured: (process.env.NODE_ENV === 'production' || process.env.USE_DATABASE === 'true') && Boolean(process.env.DB_HOST && process.env.DB_NAME && process.env.DB_USER)
 };

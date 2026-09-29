@@ -17,6 +17,7 @@ import { AdminPage } from './pages/AdminPage';
 import { PlacementPage } from './pages/PlacementPage';
 import { RecruiterPage } from './pages/RecruiterPage';
 import { StoryPage } from './pages/StoryPage';
+import { ResumePage } from './pages/ResumePage';
 import { PrivacyPolicyPage, TermsPage, CookiePolicyPage } from './pages/PolicyPages';
 
 function Protected({ children }) { const { student, loading } = useAuth(); if (loading) return <main className="pf-auth-page">Loading your Pathfolio…</main>; return student?.onboarding?.completed ? <AppLayout>{children}</AppLayout> : <Navigate to={student ? '/onboarding' : '/signin'} replace />; }
@@ -42,6 +43,7 @@ export default function App() {
         <Route path="/story" element={<Protected><StoryPage /></Protected>} />
         <Route path="/placement" element={<Protected><PlacementPage /></Protected>} />
         <Route path="/profile" element={<Protected><ProfilePage /></Protected>} />
+        <Route path="/resume" element={<Protected><ResumePage /></Protected>} />
         <Route path="/profile/edit" element={<Protected><ProfileEditPage /></Protected>} />
         <Route path="/profile/settings" element={<Protected><ProfileSettingsPage /></Protected>} />
         <Route path="/settings" element={<Protected><SettingsPage /></Protected>} />

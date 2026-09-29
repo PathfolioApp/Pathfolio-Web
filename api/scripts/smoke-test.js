@@ -189,6 +189,77 @@ async function run() {
   expectStatus(result.response, 404, 'nonexistent achievement delete');
   console.log('PASS nonexistent achievement delete rejected');
 
+  // --- Resume Module Tests (PDF Upload, Streaming & Role Tags) ---
+  result = await request('/resumes');
+  expectStatus(result.response, 200, 'list resumes initially');
+  assert.ok(Array.isArray(result.body), 'resumes should return an array');
+  console.log('PASS list resumes initially');
+
+  // Empty upload rejection
+  result = await request('/resumes/upload', {
+    method: 'POST',
+    headers: { 'Content-Type': 'multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW' },
+    body: '------WebKitFormBoundary7MA4YWxkTrZu0gW--'
+  });
+  expectStatus(result.response, 400, 'resume upload empty');
+  console.log('PASS resume upload empty rejected');
+
+  // Valid PDF upload with initial role tags
+  const pdfBytes = Buffer.from('%PDF-1.4\n1 0 obj\n<<>>\nendobj\ntrailer\n<<>>\n%%EOF');
+  const uploadFormData = new FormData();
+  uploadFormData.append('file', new Blob([pdfBytes], { type: 'application/pdf' }), 'Aman_SDE_Resume.pdf');
+  uploadFormData.append('tags', JSON.stringify(['SDE', 'Backend']));
+
+  const uploadRawRes = await fetch(`${baseUrl}/resumes/upload`, {
+    method: 'POST',
+    headers: cookie ? { Cookie: cookie } : {},
+    body: uploadFormData,
+  });
+  expectStatus(uploadRawRes, 201, 'resume pdf upload with role tags');
+  const uploadedResume = await uploadRawRes.json();
+  assert.ok(uploadedResume.id, 'uploaded resume should have an ID');
+  assert.equal(uploadedResume.filename, 'Aman_SDE_Resume.pdf');
+  assert.equal(uploadedResume.isDefault, true, 'first uploaded resume should be default');
+  assert.deepEqual(uploadedResume.tags, ['SDE', 'Backend']);
+  const resumeId = uploadedResume.id;
+  console.log('PASS resume pdf upload with role tags');
+
+  // Verify file stream retrieval
+  const fileStreamRes = await fetch(`${baseUrl}/resumes/${resumeId}/file?mode=view`, {
+    headers: cookie ? { Cookie: cookie } : {},
+  });
+  expectStatus(fileStreamRes, 200, 'resume pdf stream retrieval');
+  assert.equal(fileStreamRes.headers.get('content-type'), 'application/pdf');
+  console.log('PASS resume pdf stream retrieval');
+
+  // Update role tags
+  result = await request(`/resumes/${resumeId}/tags`, {
+    method: 'PATCH',
+    body: JSON.stringify({ tags: ['SDE', 'Full Stack', 'Cloud'] })
+  });
+  expectStatus(result.response, 200, 'resume update role tags');
+  assert.deepEqual(result.body.tags, ['SDE', 'Full Stack', 'Cloud']);
+  console.log('PASS resume update role tags');
+
+  // Rename resume file
+  result = await request(`/resumes/${resumeId}/filename`, {
+    method: 'PATCH',
+    body: JSON.stringify({ filename: 'Aman_FullStack_Resume' })
+  });
+  expectStatus(result.response, 200, 'resume rename');
+  assert.equal(result.body.filename, 'Aman_FullStack_Resume.pdf');
+  console.log('PASS resume rename');
+
+  // Delete resume
+  result = await request(`/resumes/${resumeId}`, { method: 'DELETE' });
+  expectStatus(result.response, 200, 'resume delete');
+  assert.equal(result.body.detail, 'Resume deleted');
+  console.log('PASS resume delete');
+
+  result = await request(`/resumes/${resumeId}`, { method: 'DELETE' });
+  expectStatus(result.response, 404, 'nonexistent resume delete');
+  console.log('PASS nonexistent resume delete rejected');
+
   result = await request('/notifications');
   expectStatus(result.response, 200, 'notifications');
   assert.ok(Array.isArray(result.body.notifications));
@@ -250,6 +321,10 @@ async function run() {
   result = await request('/opportunities', {}, false);
   expectStatus(result.response, 401, 'unauthenticated opportunities');
   console.log('PASS unauthenticated opportunities blocked');
+
+  result = await request('/resumes', {}, false);
+  expectStatus(result.response, 401, 'unauthenticated resumes');
+  console.log('PASS unauthenticated resumes blocked');
 
   result = await request('/onboarding/complete', {
     method: 'POST',

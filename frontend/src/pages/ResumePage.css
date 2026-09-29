@@ -1,0 +1,638 @@
+.pf-resume-page {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem;
+  animation: fadeIn 0.4s ease-out;
+}
+
+.pf-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--color-text-light);
+  text-decoration: none;
+  font-size: 0.875rem;
+  margin-bottom: 1.5rem;
+  transition: color 0.2s ease;
+}
+
+.pf-back-link:hover {
+  color: var(--color-primary);
+}
+
+.pf-resume-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 2rem;
+}
+
+.pf-resume-header h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--color-text);
+  margin: 0 0 0.5rem 0;
+  letter-spacing: -0.02em;
+}
+
+.pf-resume-header p {
+  color: var(--color-text-light);
+  margin: 0;
+}
+
+.pf-resume-actions {
+  display: flex;
+  gap: 1rem;
+}
+
+.pf-upload-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background-color: var(--color-primary);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-md);
+  font-weight: 500;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(var(--color-primary-rgb), 0.2);
+}
+
+.pf-upload-btn:hover {
+  background-color: var(--color-primary-dark);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(var(--color-primary-rgb), 0.3);
+}
+
+.pf-upload-btn:active {
+  transform: translateY(0);
+}
+
+.pf-upload-btn[disabled],
+.pf-upload-btn:has(input:disabled) {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.pf-resume-error {
+  background: var(--color-error-bg, #fef2f2);
+  color: var(--color-error, #dc2626);
+  padding: 1rem;
+  border-radius: var(--radius-md);
+  margin-bottom: 2rem;
+  font-size: 0.875rem;
+  border: 1px solid var(--color-error-border, #fecaca);
+}
+
+/* Role Tags on Resume Card */
+.pf-resume-tags-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0.35rem 0 0.4rem 0;
+}
+
+.pf-role-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: rgba(41, 74, 49, 0.08);
+  color: var(--color-primary, #294a31);
+  border: 1px solid rgba(41, 74, 49, 0.16);
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  transition: all 0.15s ease;
+}
+
+.pf-role-tag button {
+  background: transparent;
+  border: none;
+  color: var(--color-primary, #294a31);
+  opacity: 0.65;
+  cursor: pointer;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pf-role-tag button:hover {
+  opacity: 1;
+  color: #dc2626;
+}
+
+.pf-role-tags-empty {
+  font-size: 0.78rem;
+  color: var(--color-text-light);
+  font-style: italic;
+}
+
+.pf-add-tag-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  background: transparent;
+  border: 1px dashed var(--color-border);
+  color: var(--color-text-light);
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.74rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.pf-add-tag-trigger:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  background: rgba(41, 74, 49, 0.04);
+}
+
+.pf-role-tag--large {
+  font-size: 0.85rem;
+  padding: 0.3rem 0.75rem;
+  gap: 0.5rem;
+}
+
+/* Tag Management Modal */
+.pf-tag-modal {
+  background: var(--color-surface, #ffffff);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg, 12px);
+  width: 100%;
+  max-width: 520px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+  animation: slideDown 0.25s ease-out;
+}
+
+.pf-tag-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+
+.pf-tag-modal-header h3 {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.pf-tag-modal-subtitle {
+  margin: 0.25rem 0 0 0;
+  font-size: 0.85rem;
+  color: var(--color-text-light);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 380px;
+}
+
+.pf-tag-modal-body {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-height: 65vh;
+  overflow-y: auto;
+}
+
+.pf-tag-section-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-light);
+  margin-top: 0.5rem;
+}
+
+.pf-tag-section-label:first-child {
+  margin-top: 0;
+}
+
+.pf-tag-chips-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  min-height: 38px;
+  padding: 0.5rem;
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-background);
+}
+
+.pf-tag-empty-msg {
+  font-size: 0.82rem;
+  color: var(--color-text-light);
+  margin: 0;
+  padding: 0.2rem;
+}
+
+.pf-suggested-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.pf-suggested-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: var(--color-background);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.pf-suggested-chip:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  background: rgba(41, 74, 49, 0.05);
+}
+
+.pf-suggested-chip.is-selected {
+  background: rgba(41, 74, 49, 0.12);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.pf-custom-tag-form {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.pf-custom-tag-form input {
+  flex: 1;
+  padding: 0.55rem 0.85rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-background);
+  color: var(--color-text);
+  font-size: 0.88rem;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.pf-custom-tag-form input:focus {
+  border-color: var(--color-primary);
+}
+
+.pf-tag-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding: 1rem 1.5rem;
+  border-top: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+
+.pf-resume-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.pf-resume-loading,
+.pf-resume-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  text-align: center;
+  color: var(--color-text-light);
+  background: var(--color-surface);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.pf-resume-empty svg {
+  color: var(--color-border);
+  margin-bottom: 1rem;
+}
+
+.pf-resume-empty h3 {
+  color: var(--color-text);
+  margin: 0 0 0.5rem 0;
+}
+
+.pf-resume-card {
+  display: flex;
+  align-items: center;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  padding: 1.25rem;
+  border-radius: var(--radius-lg);
+  transition: all 0.2s ease;
+}
+
+.pf-resume-card:hover {
+  border-color: var(--color-primary-light);
+  box-shadow: var(--shadow-sm);
+}
+
+.pf-resume-card.is-default {
+  border-color: var(--color-primary);
+  background: linear-gradient(to right, var(--color-surface), rgba(var(--color-primary-rgb), 0.02));
+}
+
+.pf-resume-card-icon {
+  background: var(--color-background);
+  color: var(--color-primary);
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 1rem;
+  flex-shrink: 0;
+}
+
+.pf-resume-card-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.pf-resume-title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.25rem;
+}
+
+.pf-resume-title-row h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pf-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: rgba(var(--color-primary-rgb), 0.1);
+  color: var(--color-primary);
+  padding: 0.125rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.pf-resume-meta {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--color-text-light);
+}
+
+.pf-resume-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-left: 1rem;
+}
+
+.pf-resume-card-actions button,
+.pf-resume-card-actions a {
+  background: transparent;
+  border: none;
+  color: var(--color-text-light);
+  padding: 0.5rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pf-resume-card-actions button:hover,
+.pf-resume-card-actions a:hover {
+  background: var(--color-background);
+  color: var(--color-text);
+}
+
+.pf-resume-card-actions button.pf-danger:hover {
+  background: var(--color-error-bg, #fef2f2);
+  color: var(--color-error, #dc2626);
+}
+
+.pf-inline-rename-btn {
+  background: transparent;
+  border: none;
+  color: var(--color-text-light);
+  cursor: pointer;
+  padding: 0.2rem;
+  border-radius: var(--radius-sm);
+  display: inline-flex;
+  align-items: center;
+  opacity: 0.6;
+  transition: all 0.2s ease;
+}
+
+.pf-inline-rename-btn:hover {
+  opacity: 1;
+  color: var(--color-primary);
+  background: var(--color-background);
+}
+
+.pf-rename-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  width: 100%;
+}
+
+.pf-rename-input {
+  font-size: 0.95rem;
+  padding: 0.25rem 0.5rem;
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius-sm);
+  background: var(--color-background);
+  color: var(--color-text);
+  outline: none;
+  flex: 1;
+  max-width: 320px;
+}
+
+.pf-icon-btn {
+  background: transparent;
+  border: none;
+  padding: 0.3rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-light);
+}
+
+.pf-save-btn {
+  color: #10b981;
+}
+
+.pf-save-btn:hover {
+  background: rgba(16, 185, 129, 0.1);
+}
+
+/* PDF Preview Modal */
+.pf-preview-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.pf-preview-modal {
+  background: var(--color-surface, #ffffff);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg, 12px);
+  width: 100%;
+  max-width: 900px;
+  height: 85vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+}
+
+.pf-preview-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+
+.pf-preview-modal-title {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text);
+  font-size: 1.05rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pf-preview-modal-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.pf-modal-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.8rem;
+  font-size: 0.825rem;
+  color: var(--color-text);
+  background: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.pf-modal-btn:hover {
+  background: var(--color-surface);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.pf-close-btn {
+  background: transparent;
+  border: none;
+  color: var(--color-text-light);
+  padding: 0.4rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.pf-close-btn:hover {
+  color: var(--color-text);
+  background: var(--color-background);
+}
+
+.pf-preview-modal-body {
+  flex: 1;
+  background: #525659;
+  position: relative;
+}
+
+.pf-pdf-iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@media (max-width: 640px) {
+  .pf-resume-header {
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  .pf-resume-actions {
+    width: 100%;
+    flex-direction: column;
+  }
+  .pf-upload-btn, .pf-resume-actions button {
+    width: 100%;
+    justify-content: center;
+  }
+}
