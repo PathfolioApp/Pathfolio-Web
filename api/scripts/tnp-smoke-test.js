@@ -4,8 +4,8 @@ process.env.NODE_ENV = 'development';
 process.env.USE_DATABASE = 'false';
 
 const app = require('../src/app');
-const studentStore = require('../src/models/studentStore');
-const contentStore = require('../src/models/adminContentStore');
+const studentStore = require('../src/modules/students/studentStore');
+const contentStore = require('../src/modules/admin/adminContentStore');
 
 const unique = Date.now().toString();
 const ids = { admin: `admin_${unique}`, student: `student_${unique}` };

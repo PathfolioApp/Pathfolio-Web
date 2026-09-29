@@ -1,0 +1,1 @@
+const router = require('express').Router(); const auth = require('../../shared/authenticate'); const c = require('./profile.controller'); router.use(auth); router.patch('/security/password', c.changePassword); router.get('/privacy', c.get); router.patch('/privacy', c.update('profileSettings')); module.exports = router;

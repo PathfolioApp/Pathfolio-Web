@@ -1,0 +1,100 @@
+import React, { useState } from 'react';
+import { Clock, Save, Send, Undo2, Paperclip, X } from 'lucide-react';
+import { Button } from '../../../components/ui/Button';
+import { Input, PanelHeading, Empty, formatISTDate } from '../utils/adminHelpers';
+
+const formOptions = [['rollNumber', 'Roll number'], ['department', 'Department'], ['batchYear', 'Batch year'], ['resumeUrl', 'Resume link'], ['portfolioUrl', 'Portfolio link'], ['skills', 'Skills'], ['cgpa', 'CGPA']];
+
+export function JobWorkspace({ companies, jobs, jobForm, setJobForm, editingJob, resetJob, saveJob, loading, editJob, jobFilter, setJobFilter, publish, saving, selectedFields, setSelectedFields, namedAttachments, setNamedAttachments, update }) {
+  return (
+    <section className="pf-admin-workspace">
+      <div className="pf-admin-panel">
+        <PanelHeading eyebrow="Opportunity composer" title={editingJob ? 'Edit draft' : 'Create a post'} action={editingJob && <Button variant="ghost" size="sm" onClick={resetJob}>Cancel</Button>} />
+        <form className="pf-admin-form" onSubmit={saveJob}>
+          <Input label="Company">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '.4rem' }}>
+              <input type="search" placeholder="Filter companies..." value={jobForm._companySearch || ''} onChange={update(setJobForm, '_companySearch')} />
+              <select required value={jobForm.companyId} onChange={update(setJobForm, 'companyId')}>
+                <option value="">Choose a company</option>
+                {companies.filter(c => c.name.toLowerCase().includes((jobForm._companySearch || '').toLowerCase())).map(company => <option value={company.id} key={company.id}>{company.name}</option>)}
+              </select>
+            </div>
+          </Input>
+          <Input label="Title"><input required value={jobForm.title} onChange={update(setJobForm, 'title')} placeholder="e.g. Software Engineer" /></Input>
+          <Input label="Location"><input value={jobForm.location} onChange={update(setJobForm, 'location')} placeholder="Bengaluru / Remote" /></Input>
+          <Input label="Employment type"><select value={jobForm.employmentType} onChange={update(setJobForm, 'employmentType')}><option>Full-time</option><option>Part-time</option><option>Internship</option><option>Contract</option></select></Input>
+          <Input label="Description" full><textarea required rows="7" value={jobForm.description} onChange={update(setJobForm, 'description')} placeholder="Write the role, responsibilities, and requirements..." /></Input>
+          <Input label="Application URL" full><input type="url" value={jobForm.applicationUrl} onChange={update(setJobForm, 'applicationUrl')} placeholder="https://..." /></Input>
+          <Input label="Attachments" full><AttachmentList namedAttachments={namedAttachments} setNamedAttachments={setNamedAttachments} /></Input>
+          <fieldset className="pf-admin-fieldset">
+            <legend>Collect with application</legend>
+            {formOptions.map(([id, label]) => (
+              <label key={id}>
+                <input type="checkbox" checked={selectedFields.includes(id)} onChange={() => setSelectedFields(fields => fields.includes(id) ? fields.filter(field => field !== id) : [...fields, id])} />
+                {label}
+              </label>
+            ))}
+          </fieldset>
+          <Button type="submit" loading={saving} icon={Save}>Save draft</Button>
+        </form>
+      </div>
+      <div className="pf-admin-list">
+        <div className="pf-admin-panel-heading">
+          <div><p className="pf-admin-eyebrow">Published content</p><h2>Posts <span>{jobs.length}</span></h2></div>
+          <select className="pf-admin-filter" value={jobFilter} onChange={event => setJobFilter(event.target.value)}>
+            <option value="">All statuses</option><option value="draft">Drafts</option><option value="published">Published</option>
+          </select>
+        </div>
+        {loading ? <Empty text="Loading posts..." /> : jobs.length === 0 ? <Empty text="No posts yet. Save a draft to begin." /> : jobs.map((job, idx) => (
+          <article className="pf-admin-list-item" key={job.id}>
+            <div>
+              <span className={`pf-admin-status-badge is-${job.status}`}>#{jobs.length - idx} {job.status}</span>
+              <h3>{job.title}</h3>
+              <p>{job.companyName} · {job.location || 'Location flexible'} <span className="pf-admin-date"><Clock size={12} /> {formatISTDate(job.updatedAt)} IST</span></p>
+            </div>
+            <div className="pf-admin-item-actions">
+              <Button variant="ghost" size="sm" onClick={() => editJob(job)} disabled={job.status === 'published'}>Edit</Button>
+              <Button variant={job.status === 'published' ? 'outline' : 'primary'} size="sm" loading={saving} icon={job.status === 'published' ? Undo2 : Send} onClick={() => publish(job)}>{job.status === 'published' ? 'Unpublish' : 'Publish'}</Button>
+            </div>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function AttachmentList({ namedAttachments, setNamedAttachments }) {
+  const makeId = () => `att_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+  const addFiles = files => {
+    const newItems = [...files].map(f => ({ id: makeId(), name: f.name.replace(/\.[^.]+$/, ''), file: f, url: '', type: f.type || 'application/octet-stream' }));
+    setNamedAttachments(prev => [...prev, ...newItems]);
+  };
+  const rename = (id, name) => setNamedAttachments(prev => prev.map(a => (a.id === id ? { ...a, name } : a)));
+  const remove = id => setNamedAttachments(prev => prev.filter(a => a.id !== id));
+  const [dragging, setDragging] = useState(false);
+  const onDrop = e => { e.preventDefault(); setDragging(false); if (e.dataTransfer.files?.length) addFiles(e.dataTransfer.files); };
+  const onDragOver = e => { e.preventDefault(); setDragging(true); };
+  const onDragLeave = () => setDragging(false);
+  return (
+    <div className="pf-admin-attachments">
+      {namedAttachments.length > 0 && (
+        <ul className="pf-admin-attachment-list">
+          {namedAttachments.map(item => (
+            <li key={item.id} className="pf-admin-attachment-item">
+              <Paperclip size={14} className="pf-admin-attach-icon" />
+              <input className="pf-admin-attachment-name" value={item.name} onChange={e => rename(item.id, e.target.value)} placeholder="Attachment name" />
+              {item.url && !item.file && <a href={item.url} target="_blank" rel="noreferrer" className="pf-admin-attach-link">View</a>}
+              <button type="button" className="pf-admin-icon-button" onClick={() => remove(item.id)}><X size={14} /></button>
+            </li>
+          ))}
+        </ul>
+      )}
+      <label className={`pf-admin-attach-drop${dragging ? ' is-dragging' : ''}`} onDrop={onDrop} onDragOver={onDragOver} onDragLeave={onDragLeave}>
+        <Paperclip size={16} />
+        <span>{dragging ? 'Drop files here' : 'Drag & drop or click to add files'}</span>
+        <input type="file" multiple accept="image/*,.pdf,.doc,.docx" onChange={e => { if (e.target.files?.length) addFiles(e.target.files); e.target.value = ''; }} />
+      </label>
+      <small className="pf-admin-help">Files upload to Cloudinary when you save the draft. Click a name to rename it.</small>
+    </div>
+  );
+}

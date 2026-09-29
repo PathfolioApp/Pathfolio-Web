@@ -2,8 +2,20 @@ const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
 const config = require('./config');
-const onboardingRoutes = require('./routes/onboarding.routes');
-const errorHandler = require('./middleware/errorHandler');
+const errorHandler = require('./shared/errorHandler');
+
+// Domain modules — each owns its routes, controllers, services, and data access.
+const onboardingRoutes = require('./modules/onboarding/onboarding.routes');
+const authRoutes = require('./modules/auth/auth.routes');
+const profileRoutes = require('./modules/students/profile.routes');
+const settingsRoutes = require('./modules/students/settings.routes');
+const notificationRoutes = require('./modules/notifications/notification.routes');
+const preferenceRoutes = require('./modules/preferences/preference.routes');
+const resumeRoutes = require('./modules/resumes/resume.routes');
+const adminRoutes = require('./modules/admin/admin.routes');
+const recruiterRoutes = require('./modules/recruiters/recruiter.routes');
+const recruiterJobsRoutes = require('./modules/recruiters/recruiterJobs.routes');
+const opportunityRoutes = require('./modules/applications/opportunity.routes');
 
 const app = express();
 
@@ -36,18 +48,18 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Mount Onboarding API
+// Mount API modules (public URL contract is unchanged)
 app.use('/api/onboarding', onboardingRoutes);
-app.use('/api/auth', require('./routes/auth.routes'));
-app.use('/api/profile', require('./routes/profile.routes'));
-app.use('/api/settings', require('./routes/settings.routes'));
-app.use('/api/notifications', require('./routes/notification.routes'));
-app.use('/api/preference', require('./routes/preference.routes'));
-app.use('/api/resumes', require('./routes/resume.routes'));
-app.use('/api/admin', require('./routes/admin.routes'));
-app.use('/api/recruiter', require('./routes/recruiter.routes'));
-app.use('/api/recruiter/jobs', require('./routes/recruiterJobs.routes'));
-app.use('/api/opportunities', require('./routes/opportunity.routes'));
+app.use('/api/auth', authRoutes);
+app.use('/api/profile', profileRoutes);
+app.use('/api/settings', settingsRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/preference', preferenceRoutes);
+app.use('/api/resumes', resumeRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/recruiter', recruiterRoutes);
+app.use('/api/recruiter/jobs', recruiterJobsRoutes);
+app.use('/api/opportunities', opportunityRoutes);
 
 // 404 Handler for undefined API routes
 app.use((req, res) => {
