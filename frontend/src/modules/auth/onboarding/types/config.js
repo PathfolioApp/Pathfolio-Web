@@ -1,5 +1,7 @@
 /**
  * Step definitions and metadata for the onboarding journey.
+ * The institutional email is collected FIRST; the roll number is derived from
+ * it and shown locked in the following step.
  */
 
 export const ONBOARDING_STAGES = [
@@ -12,101 +14,93 @@ export const ONBOARDING_STAGES = [
     isSkippable: false
   },
   {
-    id: 'name',
-    stageNumber: 2,
-    title: 'What should we call you?',
-    eyebrow: 'Step 2 of 12 • Identity',
-    description: 'Your name will be used to personalize your Pathfolio experience and celebrate your milestones.',
-    isSkippable: false
-  },
-  {
-    id: 'age',
-    stageNumber: 3,
-    title: 'How old are you?',
-    eyebrow: 'Step 3 of 12 • Demographics',
-    description: 'This helps us understand where you are in your academic journey.',
-    isSkippable: false
-  },
-  {
     id: 'email',
+    stageNumber: 2,
+    title: 'What is your institutional email?',
+    eyebrow: 'Step 2 of 12 • Identity',
+    description: 'Use your college email — it follows the format rollnumber@kiit.ac.in, and your roll number is taken straight from it.',
+    isSkippable: false
+  },
+  {
+    id: 'identity',
+    stageNumber: 3,
+    title: 'And your name?',
+    eyebrow: 'Step 3 of 12 • About you',
+    description: 'Your roll number comes from your email and is locked. Tell us the name to attach to it.',
+    isSkippable: false
+  },
+  {
+    id: 'dob',
     stageNumber: 4,
-    title: 'Where can we reach you?',
-    eyebrow: 'Step 4 of 12 • Contact',
-    description: 'Use your college email so we can connect your account to your student identity.',
-    isSkippable: false
-  },
-  {
-    id: 'username',
-    stageNumber: 5,
-    title: 'Choose your username.',
-    eyebrow: 'Step 5 of 12 • Public Handle',
-    description: 'This will be your unique personal identity on PathfolioApp.',
-    isSkippable: false
-  },
-  {
-    id: 'rollNumber',
-    stageNumber: 6,
-    title: "Let's connect your college identity.",
-    eyebrow: 'Step 6 of 12 • Enrollment',
-    description: 'Your roll number helps connect your Pathfolio account to your college enrollment record.',
+    title: 'When were you born?',
+    eyebrow: 'Step 4 of 12 • Demographics',
+    description: 'We use your date of birth to understand where you are in your academic journey.',
     isSkippable: false
   },
   {
     id: 'academic',
-    stageNumber: 7,
+    stageNumber: 5,
     title: 'Tell us about your college journey.',
-    eyebrow: 'Step 7 of 12 • Academic Context',
+    eyebrow: 'Step 5 of 12 • Academic Context',
     description: 'This helps us understand your program, discipline, and graduation cohort.',
     isSkippable: false
   },
   {
     id: 'password',
-    stageNumber: 8,
+    stageNumber: 6,
     title: 'Create your password.',
-    eyebrow: 'Step 8 of 13 • Account security',
+    eyebrow: 'Step 6 of 12 • Account security',
     description: 'Choose a password to keep your Pathfolio account secure.',
     isSkippable: false
   },
   {
     id: 'hobbies',
-    stageNumber: 9,
+    stageNumber: 7,
     title: 'What do you enjoy outside the classroom?',
-    eyebrow: 'Step 9 of 13 • Personal Interests',
-    description: 'Select a few things you love doing in your free time, or add your own.',
+    eyebrow: 'Step 7 of 12 • Personal Interests',
+    description: 'Select a few things you love doing in your free time — then tell us how good you are at each.',
     isSkippable: false
   },
   {
     id: 'passions',
-    stageNumber: 10,
+    stageNumber: 8,
     title: 'What are you curious about?',
-    eyebrow: 'Step 10 of 13 • Curiosities & Ambitions',
-    description: 'Tell us about topics, domains, and fields that excite you intellectually.',
+    eyebrow: 'Step 8 of 12 • Curiosities & Ambitions',
+    description: 'Pick the topics and fields that excite you intellectually, and how familiar you already are with them.',
     isSkippable: false
   },
   {
     id: 'achievements',
-    stageNumber: 11,
+    stageNumber: 9,
     title: 'What are you proud of so far?',
-    eyebrow: 'Step 11 of 13 • Milestones',
+    eyebrow: 'Step 9 of 12 • Milestones',
     description: 'Add any achievements, certifications, school projects, competitions, or personal milestones.',
     isSkippable: true
   },
   {
     id: 'familyContext',
-    stageNumber: 12,
+    stageNumber: 10,
     title: "Is there anything about your background you'd like us to understand?",
-    eyebrow: 'Step 12 of 13 • Personal Context (Optional)',
+    eyebrow: 'Step 10 of 12 • Personal Context (Optional)',
     description: "You decide what you share. Sensitive personal or family background details require your explicit consent before saving.",
     isSkippable: true,
     isSensitive: true
   },
   {
     id: 'review',
-    stageNumber: 13,
+    stageNumber: 11,
     title: 'Review your initial record.',
-    eyebrow: 'Step 13 of 13 • Verification',
+    eyebrow: 'Step 11 of 12 • Verification',
     description: 'Take a moment to review the information you shared before we initialize your Pathfolio journey.',
     isSkippable: false
+  },
+  {
+    id: 'phone',
+    stageNumber: 12,
+    title: 'How can the placement cell reach you?',
+    eyebrow: 'Step 12 of 12 • Contact',
+    description: 'Add a phone number so the placement team can reach you about opportunities (you can skip this for now).',
+    isSkippable: true
   }
 ];
 
@@ -139,6 +133,22 @@ export const SUGGESTED_PASSIONS = [
   'Cybersecurity',
   'Creative Direction',
   'Biotechnology'
+];
+
+/** Skill levels for personal interests (hobbies). */
+export const HOBBY_PROFICIENCY_LEVELS = [
+  { value: 'beginner', label: 'Beginner' },
+  { value: 'intermediate', label: 'Intermediate' },
+  { value: 'advanced', label: 'Advanced' },
+  { value: 'expert', label: 'Expert' }
+];
+
+/** Familiarity levels for intellectual domains (curiosities & ambitions). */
+export const PASSION_FAMILIARITY_LEVELS = [
+  { value: 'exploring', label: 'Exploring' },
+  { value: 'beginner', label: 'Beginner' },
+  { value: 'intermediate', label: 'Intermediate' },
+  { value: 'advanced', label: 'Advanced' }
 ];
 
 export const DEPARTMENTS = [
@@ -175,3 +185,12 @@ export const ACHIEVEMENT_CATEGORIES = [
   'Athletics & Sports',
   'Creative & Arts Milestone'
 ];
+
+/** Institutional email contract: rollnumber@kiit.ac.in (case-insensitive). */
+export const INSTITUTIONAL_EMAIL_PATTERN = /^([a-z0-9]+)@kiit\.ac\.in$/i;
+
+/** Extract the roll number portion from a valid institutional email. */
+export const extractRollNumber = email => {
+  const match = String(email || '').trim().match(INSTITUTIONAL_EMAIL_PATTERN);
+  return match ? match[1].toUpperCase() : null;
+};

@@ -43,7 +43,7 @@ export function SettingsPage() {
         <h2>Account</h2>
         <dl>
           <dt>Account email</dt><dd>{student.personal.email}</dd>
-          <dt>Username</dt><dd>@{student.personal.username}</dd>
+          <dt>Roll number</dt><dd>{student.academic.rollNumber}</dd>
           <dt>Status</dt><dd>Active student account</dd>
         </dl>
         <div className="pf-settings-links">

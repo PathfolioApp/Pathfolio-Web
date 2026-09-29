@@ -6,7 +6,7 @@ import { Button } from '../../../components/ui/Button';
 export const EMPTY_JOB_FORM = {
   companyId: '', title: '', description: '', location: '', employmentType: 'Full-time', workMode: 'On-site',
   applicationUrl: '', salaryMin: '', salaryMax: '', requiredSkills: '',
-  minCgpa: '', maxActiveBacklogs: '', allowedDepartments: '', allowedBatches: '', applicationDeadline: '', publish: true
+  minCgpa: '', maxActiveBacklogs: '', allowedDepartments: '', allowedBatches: '', applicationDeadline: '', submit: true
 };
 
 /** Modal form for creating/editing a recruiter job post. */
@@ -25,7 +25,7 @@ export function JobPostComposer({ open, job, companies, saving, onClose, onSubmi
         minCgpa: job.eligibility?.minCgpa ?? '', maxActiveBacklogs: job.eligibility?.maxActiveBacklogs ?? '',
         allowedDepartments: (job.eligibility?.allowedDepartments || []).join(', '),
         allowedBatches: (job.eligibility?.allowedBatches || []).join(', '),
-        applicationDeadline: job.applicationDeadline ? job.applicationDeadline.slice(0, 10) : '', publish: false
+        applicationDeadline: job.applicationDeadline ? job.applicationDeadline.slice(0, 10) : '', submit: false
       });
     } else {
       setJobForm({ ...EMPTY_JOB_FORM, companyId: companies[0]?.id || '' });
@@ -38,6 +38,7 @@ export function JobPostComposer({ open, job, companies, saving, onClose, onSubmi
     event.preventDefault();
     const payload = {
       ...jobForm,
+      publish: undefined,
       requiredSkills: jobForm.requiredSkills.split(',').map(item => item.trim()).filter(Boolean),
       eligibility: {
         minCgpa: jobForm.minCgpa === '' ? null : Number(jobForm.minCgpa),
@@ -77,9 +78,12 @@ export function JobPostComposer({ open, job, companies, saving, onClose, onSubmi
         </fieldset>
         <label className="pf-recruiter-job-url">External application URL<input type="url" value={jobForm.applicationUrl} onChange={update('applicationUrl')} placeholder="https://careers.company.com/role" /></label>
         <label className="pf-recruiter-job-publish">
-          <input type="checkbox" checked={jobForm.publish} onChange={event => setJobForm(prev => ({ ...prev, publish: event.target.checked }))} />
-          Publish immediately{isEditing ? ' (re-publishes this post)' : ' — students can apply right away'}
+          <input type="checkbox" checked={jobForm.submit} onChange={event => setJobForm(prev => ({ ...prev, submit: event.target.checked }))} />
+          {isEditing ? 'Submit for admin approval after saving' : 'Submit for admin approval immediately'}
         </label>
+        <p className="pf-recruiter-job-hint" style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '-6px' }}>
+          Jobs go live only after the placement team reviews and publishes them — students never see drafts.
+        </p>
         <div className="pf-recruiter-job-form-actions">
           <Button type="button" variant="secondary" onClick={onClose} disabled={saving}>Cancel</Button>
           <Button type="submit" loading={saving} icon={isEditing ? CheckCircle2 : Send}>{isEditing ? 'Save changes' : 'Create job post'}</Button>

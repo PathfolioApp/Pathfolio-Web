@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { BriefcaseBusiness, Building2, FileSearch, LayoutDashboard, UserPlus, Users } from 'lucide-react';
+import { BriefcaseBusiness, Building2, FileSearch, LayoutDashboard, UserPlus, Users, Search, Share2 } from 'lucide-react';
 import { useAuth } from '../../app/providers/AuthProvider';
 import { OverviewCards } from '../../components/ui/StatCard';
 import { adminApi } from './adminApi';
@@ -9,13 +9,15 @@ import { JobWorkspace } from './components/JobWorkspace';
 import { ApplicationWorkspace } from './components/ApplicationWorkspace';
 import { UserWorkspace } from './components/UserWorkspace';
 import { JDWorkspace } from './components/JDWorkspace';
+import { StudentSearchWorkspace } from './components/StudentSearchWorkspace';
+import { SharesWorkspace } from './components/SharesWorkspace';
 import './AdminPage.css';
 
 const emptyCompany = { name: '', website: '', description: '', logoUrl: '', logoPublicId: '' };
 const emptyJob = { companyId: '', title: '', description: '', location: '', employmentType: 'Full-time', applicationUrl: '' };
-const TAB_IDS = ['overview', 'jobs', 'companies', 'applications', 'users', 'jd'];
-const TAB_LABELS = { overview: 'Overview', jobs: 'Posts', companies: 'Companies', applications: 'Applications', users: 'Users', jd: 'JD analyser' };
-const TAB_ICONS = { overview: LayoutDashboard, jobs: BriefcaseBusiness, companies: Building2, applications: Users, users: UserPlus, jd: FileSearch };
+const TAB_IDS = ['overview', 'jobs', 'students', 'shares', 'companies', 'applications', 'users', 'jd'];
+const TAB_LABELS = { overview: 'Overview', jobs: 'Job posts', students: 'Student search', shares: 'Shares', companies: 'Companies', applications: 'Applications', users: 'Users', jd: 'JD analyser' };
+const TAB_ICONS = { overview: LayoutDashboard, jobs: BriefcaseBusiness, students: Search, shares: Share2, companies: Building2, applications: Users, users: UserPlus, jd: FileSearch };
 
 /**
  * AdminPage — TnP admin portal container.
@@ -115,9 +117,27 @@ export function AdminPage() {
   const publish = async job => {
     setSaving(true); setError('');
     try {
+      // Closing a live post; publishing an approved one.
       const action = job.status === 'published' ? adminApi.unpublishJobPost : adminApi.publishJobPost;
       await action(job.id); await loadBase();
     } catch (err) { setError(err.message); } finally { setSaving(false); }
+  };
+  const reviewJob = async (job, decision) => {
+    let note = null;
+    if (decision === 'reject') {
+      note = window.prompt('What should the recruiter change before resubmitting?', '');
+      if (note === null) return; // cancelled
+    }
+    setSaving(true); setError('');
+    try {
+      await adminApi.reviewJobPost(job.id, decision, note || '');
+      await loadBase();
+    } catch (err) { setError(err.message); } finally { setSaving(false); }
+  };
+  const reopenJob = async job => {
+    setSaving(true); setError('');
+    try { await adminApi.reopenJobPost(job.id); await loadBase(); }
+    catch (err) { setError(err.message); } finally { setSaving(false); }
   };
   const updateApplication = async (id, status) => {
     setSaving(true);
@@ -149,7 +169,7 @@ export function AdminPage() {
     const reader = new FileReader();
     reader.onload = () => {
       const rows = parseCsv(String(reader.result || ''));
-      const errors = rows.flatMap((row, index) => (!row.fullname || !row.email || !row.username || !row.password ? [{ row: index + 2, message: 'fullName, email, username, and password are required.' }] : []));
+      const errors = rows.flatMap((row, index) => (!row.fullname || !row.email || !row.password ? [{ row: index + 2, message: 'fullName, email, and password are required.' }] : []));
       setUserImportRows(rows); setUserImportErrors(errors); setUserImportSummary(null);
     };
     reader.readAsText(file);
@@ -186,7 +206,8 @@ export function AdminPage() {
             { label: 'Companies', value: overview.companies?.length ?? 0, hint: `${overview.recentSignups} new users this week` }
           ]} />
           <div className="pf-admin-quick-links">
-            <button onClick={() => { window.location.hash = 'jobs'; }}><BriefcaseBusiness size={17} /><span>Manage job posts</span></button>
+            <button onClick={() => { window.location.hash = 'jobs'; }}><BriefcaseBusiness size={17} /><span>Review & publish job posts</span></button>
+            <button onClick={() => { window.location.hash = 'students'; }}><Search size={17} /><span>Search & share students</span></button>
             <button onClick={() => { window.location.hash = 'applications'; }}><Users size={17} /><span>Review applications</span></button>
             <button onClick={() => { window.location.hash = 'users'; }}><UserPlus size={17} /><span>Add or manage users</span></button>
             <button onClick={() => { window.location.hash = 'jd'; }}><FileSearch size={17} /><span>Analyse a job description</span></button>
@@ -207,8 +228,10 @@ export function AdminPage() {
         </>
       )}
       {tab === 'jobs' && (
-        <JobWorkspace companies={companies} jobs={jobs} jobForm={jobForm} setJobForm={setJobForm} editingJob={editingJob} resetJob={resetJob} saveJob={saveJob} loading={loading} editJob={editJob} jobFilter={jobFilter} setJobFilter={setJobFilter} publish={publish} saving={saving} selectedFields={selectedFields} setSelectedFields={setSelectedFields} namedAttachments={namedAttachments} setNamedAttachments={setNamedAttachments} update={update} />
+        <JobWorkspace companies={companies} jobs={jobs} jobForm={jobForm} setJobForm={setJobForm} editingJob={editingJob} resetJob={resetJob} saveJob={saveJob} loading={loading} editJob={editJob} jobFilter={jobFilter} setJobFilter={setJobFilter} publish={publish} reviewJob={reviewJob} reopenJob={reopenJob} saving={saving} selectedFields={selectedFields} setSelectedFields={setSelectedFields} namedAttachments={namedAttachments} setNamedAttachments={setNamedAttachments} update={update} />
       )}
+      {tab === 'students' && <StudentSearchWorkspace jobs={jobs} />}
+      {tab === 'shares' && <SharesWorkspace />}
       {tab === 'applications' && (
         <ApplicationWorkspace jobs={jobs} applicationJobFilter={applicationJobFilter} setApplicationJobFilter={setApplicationJobFilter} applications={visibleApplications} loading={loading} applicationFilter={applicationFilter} setApplicationFilter={setApplicationFilter} updateApplication={updateApplication} saving={saving} />
       )}

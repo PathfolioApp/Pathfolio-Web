@@ -11,6 +11,7 @@ import { SignInPage } from '../../modules/auth/pages/SignInPage';
 import { ForgotPasswordPage } from '../../modules/auth/pages/ForgotPasswordPage';
 import { OnboardingPage } from '../../modules/auth/pages/OnboardingPage';
 import { CompletionPage } from '../../modules/auth/pages/CompletionPage';
+import { PendingVerificationPage } from '../../modules/auth/pages/PendingVerificationPage';
 
 import { StudentLayout } from '../../layouts/StudentLayout/StudentLayout';
 import { DashboardPage } from '../../modules/student/dashboard/DashboardPage';
@@ -56,6 +57,7 @@ export function AppRoutes() {
       <Route path="/signin" element={<GuestRoute><AuthLayout><SignInPage /></AuthLayout></GuestRoute>} />
       <Route path="/forgot-password" element={<GuestRoute><AuthLayout><ForgotPasswordPage /></AuthLayout></GuestRoute>} />
       <Route path="/onboarding" element={<OnboardingRoute><OnboardingPage /></OnboardingRoute>} />
+      <Route path="/onboarding/pending-verification" element={<PendingVerificationPage />} />
       <Route path="/onboarding/complete" element={<OnboardingCompleteRoute><CompletionPage /></OnboardingCompleteRoute>} />
 
       {/* Student portal (role: any signed-in user) */}

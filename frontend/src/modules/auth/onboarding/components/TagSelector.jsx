@@ -2,6 +2,14 @@ import React, { useState } from 'react';
 import { Plus, X, Check, Search } from 'lucide-react';
 import './TagSelector.css';
 
+const nameOf = item => (typeof item === 'string' ? item : item?.name);
+const levelOf = (item, fallback) => (typeof item === 'string' ? fallback : item?.proficiency);
+
+/**
+ * Chip-based selection of interests/curiosities. Items are structured
+ * objects ({ name, proficiency, reason }); proficiency is defaulted when a
+ * chip is selected so validation has a baseline before the detail editor runs.
+ */
 export function TagSelector({
   suggestedTags = [],
   selectedTags = [],
@@ -9,17 +17,18 @@ export function TagSelector({
   placeholder = 'Add custom tag...',
   searchPlaceholder = 'Search suggestions...',
   allowCustom = true,
-  maxTags = 15
+  maxTags = 15,
+  defaultLevel = 'beginner'
 }) {
   const [customInput, setCustomInput] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
 
   const handleToggleTag = (tag) => {
-    if (selectedTags.includes(tag)) {
-      onChange(selectedTags.filter(t => t !== tag));
+    if (selectedTags.some(item => nameOf(item) === tag)) {
+      onChange(selectedTags.filter(item => nameOf(item) !== tag));
     } else {
       if (selectedTags.length >= maxTags) return;
-      onChange([...selectedTags, tag]);
+      onChange([...selectedTags, { name: tag, proficiency: defaultLevel, reason: '' }]);
     }
   };
 
@@ -27,14 +36,14 @@ export function TagSelector({
     e.preventDefault();
     const trimmed = customInput.trim();
     if (!trimmed) return;
-    if (!selectedTags.includes(trimmed) && selectedTags.length < maxTags) {
-      onChange([...selectedTags, trimmed]);
+    if (!selectedTags.some(item => nameOf(item) === trimmed) && selectedTags.length < maxTags) {
+      onChange([...selectedTags, { name: trimmed, proficiency: defaultLevel, reason: '' }]);
     }
     setCustomInput('');
   };
 
   const handleRemoveTag = (tag) => {
-    onChange(selectedTags.filter(t => t !== tag));
+    onChange(selectedTags.filter(item => nameOf(item) !== tag));
   };
 
   const filteredSuggestions = suggestedTags.filter(t =>
@@ -48,19 +57,22 @@ export function TagSelector({
         <div className="pf-tag-selector__selected-block">
           <span className="pf-tag-selector__label">Selected ({selectedTags.length}):</span>
           <div className="pf-tag-selector__chips">
-            {selectedTags.map(tag => (
-              <span key={tag} className="pf-tag-chip pf-tag-chip--active">
-                <span>{tag}</span>
-                <button
-                  type="button"
-                  onClick={() => handleRemoveTag(tag)}
-                  className="pf-tag-chip__remove"
-                  aria-label={`Remove ${tag}`}
-                >
-                  <X size={12} />
-                </button>
-              </span>
-            ))}
+            {selectedTags.map(item => {
+              const name = nameOf(item);
+              return (
+                <span key={name} className="pf-tag-chip pf-tag-chip--active">
+                  <span>{name}</span>
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveTag(name)}
+                    className="pf-tag-chip__remove"
+                    aria-label={`Remove ${name}`}
+                  >
+                    <X size={12} />
+                  </button>
+                </span>
+              );
+            })}
           </div>
         </div>
       )}
@@ -92,7 +104,7 @@ export function TagSelector({
       {/* Suggested Tag Grid */}
       <div className="pf-tag-selector__grid">
         {filteredSuggestions.map(tag => {
-          const isSelected = selectedTags.includes(tag);
+          const isSelected = selectedTags.some(item => nameOf(item) === tag);
           return (
             <button
               key={tag}

@@ -20,7 +20,7 @@ export function UserWorkspace({ users, userImportRows, userImportErrors, userImp
     if (statusFilter === 'blocked' && !user.blocked) return false;
     if (statusFilter === 'active' && user.blocked) return false;
     if (!searchTerm.trim()) return true;
-    return `${user.fullName} ${user.email} ${user.username} ${user.department}`.toLowerCase().includes(searchTerm.toLowerCase());
+    return `${user.fullName} ${user.email} ${user.rollNumber || ''} ${user.department}`.toLowerCase().includes(searchTerm.toLowerCase());
   });
 
   const runAction = async action => {
@@ -43,7 +43,7 @@ export function UserWorkspace({ users, userImportRows, userImportErrors, userImp
 
   const downloadTemplate = () => downloadCsvFile(
     'pathfolio-users-template.csv',
-    'fullName,email,username,password,role,department,batchYear,rollNumber\nExample Student,student@kiit.ac.in,example-student,change-me-123,student,Computer Science,2028,2024CS101\nExample Recruiter,recruiter@company.com,example-recruiter,change-me-123,recruiter,Recruitment,Operations,\n'
+    'fullName,email,password,role,department,batchYear,rollNumber\nExample Student,2024CS101@kiit.ac.in,change-me-123,student,Computer Science,2028,2024CS101\nExample Recruiter,recruiter@company.com,change-me-123,recruiter,Recruitment,Operations,\n'
   );
 
   return (
@@ -94,7 +94,7 @@ export function UserWorkspace({ users, userImportRows, userImportErrors, userImp
                     {user.blocked && <span className="pf-admin-status-badge is-blocked">blocked</span>}
                   </div>
                   <h3>{user.fullName}</h3>
-                  <p>{user.email} · @{user.username}{user.department ? ` · ${user.department}` : ''}</p>
+                  <p>{user.email}{user.rollNumber ? ` · Roll ${user.rollNumber}` : ''}{user.department ? ` · ${user.department}` : ''}</p>
                 </div>
               </div>
               <div className="pf-admin-item-actions">
@@ -122,10 +122,9 @@ export function UserWorkspace({ users, userImportRows, userImportErrors, userImp
             <dl>
               <dt>Email</dt><dd>{viewingUser.email}</dd>
               <dt>Phone</dt><dd>{viewingUser.phone || '—'}</dd>
-              <dt>Username</dt><dd>@{viewingUser.username}</dd>
+              <dt>Roll number</dt><dd>{viewingUser.rollNumber || 'Not specified'}</dd>
               <dt>Department</dt><dd>{viewingUser.department || 'Not specified'}</dd>
               <dt>Batch</dt><dd>{viewingUser.batchYear || 'Not specified'}</dd>
-              <dt>Roll number</dt><dd>{viewingUser.rollNumber || 'Not specified'}</dd>
               <dt>Achievements</dt><dd>{viewingUser.achievementsCount ?? 0}</dd>
               <dt>Interests</dt><dd>{viewingUser.interestsCount ?? 0}</dd>
               <dt>Status</dt><dd>{viewingUser.blocked ? 'Blocked' : 'Active'} · onboarding {viewingUser.onboarding?.completed ? 'completed' : 'in progress'}</dd>

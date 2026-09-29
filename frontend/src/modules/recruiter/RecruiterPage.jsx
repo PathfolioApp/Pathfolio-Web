@@ -1,28 +1,25 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { BriefcaseBusiness, LayoutDashboard, Search } from 'lucide-react';
+import { BriefcaseBusiness, LayoutDashboard, Users } from 'lucide-react';
 import { recruiterApi } from './recruiterApi';
 import { OverviewCards } from '../../components/ui/StatCard';
-import { TalentSearch } from './components/TalentSearch';
+import { SharedCandidates } from './components/SharedCandidates';
 import { JobPostList } from './components/JobPostList';
 import { JobPostComposer } from './components/JobPostComposer';
 import './RecruiterPage.css';
 
-const RECRUITER_TABS = ['overview', 'discover', 'jobs'];
-const RECRUITER_TAB_LABELS = { overview: 'Overview', discover: 'Talent search', jobs: 'My job posts' };
-const TAB_ICONS = { overview: LayoutDashboard, discover: Search, jobs: BriefcaseBusiness };
+const RECRUITER_TABS = ['overview', 'jobs', 'candidates'];
+const RECRUITER_TAB_LABELS = { overview: 'Overview', jobs: 'My job posts', candidates: 'Shared candidates' };
+const TAB_ICONS = { overview: LayoutDashboard, jobs: BriefcaseBusiness, candidates: Users };
 
 /**
  * RecruiterPage — recruiter portal container.
- * Route sections are reflected in the URL hash (/recruiter#discover, #jobs).
+ * Route sections are reflected in the URL hash (/recruiter#jobs, #candidates).
+ * There is no talent-search section: recruiters only see candidates the
+ * placement team explicitly shares with them.
  */
 export function RecruiterPage() {
   const sectionFromUrl = () => (RECRUITER_TABS.includes(window.location.hash.slice(1)) ? window.location.hash.slice(1) : 'overview');
   const [tab, setTab] = useState(sectionFromUrl);
-  const [keywords, setKeywords] = useState('');
-  const [jobDescription, setJobDescription] = useState('');
-  const [students, setStudents] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [searchError, setSearchError] = useState('');
   const [jobs, setJobs] = useState([]);
   const [jobsLoading, setJobsLoading] = useState(false);
   const [overview, setOverview] = useState(null);
@@ -37,15 +34,6 @@ export function RecruiterPage() {
     recruiterApi.overview().then(data => setOverview(data.overview)).catch(() => {});
   }, []);
 
-  const search = async (event) => {
-    event?.preventDefault();
-    setLoading(true);
-    setSearchError('');
-    try { setStudents(await recruiterApi.searchStudents({ keywords, jobDescription })); }
-    catch (err) { setSearchError(err.message); }
-    finally { setLoading(false); }
-  };
-
   const loadJobs = useCallback(async () => {
     setJobsLoading(true); setJobError('');
     try { const data = await recruiterApi.myJobs(); setJobs(data.jobPosts); }
@@ -53,7 +41,7 @@ export function RecruiterPage() {
     finally { setJobsLoading(false); }
   }, []);
 
-  useEffect(() => { search(); loadOverview(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { loadOverview(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
     const onHashChange = () => setTab(sectionFromUrl());
     window.addEventListener('hashchange', onHashChange);
@@ -61,8 +49,6 @@ export function RecruiterPage() {
   }, []);
   useEffect(() => { if (tab === 'jobs') { loadJobs(); loadOverview(); } }, [tab, loadJobs, loadOverview]);
   useEffect(() => { if (tab === 'jobs' && companies.length === 0) recruiterApi.companies().then(data => setCompanies(data.companies)).catch(() => setCompanies([])); }, [tab, companies.length]);
-
-  const clear = () => { setKeywords(''); setJobDescription(''); setTimeout(() => search(), 0); };
 
   const openComposer = (job = null) => { setJobError(''); setJobMessage(''); setEditingJob(job); setComposerOpen(true); };
 
@@ -72,44 +58,46 @@ export function RecruiterPage() {
       const data = isEditing
         ? await recruiterApi.updateJob(editingJob.id, payload)
         : await recruiterApi.createJob(payload);
-      setJobMessage(payload.publish
-        ? `${data.jobPost.title} ${isEditing ? 'published.' : 'is live for students.'}`
+      setJobMessage(payload.submit
+        ? `${data.jobPost.title} submitted for placement team approval.`
         : `${data.jobPost.title} saved as draft.`);
       setComposerOpen(false); setEditingJob(null); await loadJobs();
     } catch (err) { setJobError(err.message); }
     finally { setSavingJob(false); }
   };
 
-  const setPublish = async (job, publish) => {
+  const submitJob = async (job) => {
     setJobError(''); setJobMessage('');
     try {
-      const data = publish ? await recruiterApi.publishJob(job.id) : await recruiterApi.unpublishJob(job.id);
-      setJobMessage(`${data.jobPost.title} ${publish ? 'is live for students' : 'moved back to drafts'}.`);
-      await loadJobs();
+      const data = await recruiterApi.submitJob(job.id);
+      setJobMessage(`${data.jobPost.title} submitted for placement team approval.`);
+      await loadJobs(); await loadOverview();
     } catch (err) { setJobError(err.message); }
   };
+
+  const headerTitle = tab === 'overview' ? 'Your hiring dashboard.' : tab === 'jobs' ? 'Your job posts.' : 'Candidates shared with your company.';
 
   return (
     <main className="pf-recruiter-page">
       <header className="pf-recruiter-header pf-recruiter-header--compact">
         <div>
           <p className="pf-recruiter-eyebrow">Pathfolio talent desk</p>
-          <h1>{tab === 'overview' ? 'Your hiring dashboard.' : tab === 'jobs' ? 'Your job posts.' : 'Find the people behind the potential.'}</h1>
+          <h1>{headerTitle}</h1>
         </div>
       </header>
 
       {tab === 'overview' && overview && (
         <>
-          <p className="pf-recruiter-overview-note">Your pipeline at a glance — post roles, search talent, and track applications from one place.</p>
+          <p className="pf-recruiter-overview-note">Post roles for approval and review the candidates the placement team shares with you.</p>
           <OverviewCards cards={[
-            { label: 'Job posts', value: overview.totalJobs, hint: `${overview.published} published · ${overview.drafts} drafts` },
+            { label: 'Job posts', value: overview.totalJobs, hint: `${overview.published} live · ${overview.pendingApproval || 0} pending approval` },
             { label: 'Applications', value: overview.totalApplications, hint: `${overview.last7Days} in the last 7 days` },
-            { label: 'In review', value: (overview.statusCounts?.shortlisted || 0) + (overview.statusCounts?.interview || 0), hint: `${overview.statusCounts?.selected || 0} selected overall` },
+            { label: 'Shared candidates', value: overview.sharedCandidates || 0, hint: 'Lists shared by the placement team' },
             { label: 'New this week', value: overview.last7Days, hint: 'Applications received' }
           ]} />
           <div className="pf-recruiter-quick-links">
             <button onClick={() => { window.location.hash = 'jobs'; }}><BriefcaseBusiness size={16} /><span>Create or manage job posts</span></button>
-            <button onClick={() => { window.location.hash = 'discover'; }}><Search size={16} /><span>Search student talent</span></button>
+            <button onClick={() => { window.location.hash = 'candidates'; }}><Users size={16} /><span>View shared candidates</span></button>
           </div>
         </>
       )}
@@ -128,23 +116,16 @@ export function RecruiterPage() {
       {jobError && <div className="pf-recruiter-error" role="alert">{jobError}</div>}
       {jobMessage && <div className="pf-recruiter-success" role="status">{jobMessage}</div>}
 
-      {tab === 'discover' && (
-        <TalentSearch
-          keywords={keywords} setKeywords={setKeywords}
-          jobDescription={jobDescription} setJobDescription={setJobDescription}
-          onSearch={search} onClear={clear}
-          loading={loading} students={students} error={searchError}
-        />
-      )}
-
       {tab === 'jobs' && (
         <JobPostList
           jobs={jobs} jobsLoading={jobsLoading} companies={companies}
           onOpenComposer={openComposer}
           onEdit={openComposer}
-          onPublishToggle={setPublish}
+          onSubmit={submitJob}
         />
       )}
+
+      {tab === 'candidates' && <SharedCandidates />}
 
       <JobPostComposer
         open={composerOpen}

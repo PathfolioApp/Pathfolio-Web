@@ -8,10 +8,10 @@ PathfolioApp is a modular college ERP built around three role-based portals — 
 
 ## 1. Project Overview
 
-- **Public site** (`/`): Landing page, policies, and the 13-stage student onboarding journey.
+- **Public site** (`/`): Landing page, policies, the student/recruiter onboarding entry, and the 12-stage student onboarding journey.
 - **Student portal** (`/dashboard`, `/profile`, `/placement`, …): Profile dossier (academic, schooling, internships, achievements), resume management, placement opportunities, story timeline, and account settings.
-- **Recruiter portal** (`/recruiter`): Talent search (keyword + job-description matching), job-post publishing with eligibility criteria, and pipeline overview.
-- **Admin portal** (`/admin`): T&P operations workspace — users, companies, job posts, application review, and a JD analyser that ranks students against a job description.
+- **Recruiter portal** (`/recruiter`): job-post submission with eligibility criteria (published only after admin approval), shared-candidate referrals, and pipeline overview.
+- **Admin portal** (`/admin`): T&P operations workspace — job approval & publishing, admin-only student search/filtering, recruiter candidate shares, users, companies, application review, and a JD analyser.
 
 All three portals share one authentication session, one design system, and one REST API. Route access is enforced centrally; users cannot enter a portal they are not authorized for.
 
@@ -48,9 +48,9 @@ Pathfolio-Web/
 │       ├── config/                  # Environment configuration
 │       ├── modules/                 # Domain modules (business ownership)
 │       │   ├── auth/                #   login, logout, sessions, me
-│       │   ├── onboarding/          #   13-stage registration & verification
+│       │   ├── onboarding/          #   12-stage email-first registration & verification
 │       │   ├── students/            #   profile dossier, academics, settings
-│       │   ├── recruiters/          #   talent search, own job posts
+│       │   ├── recruiters/          #   own job posts (submit for approval), shared candidates
 │       │   ├── admin/               #   users, companies, job posts, JD analyser
 │       │   ├── applications/        #   student-facing opportunities & apply
 │       │   ├── resumes/             #   resume upload, tags, R2 storage
@@ -81,7 +81,7 @@ Pathfolio-Web/
         ├── modules/                 # Feature modules by portal
         │   ├── public/              #   landing, policies, 404
         │   ├── auth/                #   sign-in, forgot password,
-        │   │   └── onboarding/      #   13-stage onboarding journey
+        │   │   └── onboarding/      #   12-stage onboarding journey (email-first)
         │   ├── student/
         │   │   ├── dashboard/       #   welcome + progress overview
         │   │   ├── story/           #   living timeline
@@ -113,7 +113,7 @@ Pathfolio-Web/
 `PortalShell` implements the shared workspace chrome (brand, sidebar, top bar with notifications and avatar, compact footer) once. Each portal layout supplies only its navigation items and portal switcher:
 
 - `StudentLayout` — Dashboard, My Profile, Story, Placement Portal, Settings
-- `RecruiterLayout` — Overview, Talent search, My job posts
+- `RecruiterLayout` — Overview, My job posts, Shared candidates
 - `AdminLayout` — Overview, Job posts, Companies, Applications, Users, JD analyser
 
 Recruiters and admins also see the **portal switcher**, allowing one account to move between authorized workspaces.
@@ -130,8 +130,8 @@ Each module owns its pages, components, services, and utilities. Cross-portal im
   - `placements/` — published opportunities list, detail view, apply flow, `opportunitiesApi.js`.
   - `resume/` — multi-resume PDF manager with role tags, `resumeApi.js`.
   - `settings/` — account settings, security (password), privacy/sharing controls.
-- **`recruiter/`** — `RecruiterPage` (slim container) composing `components/`: TalentSearch, JobPostList, JobPostCard, JobPostComposer, CandidateCard; `utils/jobFormatting.js`.
-- **`admin/`** — `AdminPage` (slim container) composing `components/`: UserWorkspace, CompanyWorkspace (+ import), JobWorkspace, ApplicationWorkspace, JDWorkspace; shared `utils/adminHelpers.jsx` (CSV parsing, Cloudinary upload, form primitives).
+- **`recruiter/`** — `RecruiterPage` (slim container) composing `components/`: JobPostList, JobPostCard, JobPostComposer, SharedCandidates; `utils/jobFormatting.js`.
+- **`admin/`** — `AdminPage` (slim container) composing `components/`: UserWorkspace, CompanyWorkspace (+ import), JobWorkspace (approval workflow), StudentSearchWorkspace (+ share wizard), SharesWorkspace, ApplicationWorkspace, JDWorkspace; shared `utils/adminHelpers.jsx` (CSV parsing, Cloudinary upload, form primitives).
 
 ### Shared components (`src/components/`)
 - **`ui/`** — genuinely cross-portal primitives: Button, Badge, Modal, StatCard/OverviewCards, NotificationPanel, AvatarEditor, AchievementIcon, PdfIcon, SignOutButton, ConsentBanner.
@@ -150,8 +150,8 @@ Each module in `api/src/modules/` owns its slice of the API:
 | `auth/` | routes, service | Login, logout, session cookie, `/me` |
 | `onboarding/` | routes, controller, service | Username/roll verification, registration, consent enforcement |
 | `students/` | routes, controller, service, uploads, `studentStore` | Profile dossier CRUD, academics, settings, notifications store |
-| `recruiters/` | routes (search + own jobs), service | Talent search, own job-post management, pipeline overview |
-| `admin/` | routes, services, `adminContentStore` | Users & roles, companies, job posts, applications, JD analyser |
+| `recruiters/` | routes, `recruiterShare.service` | Own job-post management with submit-for-approval, shared-candidate referrals (no student search) |
+| `admin/` | routes, services, `adminContentStore`, `studentSearch.service` | Users & roles, companies, job approval/publishing, admin-only student search, shares, applications, JD analyser |
 | `applications/` | routes | Student-facing opportunity feed and application submission |
 | `resumes/` | routes, controller, validation, upload, store, `r2.service` | Resume upload/tags/defaults via R2 |
 | `notifications/` | routes | List, read, clear in-app notifications |
@@ -207,12 +207,11 @@ Set these values in the ignored `api/.env` before starting the API:
 BOOTSTRAP_ADMIN_EMAIL=admin@kiit.ac.in
 BOOTSTRAP_ADMIN_PASSWORD=use-a-strong-password-here
 BOOTSTRAP_ADMIN_NAME=Pathfolio Administrator
-BOOTSTRAP_ADMIN_USERNAME=pathfolio-admin
 ```
 
 On startup, the API creates the account (or restores its admin flag if it exists). The password is hashed and never returned. In development without a database, storage is intentionally volatile and the account is recreated after each restart.
 
-After signing in through the Admin portal, the **Users** tab supports CSV bulk import and role switching between student and recruiter. CSV columns: `fullName,email,username,password,role,department,batchYear,rollNumber` (template downloadable in-app).
+After signing in through the Admin portal, the **Users** tab supports CSV bulk import and role switching between student and recruiter. CSV columns: `fullName,email,password,role,department,batchYear,rollNumber` (template downloadable in-app).
 
 ### 3. Production pipeline
 
@@ -245,6 +244,9 @@ npm run start:frontend # Frontend, production preview
 | `USE_DATABASE` | Force DB mode in development (`true`) |
 | `SESSION_SECRET` | Session secret (for production hardening) |
 | `BOOTSTRAP_ADMIN_*` | Initial admin account (see above) |
+| `STRICT_EMAIL_VERIFICATION` | `true` = registration requires a time-limited emailed verification link; `false` = dev-friendly flow (format still enforced server-side) |
+| `EMAIL_VERIFICATION_TOKEN_TTL_MINUTES` | Verification link lifetime in minutes (default 60) |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM` | Server-only SMTP credentials for verification email. If strict verification is on but SMTP is missing, registration fails with a clear 503 instead of skipping verification |
 | `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`, `CLOUDINARY_UPLOAD_FOLDER` | Image/attachment storage |
 | `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET`, `R2_ENDPOINT`, `R2_PUBLIC_URL` | Resume & document storage |
 
@@ -259,22 +261,50 @@ Public URL contract is unchanged by the restructuring.
 | Method | Endpoint | Description |
 | --- | --- | --- |
 | `GET` | `/api/health` | Service health status |
-| `POST` | `/api/onboarding/check-username` | Validates format and uniqueness |
+| `POST` | `/api/onboarding/check-email` | Institutional email format + early duplicate detection; returns the derived roll number |
 | `POST` | `/api/onboarding/verify-roll-number` | Institutional roll verification |
-| `POST` | `/api/onboarding/register` | Full payload validation with consent enforcement |
+| `POST` | `/api/onboarding/register` | Full payload validation with consent enforcement; returns 202 + emails a verification link when strict mode is on |
+| `POST` | `/api/onboarding/verify-email` | Consumes a time-limited verification token and creates the account |
 | `POST` | `/api/auth/login` / `POST /api/auth/logout` | Session management |
 | `GET` | `/api/auth/me` | Current session |
-| `GET/PATCH` | `/api/profile/*` | Profile dossier sections, achievements, internships, academics |
+| `GET/PATCH` | `/api/profile/*` | Profile dossier sections (personal, DOB, structured interests, achievements, internships, academics) |
 | `PATCH` | `/api/settings/security/password` | Password change |
 | `GET` | `/api/notifications` | In-app notifications |
 | `GET` | `/api/opportunities` | Published job posts (students) |
-| `POST` | `/api/opportunities/:id/applications` | Apply to a role |
+| `POST` | `/api/opportunities/:id/applications` | Apply to a role (deadline + eligibility + duplicate checks) |
 | `GET/POST/PATCH/DELETE` | `/api/resumes/*` | Resume upload and management |
 | `GET/POST/PATCH/DELETE` | `/api/recruiter/jobs/*` | Recruiter's own job posts |
-| `GET` | `/api/recruiter/students` | Talent search |
+| `POST` | `/api/recruiter/jobs/:id/submit` | Submit a draft/rejected job for admin approval |
+| `GET` | `/api/recruiter/shared-candidates` | Candidate lists shared by the admin (only these; no student search) |
+| `GET` | `/api/recruiter/shared-candidates/:id` | Open a share (marks viewed); whitelisted profile fields only |
+| `POST` | `/api/recruiter/shared-candidates/:id/feedback` | Record per-student recruiter feedback |
+| `GET` | `/api/admin/students` | **Admin-only** student search/filtering (department, batch, skills, CGPA, backlogs, …) |
+| `GET` | `/api/admin/students/:id` | **Admin-only** full student detail |
+| `GET/POST` | `/api/admin/shares` | Share history / create a recruiter share (student shortlist) |
+| `GET` | `/api/admin/recruiters` | Recruiter directory for share targeting |
+| `POST` | `/api/admin/job-posts/:id/review` | **Admin-only** approve / reject (with note) a pending job |
+| `POST` | `/api/admin/job-posts/:id/publish` | **Admin-only** publish an approved job to students |
+| `POST` | `/api/admin/job-posts/:id/unpublish` · `/reopen` | Close a live job / reopen a closed one |
 | `GET/POST/PATCH/DELETE` | `/api/admin/*` | Users, companies, job posts, applications, JD analysis |
 
-Smoke tests: `npm run test:smoke` (auth/profile workflows) and `npm run test:tnp` (placements workflow) from `api/`.
+> **Removed:** `POST /api/onboarding/check-username` (username concept removed) and
+> `GET /api/recruiter/students` (recruiter talent search removed — student discovery is
+> now exclusively an admin capability, shared outward via recruiter shares).
+
+### Core workflow: recruiters never search students
+
+```text
+RECRUITER ──creates + submits job──▶ ADMIN (reviews: approve / reject+note)
+ADMIN ──publishes approved job──▶ STUDENTS (discover + apply)
+STUDENT applications ──▶ ADMIN (reviews, filters eligible students)
+ADMIN ──shares selected students──▶ RECRUITER ("Shared candidates")
+```
+
+Job lifecycle: `draft → pending_approval → approved | rejected → published → closed`.
+Share lifecycle: `shared → viewed → feedback`.
+
+Smoke tests: `npm run test:smoke` (onboarding/auth/profile workflows) and `npm run test:tnp`
+(the complete recruiter → admin → student → admin → recruiter workflow) from `api/`.
 
 ---
 
@@ -305,11 +335,14 @@ Smoke tests: `npm run test:smoke` (auth/profile workflows) and `npm run test:tnp
 
 ### Implemented
 - [x] Public landing page and policy pages
-- [x] 13-stage guided onboarding with verification and consent enforcement
+- [x] Onboarding entry with explicit **Student / Recruiter** paths; recruiter onboarding is **invite-only** (`placement@kiit.ac.in`)
+- [x] 12-stage student onboarding: **email-first** (`rollnumber@kiit.ac.in`), roll number derived and locked, DOB picker (age calculated, never stored as source of truth), structured interests/curiosities (proficiency + optional reason), consent enforcement
+- [x] Optional strict email verification (`STRICT_EMAIL_VERIFICATION`) with hashed, single-use, time-limited tokens sent over SMTP
+- [x] Roll number + email uniqueness enforced server-side (unique DB columns)
 - [x] Student portal: profile dossier, academics/schooling/transcripts, internships, achievements, resumes, story, placements, settings
-- [x] Recruiter portal: talent search, job-post lifecycle (draft → published), pipeline overview
-- [x] Admin portal: user management, companies, job posts, application review, JD analyser
-- [x] Role-based portal access (frontend guards + backend middleware)
+- [x] Recruiter portal: job-post creation + **submit for approval** (recruiters cannot publish), shared-candidate referrals with feedback; **no talent search**
+- [x] Admin portal: job approval workflow (approve / reject-with-note / publish / close / reopen), **admin-only student search & filtering**, **recruiter shares** (student shortlists) with audit-friendly status trail, user management, companies, application review, JD analyser
+- [x] Role-based portal access (frontend guards + backend middleware); recruiter↔student discovery boundary enforced server-side
 - [x] Notification center, cookie consent, responsive layout, WCAG 2.1 AA focus/keyboard support
 
 ### Future modules

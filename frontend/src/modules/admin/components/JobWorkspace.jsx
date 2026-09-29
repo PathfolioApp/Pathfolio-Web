@@ -1,11 +1,21 @@
 import React, { useState } from 'react';
-import { Clock, Save, Send, Undo2, Paperclip, X } from 'lucide-react';
+import { Clock, Save, Send, Undo2, Paperclip, X, CheckCircle2, RotateCcw, MessageSquareWarning } from 'lucide-react';
 import { Button } from '../../../components/ui/Button';
 import { Input, PanelHeading, Empty, formatISTDate } from '../utils/adminHelpers';
 
 const formOptions = [['rollNumber', 'Roll number'], ['department', 'Department'], ['batchYear', 'Batch year'], ['resumeUrl', 'Resume link'], ['portfolioUrl', 'Portfolio link'], ['skills', 'Skills'], ['cgpa', 'CGPA']];
 
-export function JobWorkspace({ companies, jobs, jobForm, setJobForm, editingJob, resetJob, saveJob, loading, editJob, jobFilter, setJobFilter, publish, saving, selectedFields, setSelectedFields, namedAttachments, setNamedAttachments, update }) {
+const STATUS_LABELS = {
+  draft: 'Draft',
+  pending_approval: 'Pending approval',
+  approved: 'Approved',
+  rejected: 'Changes requested',
+  published: 'Published',
+  closed: 'Closed',
+  archived: 'Archived'
+};
+
+export function JobWorkspace({ companies, jobs, jobForm, setJobForm, editingJob, resetJob, saveJob, loading, editJob, jobFilter, setJobFilter, publish, reviewJob, reopenJob, saving, selectedFields, setSelectedFields, namedAttachments, setNamedAttachments, update }) {
   return (
     <section className="pf-admin-workspace">
       <div className="pf-admin-panel">
@@ -42,19 +52,42 @@ export function JobWorkspace({ companies, jobs, jobForm, setJobForm, editingJob,
         <div className="pf-admin-panel-heading">
           <div><p className="pf-admin-eyebrow">Published content</p><h2>Posts <span>{jobs.length}</span></h2></div>
           <select className="pf-admin-filter" value={jobFilter} onChange={event => setJobFilter(event.target.value)}>
-            <option value="">All statuses</option><option value="draft">Drafts</option><option value="published">Published</option>
+            <option value="">All statuses</option>
+            {Object.entries(STATUS_LABELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
           </select>
         </div>
         {loading ? <Empty text="Loading posts..." /> : jobs.length === 0 ? <Empty text="No posts yet. Save a draft to begin." /> : jobs.map((job, idx) => (
           <article className="pf-admin-list-item" key={job.id}>
             <div>
-              <span className={`pf-admin-status-badge is-${job.status}`}>#{jobs.length - idx} {job.status}</span>
+              <span className={`pf-admin-status-badge is-${job.status === 'published' ? 'published' : job.status === 'pending_approval' ? 'draft' : 'draft'}`}>#{jobs.length - idx} {STATUS_LABELS[job.status] || job.status}</span>
               <h3>{job.title}</h3>
               <p>{job.companyName} · {job.location || 'Location flexible'} <span className="pf-admin-date"><Clock size={12} /> {formatISTDate(job.updatedAt)} IST</span></p>
+              {job.status === 'pending_approval' && (
+                <p className="pf-admin-review-note">Submitted by the recruiter — review before publishing to students.</p>
+              )}
+              {job.reviewNote && (
+                <p className="pf-admin-review-note">Last note: “{job.reviewNote}”</p>
+              )}
             </div>
             <div className="pf-admin-item-actions">
-              <Button variant="ghost" size="sm" onClick={() => editJob(job)} disabled={job.status === 'published'}>Edit</Button>
-              <Button variant={job.status === 'published' ? 'outline' : 'primary'} size="sm" loading={saving} icon={job.status === 'published' ? Undo2 : Send} onClick={() => publish(job)}>{job.status === 'published' ? 'Unpublish' : 'Publish'}</Button>
+              {job.status === 'pending_approval' && (
+                <>
+                  <Button variant="primary" size="sm" loading={saving} icon={CheckCircle2} onClick={() => reviewJob(job, 'approve')}>Approve</Button>
+                  <Button variant="ghost" size="sm" loading={saving} icon={MessageSquareWarning} onClick={() => reviewJob(job, 'reject')}>Request changes</Button>
+                </>
+              )}
+              {job.status === 'approved' && (
+                <Button variant="primary" size="sm" loading={saving} icon={Send} onClick={() => publish(job)}>Publish to students</Button>
+              )}
+              {job.status === 'published' && (
+                <Button variant="outline" size="sm" loading={saving} icon={Undo2} onClick={() => publish(job)}>Close</Button>
+              )}
+              {job.status === 'closed' && (
+                <Button variant="ghost" size="sm" loading={saving} icon={RotateCcw} onClick={() => reopenJob(job)}>Reopen</Button>
+              )}
+              {['draft', 'rejected'].includes(job.status) && (
+                <Button variant="ghost" size="sm" onClick={() => editJob(job)}>Edit</Button>
+              )}
             </div>
           </article>
         ))}

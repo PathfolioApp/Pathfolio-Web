@@ -385,11 +385,10 @@ export function ProfileEditPage() {
       <AvatarEditor name={student.personal.fullName} currentUrl={student.personal.avatarUrl || ''} onSaved={refresh} />
     </section>
 
-    <EditSection title="Personal information" note="Your email is linked to your institutional identity and can't be changed here." onSave={() => save('personal', personal)} saving={savingSection === 'personal'}>
+    <EditSection title="Personal information" note="Your email and roll number are linked to your institutional identity and can't be changed here." onSave={() => save('personal', personal)} saving={savingSection === 'personal'}>
       <label>Full name<input value={personal.fullName} onChange={event => setPersonal({ ...personal, fullName: event.target.value })} /></label>
-      <label>Age<input type="number" value={personal.age} onChange={event => setPersonal({ ...personal, age: event.target.value })} /></label>
+      <label>Date of birth<input type="date" max={new Date().toISOString().slice(0, 10)} value={(personal.dateOfBirth || '').slice(0, 10)} onChange={event => setPersonal({ ...personal, dateOfBirth: event.target.value })} /></label>
       <label>Phone number<input type="tel" placeholder="+91 98765 43210" value={personal.phone || ''} onChange={event => setPersonal({ ...personal, phone: event.target.value })} /></label>
-      <label>Username<input value={personal.username} onChange={event => setPersonal({ ...personal, username: event.target.value.toLowerCase() })} /></label>
       <label>Institutional email<input value={personal.email} disabled /></label>
     </EditSection>
 

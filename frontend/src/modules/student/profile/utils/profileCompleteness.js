@@ -2,9 +2,8 @@ export function profileCompleteness(student) {
   if (!student) return 0;
   const score = [
     student.personal?.fullName,
-    student.personal?.age,
+    student.personal?.dateOfBirth,
     student.personal?.phone,
-    student.personal?.username,
     student.academic?.rollNumber,
     student.academic?.department,
     student.academic?.batchYear,
@@ -22,5 +21,5 @@ export function profileCompleteness(student) {
     student.achievements?.length,
     student.internships?.length,
   ].filter(Boolean).length;
-  return Math.round((score / 20) * 100);
+  return Math.round((score / 19) * 100);
 }

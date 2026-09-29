@@ -83,13 +83,17 @@ class ProfileService {
     const student = await store.getStudentById(id); if (!student) throw new Error('Student not found.');
     if (section === 'personal') {
       if (values.fullName !== undefined && values.fullName.trim().length < 2) throw new Error('Full name must be at least 2 characters.');
-      if (values.age !== undefined && (!Number.isInteger(Number(values.age)) || values.age < 15 || values.age > 100)) throw new Error('Please provide a valid age.');
+      if (values.dateOfBirth !== undefined && values.dateOfBirth !== '') {
+        const onboarding = require('../onboarding/onboarding.service');
+        const { dob } = onboarding.validateDateOfBirth(values.dateOfBirth);
+        values.dateOfBirth = dob;
+      }
       if (values.phone !== undefined && String(values.phone).trim()) {
         const cleanedPhone = String(values.phone).trim();
         if (!/^[+]?[\d\s\-()]{7,20}$/.test(cleanedPhone)) throw new Error('Please provide a valid phone number.');
       }
-      if (values.username && values.username !== student.personal.username) { if (!/^[a-z0-9_-]{3,20}$/i.test(values.username)) throw new Error('Username must be 3-20 valid characters.'); if (await store.isUsernameTaken(values.username)) throw new Error('That username is already taken.'); }
-      const allowed = ['fullName', 'age', 'username', 'phone'];
+      // email and rollNumber are institutional identifiers and cannot be self-edited.
+      const allowed = ['fullName', 'dateOfBirth', 'phone'];
       const updates = Object.fromEntries(
         Object.entries(values)
           .filter(([k]) => allowed.includes(k))
@@ -102,7 +106,32 @@ class ProfileService {
       const academicUpdates = Object.fromEntries(Object.entries(values).filter(([field]) => academicFields.includes(field)).map(([field, value]) => [field, normalizeAcademicValue(field, value)]).filter(([, value]) => value !== undefined));
       student.academic = { ...student.academic, ...academicUpdates };
     }
-    else if (section === 'interests') { const tidy = list => Array.isArray(list) ? [...new Set(list.map(x => String(x).trim()).filter(Boolean))].slice(0, 30) : undefined; student.interests = { ...student.interests, ...(values.hobbies !== undefined ? { hobbies: tidy(values.hobbies) } : {}), ...(values.passions !== undefined ? { passions: tidy(values.passions) } : {}) }; }
+    else if (section === 'interests') {
+      const onboarding = require('../onboarding/onboarding.service');
+      // Accept both legacy plain-string tags and structured { name, proficiency, reason }.
+      const tidyStructured = (list, levels) => Array.isArray(list)
+        ? onboarding[levels === 'familiarity' ? 'FAMILIARITY_LEVELS' : 'PROFICIENCY_LEVELS'] && list
+            .map(entry => {
+              if (typeof entry === 'string') return { name: entry.trim(), proficiency: levels === 'familiarity' ? 'exploring' : 'beginner', reason: '' };
+              const name = String(entry?.name || '').trim();
+              if (!name) return null;
+              const proficiencyRaw = String(entry?.proficiency || '').trim().toLowerCase();
+              const allowed = levels === 'familiarity' ? onboarding.FAMILIARITY_LEVELS : onboarding.PROFICIENCY_LEVELS;
+              const proficiency = allowed.includes(proficiencyRaw) ? proficiencyRaw : allowed[0];
+              return { name, proficiency, reason: String(entry?.reason || '').trim().slice(0, 300) };
+            })
+            .filter(Boolean)
+            .filter((item, index, arr) => arr.findIndex(other => other.name.toLowerCase() === item.name.toLowerCase()) === index)
+            .slice(0, 30)
+        : undefined;
+      const hobbies = values.hobbies !== undefined ? tidyStructured(values.hobbies, 'proficiency') : undefined;
+      const passions = values.passions !== undefined ? tidyStructured(values.passions, 'familiarity') : undefined;
+      student.interests = {
+        ...student.interests,
+        ...(hobbies !== undefined ? { hobbies } : {}),
+        ...(passions !== undefined ? { passions } : {})
+      };
+    }
     else if (section === 'familyContext') { const details = String(values.details || '').trim(); if (details && !values.consentGiven) throw new Error('Explicit consent is required before saving sensitive context.'); student.familyContext = details ? { details, consentGiven: true } : { details: '', consentGiven: false }; }
     else if (section === 'profileSettings') student.profileSettings = { ...this.defaultSettings(), ...(student.profileSettings || {}), ...values, fieldVisibility: { ...(student.profileSettings?.fieldVisibility || {}), ...(values.fieldVisibility || {}) } };
     await store.saveStudent(student); return this.safe(student);

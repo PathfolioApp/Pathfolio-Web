@@ -108,7 +108,7 @@ export function ProfilePage() {
           </div>
           <h1 className="pf-profile-name">{personal.fullName}</h1>
           <p className="pf-profile-subtext">
-            <span>@{personal.username}</span>
+            <span>Roll No. {academic.rollNumber}</span>
             <span className="pf-dot">·</span>
             <span>{academic.department}</span>
             <span className="pf-dot">·</span>
@@ -149,8 +149,8 @@ export function ProfilePage() {
             <span className="pf-info-value">{personal.fullName}</span>
           </div>
           <div className="pf-info-row">
-            <span className="pf-info-label">Age</span>
-            <span className="pf-info-value">{personal.age || '—'}</span>
+            <span className="pf-info-label">Date of birth</span>
+            <span className="pf-info-value">{personal.dateOfBirth ? new Date(`${personal.dateOfBirth}T00:00:00`).toLocaleDateString() : '—'}</span>
           </div>
           <div className="pf-info-row">
             <span className="pf-info-label">Phone number</span>
@@ -164,8 +164,8 @@ export function ProfilePage() {
             </span>
           </div>
           <div className="pf-info-row">
-            <span className="pf-info-label">Username</span>
-            <span className="pf-info-value">@{personal.username}</span>
+            <span className="pf-info-label">Roll number</span>
+            <span className="pf-info-value">{academic.rollNumber}</span>
           </div>
         </div>
       </section>

@@ -3,6 +3,20 @@ import { Edit2, User, GraduationCap, Compass, Award, ShieldCheck, CheckCircle } 
 import { Badge } from '../../../../components/ui/Badge';
 import './ReviewSummary.css';
 
+const levelLabel = value => {
+  const labels = { beginner: 'Beginner', intermediate: 'Intermediate', advanced: 'Advanced', expert: 'Expert', exploring: 'Exploring' };
+  return labels[value] || value;
+};
+
+const formatDate = value => {
+  if (!value) return 'Not provided';
+  try {
+    return new Date(`${value}T00:00:00`).toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' });
+  } catch {
+    return value;
+  }
+};
+
 export function ReviewSummary({ formData, onEditSection }) {
   const { personal, academic, interests, achievements, familyContext } = formData;
 
@@ -17,7 +31,7 @@ export function ReviewSummary({ formData, onEditSection }) {
           </div>
           <button
             type="button"
-            onClick={() => onEditSection('name')}
+            onClick={() => onEditSection('identity')}
             className="pf-review-card__edit-btn"
           >
             <Edit2 size={13} />
@@ -31,16 +45,16 @@ export function ReviewSummary({ formData, onEditSection }) {
             <span className="pf-review-item__value">{personal.fullName || 'Not provided'}</span>
           </div>
           <div className="pf-review-item">
-            <span className="pf-review-item__label">Age</span>
-            <span className="pf-review-item__value">{personal.age ? `${personal.age} years old` : 'Not provided'}</span>
-          </div>
-          <div className="pf-review-item">
             <span className="pf-review-item__label">Institutional Email</span>
             <span className="pf-review-item__value">{personal.email || 'Not provided'}</span>
           </div>
           <div className="pf-review-item">
-            <span className="pf-review-item__label">Username / Handle</span>
-            <span className="pf-review-item__value">@{personal.username || 'Not provided'}</span>
+            <span className="pf-review-item__label">Roll Number</span>
+            <span className="pf-review-item__value"><code>{academic.rollNumber || 'Not provided'}</code></span>
+          </div>
+          <div className="pf-review-item">
+            <span className="pf-review-item__label">Date of Birth</span>
+            <span className="pf-review-item__value">{formatDate(personal.dateOfBirth)}</span>
           </div>
         </div>
       </div>
@@ -54,7 +68,7 @@ export function ReviewSummary({ formData, onEditSection }) {
           </div>
           <button
             type="button"
-            onClick={() => onEditSection('rollNumber')}
+            onClick={() => onEditSection('academic')}
             className="pf-review-card__edit-btn"
           >
             <Edit2 size={13} />
@@ -63,12 +77,6 @@ export function ReviewSummary({ formData, onEditSection }) {
         </div>
 
         <div className="pf-review-grid">
-          <div className="pf-review-item">
-            <span className="pf-review-item__label">Roll Number</span>
-            <span className="pf-review-item__value">
-              <code>{academic.rollNumber || 'Not provided'}</code>
-            </span>
-          </div>
           <div className="pf-review-item">
             <span className="pf-review-item__label">Department</span>
             <span className="pf-review-item__value">{academic.department || 'Not provided'}</span>
@@ -103,7 +111,9 @@ export function ReviewSummary({ formData, onEditSection }) {
             <div className="pf-review-chips">
               {interests.hobbies?.length > 0 ? (
                 interests.hobbies.map(h => (
-                  <span key={h} className="pf-review-chip">{h}</span>
+                  <span key={h.name} className="pf-review-chip" title={h.reason || undefined}>
+                    {h.name}{h.proficiency ? ` · ${levelLabel(h.proficiency)}` : ''}
+                  </span>
                 ))
               ) : (
                 <span className="pf-review-empty">None selected</span>
@@ -116,7 +126,9 @@ export function ReviewSummary({ formData, onEditSection }) {
             <div className="pf-review-chips">
               {interests.passions?.length > 0 ? (
                 interests.passions.map(p => (
-                  <span key={p} className="pf-review-chip pf-review-chip--sage">{p}</span>
+                  <span key={p.name} className="pf-review-chip pf-review-chip--sage" title={p.reason || undefined}>
+                    {p.name}{p.proficiency ? ` · ${levelLabel(p.proficiency)}` : ''}
+                  </span>
                 ))
               ) : (
                 <span className="pf-review-empty">None selected</span>

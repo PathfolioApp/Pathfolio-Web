@@ -6,6 +6,7 @@
 const app = require('./src/app');
 const store = require('./src/models/studentStore');
 const adminContentStore = require('./src/models/adminContentStore');
+const recruiterShareService = require('./src/modules/recruiters/recruiterShare.service');
 const adminUserService = require('./src/services/adminUser.service');
 const config = require('./src/config');
 
@@ -15,6 +16,7 @@ async function initialize() {
     ready = (async () => {
       await store.initialize();
       await adminContentStore.initialize();
+      await recruiterShareService.initialize();
       await adminUserService.ensureBootstrapAdmin(config);
     })().catch(error => {
       ready = null; // allow retry on the next invocation

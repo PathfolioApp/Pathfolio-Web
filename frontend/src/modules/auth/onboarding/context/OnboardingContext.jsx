@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ONBOARDING_STAGES } from '../types/config';
+import { ONBOARDING_STAGES, extractRollNumber, INSTITUTIONAL_EMAIL_PATTERN } from '../types/config';
 import { onboardingApi } from '../services/onboardingApi';
 
 const STORAGE_KEY = 'pathfolio_onboarding_state';
@@ -8,10 +8,9 @@ const STORAGE_KEY = 'pathfolio_onboarding_state';
 const initialFormData = {
   personal: {
     fullName: '',
-    age: '',
+    dateOfBirth: '',
     phone: '',
-    email: '',
-    username: ''
+    email: ''
   },
   academic: {
     rollNumber: '',
@@ -19,6 +18,7 @@ const initialFormData = {
     batchYear: ''
   },
   credentials: { password: '', confirmPassword: '' },
+  // Structured interests: [{ name, proficiency, reason }]
   interests: {
     hobbies: [],
     passions: []
@@ -43,7 +43,7 @@ export function OnboardingProvider({ children }) {
       // Existing drafts can predate newly added onboarding fields. Merge every
       // nested group so resuming an older draft never crashes a new stage.
       const parsed = JSON.parse(saved);
-      return {
+      const merged = {
         ...initialFormData,
         ...parsed,
         personal: { ...initialFormData.personal, ...(parsed.personal || {}) },
@@ -52,6 +52,10 @@ export function OnboardingProvider({ children }) {
         interests: { ...initialFormData.interests, ...(parsed.interests || {}) },
         familyContext: { ...initialFormData.familyContext, ...(parsed.familyContext || {}) }
       };
+      // Migration: drop retired fields (age/username) from older drafts.
+      delete merged.personal.age;
+      delete merged.personal.username;
+      return merged;
     } catch {
       return initialFormData;
     }
@@ -62,6 +66,8 @@ export function OnboardingProvider({ children }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(null);
   const [completedStudent, setCompletedStudent] = useState(null);
+  // Result of the early email/roll-number duplicate check (step 2).
+  const [emailCheck, setEmailCheck] = useState(null);
 
   // Sync to sessionStorage
   useEffect(() => {
@@ -74,6 +80,17 @@ export function OnboardingProvider({ children }) {
 
   const currentStage = ONBOARDING_STAGES[currentStepIndex] || ONBOARDING_STAGES[0];
   const totalStages = ONBOARDING_STAGES.length;
+
+  // The roll number is derived from the institutional email and locked.
+  const rollNumber = extractRollNumber(formData.personal.email) || formData.academic.rollNumber || '';
+
+  // Keep the derived roll number in sync with the email.
+  useEffect(() => {
+    const derived = extractRollNumber(formData.personal.email);
+    if (derived && derived !== formData.academic.rollNumber) {
+      setFormData(prev => ({ ...prev, academic: { ...prev.academic, rollNumber: derived } }));
+    }
+  }, [formData.personal.email, formData.academic.rollNumber]);
 
   // Field updates
   const updatePersonal = (field, value) => {
@@ -135,65 +152,58 @@ export function OnboardingProvider({ children }) {
       case 'welcome':
         return true;
 
-      case 'name':
+      case 'email': {
+        const email = (formData.personal.email || '').trim();
+        if (!email) {
+          newErrors.email = 'Institutional email is required.';
+          break;
+        }
+        if (!INSTITUTIONAL_EMAIL_PATTERN.test(email)) {
+          newErrors.email = 'Please use your KIIT institutional email in the format rollnumber@kiit.ac.in (e.g. 2024CS101@kiit.ac.in).';
+          break;
+        }
+        // Early duplicate detection: ask the server before the student invests
+        // time in the rest of onboarding.
+        try {
+          const res = await onboardingApi.checkEmail(email);
+          setEmailCheck(res);
+          if (!res.available) {
+            newErrors.email = res.message || 'This email cannot be used.';
+          }
+        } catch (err) {
+          newErrors.email = err.message || 'Unable to verify the email right now.';
+        }
+        break;
+      }
+
+      case 'identity': {
+        if (!rollNumber) {
+          newErrors.rollNumber = 'Your roll number could not be derived from the email. Please go back and re-enter it.';
+        }
         if (!formData.personal.fullName || formData.personal.fullName.trim().length < 2) {
           newErrors.fullName = 'Please enter your full name (minimum 2 characters).';
         }
         break;
-
-      case 'age': {
-        const ageNum = parseInt(formData.personal.age, 10);
-        if (!formData.personal.age || isNaN(ageNum) || ageNum < 15 || ageNum > 99) {
-          newErrors.age = 'Please enter a valid age between 15 and 99.';
-        }
-        break;
       }
 
-      case 'email': {
-        const email = (formData.personal.email || '').trim();
-        const emailRegex = /^[^\s@]+@kiit\.ac\.in$/i;
-        if (!email) {
-          newErrors.email = 'Institutional email is required.';
-        } else if (!emailRegex.test(email)) {
-          newErrors.email = 'Please use your KIIT institutional email ending in @kiit.ac.in.';
+      case 'dob': {
+        const dob = formData.personal.dateOfBirth;
+        if (!dob) {
+          newErrors.dateOfBirth = 'Please provide your date of birth.';
+          break;
         }
-        break;
-      }
-
-      case 'username': {
-        const username = (formData.personal.username || '').trim();
-        if (!username) {
-          newErrors.username = 'Please choose a username.';
-        } else if (username.length < 3 || username.length > 20) {
-          newErrors.username = 'Username must be between 3 and 20 characters.';
-        } else if (!/^[a-zA-Z0-9_-]+$/.test(username)) {
-          newErrors.username = 'Username can only contain letters, numbers, hyphens, and underscores.';
+        const value = new Date(`${dob}T00:00:00`);
+        const today = new Date();
+        if (Number.isNaN(value.getTime())) {
+          newErrors.dateOfBirth = 'Please provide a valid date.';
+        } else if (value > today) {
+          newErrors.dateOfBirth = 'Your date of birth cannot be in the future.';
         } else {
-          // Verify with backend
-          const res = await onboardingApi.checkUsername(username);
-          if (!res.available) {
-            newErrors.username = res.message || 'This username is already taken.';
-          }
-        }
-        break;
-      }
-
-      case 'rollNumber': {
-        const roll = (formData.academic.rollNumber || '').trim();
-        if (!roll) {
-          newErrors.rollNumber = 'College roll number is required.';
-        } else if (!/^\d+$/.test(roll)) {
-          newErrors.rollNumber = 'Roll number must contain numbers only.';
-        } else {
-          const res = await onboardingApi.verifyRollNumber(roll);
-          if (!res.valid) {
-            newErrors.rollNumber = res.message || 'Invalid roll number format.';
-          } else if (res.department && !formData.academic.department) {
-            // Auto-populate academic fields if pre-enrolled record exists
-            updateAcademic('department', res.department);
-            if (res.batchYear && !formData.academic.batchYear) {
-              updateAcademic('batchYear', res.batchYear);
-            }
+          let age = today.getFullYear() - value.getFullYear();
+          const beforeBirthday = today.getMonth() < value.getMonth() || (today.getMonth() === value.getMonth() && today.getDate() < value.getDate());
+          if (beforeBirthday) age -= 1;
+          if (age < 15 || age > 100) {
+            newErrors.dateOfBirth = 'Please provide a realistic date of birth (age 15-100).';
           }
         }
         break;
@@ -213,17 +223,25 @@ export function OnboardingProvider({ children }) {
         if (formData.credentials?.password !== formData.credentials?.confirmPassword) newErrors.confirmPassword = 'Passwords do not match.';
         break;
 
-      case 'hobbies':
-        if (!formData.interests.hobbies || formData.interests.hobbies.length === 0) {
+      case 'hobbies': {
+        const hobbies = formData.interests.hobbies || [];
+        if (hobbies.length === 0) {
           newErrors.hobbies = 'Please select or add at least one hobby or interest.';
+        } else if (hobbies.some(item => !item?.proficiency)) {
+          newErrors.hobbies = 'Tell us how good you are at each selected interest.';
         }
         break;
+      }
 
-      case 'passions':
-        if (!formData.interests.passions || formData.interests.passions.length === 0) {
+      case 'passions': {
+        const passions = formData.interests.passions || [];
+        if (passions.length === 0) {
           newErrors.passions = 'Please select or add at least one topic or curiosity.';
+        } else if (passions.some(item => !item?.proficiency)) {
+          newErrors.passions = 'Tell us how familiar you are with each selected field.';
         }
         break;
+      }
 
       case 'achievements':
         // Optional milestone step
@@ -239,6 +257,10 @@ export function OnboardingProvider({ children }) {
         break;
 
       case 'review':
+        return true;
+
+      case 'phone':
+        // Optional contact step
         return true;
 
       default:
@@ -298,7 +320,20 @@ export function OnboardingProvider({ children }) {
     setIsSubmitting(true);
     setSubmitError(null);
     try {
-      const regResponse = await onboardingApi.register(formData);
+      const payload = {
+        ...formData,
+        academic: { ...formData.academic, rollNumber }
+      };
+      const regResponse = await onboardingApi.register(payload);
+
+      // Strict mode: registration is held until the emailed link is opened.
+      if (regResponse.pendingVerification) {
+        sessionStorage.removeItem(STORAGE_KEY);
+        sessionStorage.setItem('pathfolio_verification_email', regResponse.email || payload.personal.email);
+        window.location.href = '/onboarding/pending-verification';
+        return;
+      }
+
       if (!regResponse.success && !regResponse.data) {
         throw new Error(regResponse.message || 'Registration failed.');
       }
@@ -314,7 +349,7 @@ export function OnboardingProvider({ children }) {
       setCompletedStudent(completedData);
       sessionStorage.removeItem(STORAGE_KEY);
       sessionStorage.setItem('pathfolio_completed_student', JSON.stringify(completedData));
-      
+
       // Update auth context by triggering a full page reload to /onboarding/complete
       // which will ensure the AuthContext fetches the new session on load.
       window.location.href = '/onboarding/complete';
@@ -332,6 +367,7 @@ export function OnboardingProvider({ children }) {
     setErrors({});
     setSubmitError(null);
     setCompletedStudent(null);
+    setEmailCheck(null);
     sessionStorage.removeItem(STORAGE_KEY);
     sessionStorage.removeItem('pathfolio_completed_student');
   };
@@ -347,6 +383,8 @@ export function OnboardingProvider({ children }) {
         isSubmitting,
         submitError,
         completedStudent,
+        rollNumber,
+        emailCheck,
         updatePersonal,
         updateAcademic,
         updateCredentials,

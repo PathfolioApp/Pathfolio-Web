@@ -14,7 +14,6 @@ const preferenceRoutes = require('./modules/preferences/preference.routes');
 const resumeRoutes = require('./modules/resumes/resume.routes');
 const adminRoutes = require('./modules/admin/admin.routes');
 const recruiterRoutes = require('./modules/recruiters/recruiter.routes');
-const recruiterJobsRoutes = require('./modules/recruiters/recruiterJobs.routes');
 const opportunityRoutes = require('./modules/applications/opportunity.routes');
 
 const app = express();
@@ -58,7 +57,6 @@ app.use('/api/preference', preferenceRoutes);
 app.use('/api/resumes', resumeRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/recruiter', recruiterRoutes);
-app.use('/api/recruiter/jobs', recruiterJobsRoutes);
 app.use('/api/opportunities', opportunityRoutes);
 
 // 404 Handler for undefined API routes

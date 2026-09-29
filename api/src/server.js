@@ -5,12 +5,14 @@ const config = require('./config');
 const studentStore = require('./modules/students/studentStore');
 const adminContentStore = require('./modules/admin/adminContentStore');
 const resumeStore = require('./modules/resumes/resumeStore');
+const recruiterShareService = require('./modules/recruiters/recruiterShare.service');
 const adminUserService = require('./modules/admin/adminUser.service');
 
 async function start() {
   await studentStore.initialize();
   await adminContentStore.initialize();
   await resumeStore.initialize(studentStore.pool);
+  await recruiterShareService.initialize();
   const bootstrapAdmin = await adminUserService.ensureBootstrapAdmin(config);
   if (bootstrapAdmin) console.log(`[PathfolioApp] Bootstrap admin ready for ${bootstrapAdmin.email}.`);
 

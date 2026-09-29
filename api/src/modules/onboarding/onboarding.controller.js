@@ -2,10 +2,10 @@ const onboardingService = require('./onboarding.service');
 const authService = require('../auth/auth.service');
 
 class OnboardingController {
-  async checkUsername(req, res, next) {
+  /** Early duplicate/format check on the institutional email (step 1 of onboarding). */
+  async checkEmail(req, res, next) {
     try {
-      const { username } = req.body;
-      const result = await onboardingService.checkUsernameAvailability(username);
+      const result = await onboardingService.checkEmail(req.body.email);
       return res.status(200).json(result);
     } catch (error) {
       next(error);
@@ -14,8 +14,7 @@ class OnboardingController {
 
   async verifyRollNumber(req, res, next) {
     try {
-      const { rollNumber } = req.body;
-      const result = await onboardingService.verifyRollNumber(rollNumber);
+      const result = await onboardingService.verifyRollNumber(req.body.rollNumber);
       return res.status(200).json(result);
     } catch (error) {
       next(error);
@@ -24,8 +23,15 @@ class OnboardingController {
 
   async register(req, res, next) {
     try {
-      const student = await onboardingService.registerStudent(req.body);
-      const session = await authService.register(await require('../students/studentStore').getStudentById(student.id));
+      const result = await onboardingService.registerStudent(req.body);
+
+      // Strict mode holds the registration behind an emailed verification link.
+      if (result.pendingVerification) {
+        return res.status(202).json({ success: true, ...result });
+      }
+
+      const student = await require('../students/studentStore').getStudentById(result.id);
+      const session = await authService.register(student);
       res.cookie('pf_session', session.token, { httpOnly: true, sameSite: 'lax', secure: process.env.NODE_ENV === 'production', maxAge: 1000 * 60 * 60 * 24 * 7, path: '/' });
       return res.status(201).json({
         success: true,
@@ -33,10 +39,25 @@ class OnboardingController {
         data: session.student
       });
     } catch (error) {
-      return res.status(400).json({
+      return res.status(error.statusCode || 400).json({
         success: false,
         message: error.message || 'Failed to complete registration.'
       });
+    }
+  }
+
+  /** Consume an emailed verification token; signs the student in on success. */
+  async verifyEmail(req, res, next) {
+    try {
+      const result = await onboardingService.verifyEmailToken(req.body.token);
+      if (result.success && result.student) {
+        const student = await require('../students/studentStore').getStudentById(result.student.id);
+        const session = await authService.register(student);
+        res.cookie('pf_session', session.token, { httpOnly: true, sameSite: 'lax', secure: process.env.NODE_ENV === 'production', maxAge: 1000 * 60 * 60 * 24 * 7, path: '/' });
+      }
+      return res.status(result.success ? 200 : 400).json(result);
+    } catch (error) {
+      return res.status(error.statusCode || 400).json({ success: false, message: error.message || 'Email verification failed.' });
     }
   }
 

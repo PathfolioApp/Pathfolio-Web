@@ -1,12 +1,14 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Search, BriefcaseBusiness, GraduationCap, Building2, ShieldCheck } from 'lucide-react';
+import { LayoutDashboard, BriefcaseBusiness, Users, GraduationCap, Building2, ShieldCheck } from 'lucide-react';
 import { PortalShell } from '../PortalShell';
 import { useAuth } from '../../app/providers/AuthProvider';
 
 /**
  * RecruiterLayout — navigation and chrome for the recruiter portal.
  * Route access is enforced by RequireRole in the central route table.
+ * Note: recruiters have no talent-search navigation — student discovery is
+ * mediated by the placement team through shared candidate lists.
  */
 export function RecruiterLayout({ children }) {
   const { student } = useAuth();
@@ -15,8 +17,8 @@ export function RecruiterLayout({ children }) {
 
   const navItems = [
     [LayoutDashboard, 'Overview', '/recruiter'],
-    [Search, 'Talent search', '/recruiter', 'discover'],
-    [BriefcaseBusiness, 'My job posts', '/recruiter', 'jobs']
+    [BriefcaseBusiness, 'My job posts', '/recruiter', 'jobs'],
+    [Users, 'Shared candidates', '/recruiter', 'candidates']
   ];
 
   const go = path => {

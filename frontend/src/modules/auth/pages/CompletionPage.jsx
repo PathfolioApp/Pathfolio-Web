@@ -37,7 +37,7 @@ export function CompletionPage() {
   const name = student?.personal?.fullName || 'Student';
   const department = student?.academic?.department || 'Academic Department';
   const batchYear = student?.academic?.batchYear || 'Class Cohort';
-  const username = student?.personal?.username || 'scholar';
+  const rollNumber = student?.academic?.rollNumber || 'Scholar';
   const hobbiesCount = student?.interests?.hobbies?.length || 0;
   const passionsCount = student?.interests?.passions?.length || 0;
   const achievementsCount = student?.achievements?.length || 0;
@@ -86,7 +86,7 @@ export function CompletionPage() {
                 <p className="pf-completion-dept">
                   {department} • {batchYear}
                 </p>
-                <span className="pf-completion-handle">@{username}</span>
+                <span className="pf-completion-handle">Roll No. {rollNumber}</span>
               </div>
               <Badge variant="sage" size="md">Admitted & Initialized</Badge>
             </div>

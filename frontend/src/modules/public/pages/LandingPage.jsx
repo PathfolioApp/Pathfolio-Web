@@ -19,7 +19,7 @@ import {
   TrendingUp,
   UserCheck,
   BriefcaseBusiness,
-  Search,
+  Users,
   FileSearch,
   Building2
 } from 'lucide-react';
@@ -84,7 +84,7 @@ export function LandingPage() {
 
               <p className="pf-hero__audience">
                 Built for <b>talent havers</b> and <b>talent hunters</b> — students grow a verified
-                record, while recruiters and placement teams discover the people behind the potential.
+                record, while the placement team curates matches and connects recruiters with the people behind the potential.
               </p>
             </div>
 
@@ -274,30 +274,30 @@ export function LandingPage() {
               <span className="editorial-eyebrow">For talent hunters</span>
               <h2 className="pf-section-title">Recruiting? Meet your shortest path to the right people.</h2>
               <p className="pf-section-subtitle">
-                The same living records students build become a explainable, searchable talent pool for recruiters and TnP teams.
+                Submit your roles for placement-team review and receive curated candidate referrals — the living records students build, matched and shared by the TnP cell.
               </p>
             </div>
 
             <div className="pf-recruiter-grid">
               <div className="pf-recruiter-feature animate-fade-in delay-100">
-                <div className="pf-recruiter-feature__icon"><Search size={20} /></div>
-                <h3>Search real profiles</h3>
-                <p>Filter students by skills, interests, department, or batch — every result is a living record, not a static resume.</p>
-              </div>
-              <div className="pf-recruiter-feature animate-fade-in delay-200">
-                <div className="pf-recruiter-feature__icon"><FileSearch size={20} /></div>
-                <h3>Analyse job descriptions</h3>
-                <p>Paste a JD and Pathfolio extracts the skills and eligibility criteria, then ranks candidates with explainable matches.</p>
-              </div>
-              <div className="pf-recruiter-feature animate-fade-in delay-300">
                 <div className="pf-recruiter-feature__icon"><BriefcaseBusiness size={20} /></div>
                 <h3>Post opportunities</h3>
-                <p>Publish roles with salary, work mode, and eligibility criteria. Students apply in one click with verified profiles.</p>
+                <p>Submit roles with salary, work mode, and eligibility criteria. The placement team reviews and publishes them to matched students.</p>
+              </div>
+              <div className="pf-recruiter-feature animate-fade-in delay-200">
+                <div className="pf-recruiter-feature__icon"><Users size={20} /></div>
+                <h3>Receive curated candidates</h3>
+                <p>The placement team shares matched student profiles with your company — no database digging, just relevant referrals.</p>
+              </div>
+              <div className="pf-recruiter-feature animate-fade-in delay-300">
+                <div className="pf-recruiter-feature__icon"><FileSearch size={20} /></div>
+                <h3>Review living records</h3>
+                <p>Shared candidates arrive with interests, achievements, experience, and resumes — evidence, not static resumes.</p>
               </div>
               <div className="pf-recruiter-feature animate-fade-in delay-400">
                 <div className="pf-recruiter-feature__icon"><Building2 size={20} /></div>
                 <h3>Track your pipeline</h3>
-                <p>Review applications, move candidates through shortlist to selected, and keep the placement team in sync.</p>
+                <p>Review applications to your published roles, share feedback on referrals, and keep the placement team in sync.</p>
               </div>
             </div>
 
