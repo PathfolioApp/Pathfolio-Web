@@ -46,10 +46,39 @@ const normalizeAcademicValue = (field, value) => {
   }
   return String(value).trim();
 };
+
+const sortInternships = (internships) => {
+  if (!Array.isArray(internships)) return [];
+  return [...internships].sort((a, b) => {
+    if (a.currentlyWorking && !b.currentlyWorking) return -1;
+    if (!a.currentlyWorking && b.currentlyWorking) return 1;
+
+    if (a.currentlyWorking && b.currentlyWorking) {
+      const aStart = a.startDate ? new Date(a.startDate).getTime() : 0;
+      const bStart = b.startDate ? new Date(b.startDate).getTime() : 0;
+      if (aStart !== bStart) return bStart - aStart;
+    } else {
+      const aEnd = a.endDate ? new Date(a.endDate).getTime() : 0;
+      const bEnd = b.endDate ? new Date(b.endDate).getTime() : 0;
+      if (aEnd !== bEnd) return bEnd - aEnd;
+
+      const aStart = a.startDate ? new Date(a.startDate).getTime() : 0;
+      const bStart = b.startDate ? new Date(b.startDate).getTime() : 0;
+      if (aStart !== bStart) return bStart - aStart;
+    }
+
+    const aCreated = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+    const bCreated = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+    if (aCreated && bCreated && aCreated !== bCreated) {
+      return aCreated - bCreated;
+    }
+    return String(a.id || '').localeCompare(String(b.id || ''));
+  });
+};
 class ProfileService {
   async current(id) { return auth.getStudentForSession((await store.createSession(id))); }
-  async get(id) { return auth.publicStudent ? auth.publicStudent(await store.getStudentById(id)) : this.safe(await store.getStudentById(id)); }
-  safe(student) { const { passwordHash, ...safe } = student; return safe; }
+  async get(id) { return this.safe(await store.getStudentById(id)); }
+  safe(student) { return auth.publicStudent ? auth.publicStudent(student) : student; }
   async update(id, section, values) {
     const student = await store.getStudentById(id); if (!student) throw new Error('Student not found.');
     if (section === 'personal') {
@@ -359,6 +388,316 @@ class ProfileService {
     student.academic.semesters = semesters;
     await store.saveStudent(student);
     return this.get(id);
+  }
+
+  validateInternship(data, isUpdate = false) {
+    const companyName = String(data.companyName || '').trim();
+    const role = String(data.role || '').trim();
+    const startDate = String(data.startDate || '').trim();
+    const currentlyWorking = Boolean(data.currentlyWorking);
+    const endDate = currentlyWorking ? '' : String(data.endDate || '').trim();
+
+    if (!isUpdate || data.companyName !== undefined) {
+      if (!companyName) {
+        const err = new Error('Company name is required.');
+        err.statusCode = 400;
+        throw err;
+      }
+    }
+
+    if (!isUpdate || data.role !== undefined) {
+      if (!role) {
+        const err = new Error('Role / position is required.');
+        err.statusCode = 400;
+        throw err;
+      }
+    }
+
+    if (!isUpdate || data.startDate !== undefined) {
+      if (!startDate) {
+        const err = new Error('Start date is required.');
+        err.statusCode = 400;
+        throw err;
+      }
+    }
+
+    if (!currentlyWorking && (!isUpdate || data.endDate !== undefined)) {
+      if (!endDate) {
+        const err = new Error('End date is required unless currently working.');
+        err.statusCode = 400;
+        throw err;
+      }
+    }
+
+    const todayStr = new Date().toISOString().split('T')[0];
+    if (startDate && startDate > todayStr) {
+      const err = new Error('Start date cannot be in the future.');
+      err.statusCode = 400;
+      throw err;
+    }
+
+    if (!currentlyWorking && endDate && endDate > todayStr) {
+      const err = new Error('End date cannot be in the future for completed internships.');
+      err.statusCode = 400;
+      throw err;
+    }
+
+    if (startDate && endDate && !currentlyWorking) {
+      if (new Date(startDate) > new Date(endDate)) {
+        const err = new Error('Start date cannot be later than end date.');
+        err.statusCode = 400;
+        throw err;
+      }
+    }
+
+    const validModes = ['Remote', 'Hybrid', 'On-site'];
+    let workMode = String(data.workMode || 'On-site').trim();
+    const matchedMode = validModes.find(m => m.toLowerCase() === workMode.toLowerCase());
+    workMode = matchedMode || 'On-site';
+
+    let responsibilities = [];
+    if (Array.isArray(data.responsibilities)) {
+      responsibilities = data.responsibilities.map(r => String(r || '').trim()).filter(Boolean);
+    } else if (typeof data.responsibilities === 'string') {
+      responsibilities = data.responsibilities.split('\n').map(r => r.trim()).filter(Boolean);
+    }
+
+    let skills = [];
+    if (Array.isArray(data.skills)) {
+      skills = [...new Set(data.skills.map(s => String(s || '').trim()).filter(Boolean))];
+    } else if (typeof data.skills === 'string') {
+      skills = [...new Set(data.skills.split(',').map(s => s.trim()).filter(Boolean))];
+    }
+
+    const projects = data.projects && typeof data.projects === 'object' ? {
+      projectName: String(data.projects.projectName || '').trim(),
+      projectDescription: String(data.projects.projectDescription || '').trim(),
+      projectUrl: String(data.projects.projectUrl || '').trim(),
+    } : {
+      projectName: '',
+      projectDescription: '',
+      projectUrl: String(data.projectUrl || '').trim(),
+    };
+
+    return {
+      companyName,
+      companyLogo: String(data.companyLogo || '').trim(),
+      role,
+      startDate,
+      endDate,
+      currentlyWorking,
+      internshipType: String(data.internshipType || '').trim(),
+      workMode,
+      location: String(data.location || '').trim(),
+      description: String(data.description || '').trim(),
+      responsibilities,
+      skills,
+      projects,
+      companyWebsite: String(data.companyWebsite || '').trim(),
+      projectUrl: String(data.projectUrl || projects.projectUrl || '').trim(),
+    };
+  }
+
+  async addInternship(id, data) {
+    const student = await store.getStudentById(id);
+    if (!student) {
+      const error = new Error('Student not found.');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    const validated = this.validateInternship(data, false);
+    const internshipId = `intern_${Date.now()}_${crypto.randomBytes(3).toString('hex')}`;
+    const newInternship = {
+      id: internshipId,
+      ...validated,
+      certificate: null,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    student.internships = Array.isArray(student.internships) ? [...student.internships] : [];
+    student.internships = sortInternships([...student.internships, newInternship]);
+
+    await store.saveStudent(student);
+    return this.get(id);
+  }
+
+  async editInternship(id, internshipId, data) {
+    const student = await store.getStudentById(id);
+    if (!student) {
+      const error = new Error('Student not found.');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    student.internships = Array.isArray(student.internships) ? [...student.internships] : [];
+    const index = student.internships.findIndex(i => i.id === internshipId);
+    if (index < 0) {
+      const error = new Error('Internship not found.');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    const current = student.internships[index];
+    const validated = this.validateInternship({ ...current, ...data }, true);
+    student.internships[index] = {
+      ...current,
+      ...validated,
+      id: current.id,
+      certificate: current.certificate || null,
+      updatedAt: new Date().toISOString(),
+    };
+    student.internships = sortInternships(student.internships);
+
+    await store.saveStudent(student);
+    return this.get(id);
+  }
+
+  async deleteInternship(id, internshipId) {
+    const student = await store.getStudentById(id);
+    if (!student) {
+      const error = new Error('Student not found.');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    student.internships = Array.isArray(student.internships) ? [...student.internships] : [];
+    const index = student.internships.findIndex(i => i.id === internshipId);
+    if (index < 0) {
+      const error = new Error('Internship not found.');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    const [removed] = student.internships.splice(index, 1);
+    if (removed?.certificate?.key) {
+      await r2Service.deleteFile(removed.certificate.key).catch(() => {});
+    }
+
+    await store.saveStudent(student);
+    return this.get(id);
+  }
+
+  async uploadInternshipCertificate(id, internshipId, file) {
+    if (!file || !file.buffer) {
+      const error = new Error('Please select a certificate file to upload.');
+      error.statusCode = 400;
+      throw error;
+    }
+
+    const isPdf = file.mimetype === 'application/pdf' || /\.pdf$/i.test(file.originalname || '');
+    if (!isPdf) {
+      const error = new Error('Only PDF documents are allowed for internship certificates.');
+      error.statusCode = 400;
+      throw error;
+    }
+    validatePdfBuffer(file.buffer);
+
+    const student = await store.getStudentById(id);
+    if (!student) {
+      const error = new Error('Student not found.');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    student.internships = Array.isArray(student.internships) ? [...student.internships] : [];
+    const index = student.internships.findIndex(i => i.id === internshipId);
+    if (index < 0) {
+      const error = new Error('Internship not found.');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    const current = student.internships[index];
+    const oldKey = current.certificate?.key;
+    const ext = 'pdf';
+    const sanitizedName = sanitizeDocFilename(file.originalname, `certificate_${internshipId}.pdf`);
+    const fileId = `cert_${Date.now()}_${crypto.randomBytes(3).toString('hex')}`;
+    const key = `students/${id}/internships/cert_${internshipId}_${Date.now()}.pdf`;
+
+    await r2Service.uploadFile(file.buffer, key, 'application/pdf');
+    if (oldKey) await r2Service.deleteFile(oldKey).catch(() => {});
+
+    student.internships[index] = {
+      ...current,
+      certificate: {
+        fileId,
+        key,
+        filename: sanitizedName,
+        size: file.size,
+        contentType: file.mimetype || 'application/pdf',
+        uploadedAt: new Date().toISOString(),
+      },
+      updatedAt: new Date().toISOString(),
+    };
+
+    await store.saveStudent(student);
+    return this.get(id);
+  }
+
+  async deleteInternshipCertificate(id, internshipId) {
+    const student = await store.getStudentById(id);
+    if (!student) {
+      const error = new Error('Student not found.');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    student.internships = Array.isArray(student.internships) ? [...student.internships] : [];
+    const index = student.internships.findIndex(i => i.id === internshipId);
+    if (index < 0) {
+      const error = new Error('Internship not found.');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    const current = student.internships[index];
+    if (current.certificate?.key) {
+      await r2Service.deleteFile(current.certificate.key).catch(() => {});
+    }
+
+    student.internships[index] = {
+      ...current,
+      certificate: null,
+      updatedAt: new Date().toISOString(),
+    };
+
+    await store.saveStudent(student);
+    return this.get(id);
+  }
+
+  async getInternshipCertificate(id, internshipId) {
+    const student = await store.getStudentById(id);
+    if (!student) {
+      const error = new Error('Student not found.');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    const internships = Array.isArray(student.internships) ? student.internships : [];
+    const internship = internships.find(i => i.id === internshipId);
+    const cert = internship?.certificate;
+
+    if (!cert || !cert.key) {
+      const error = new Error('Internship certificate not found.');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    const object = await r2Service.getFile(cert.key);
+    if (!object.Body) {
+      const error = new Error('Certificate file is unavailable in storage.');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    return {
+      body: object.Body,
+      contentType: object.ContentType || cert.contentType || 'application/pdf',
+      contentLength: object.ContentLength,
+      filename: cert.filename || 'certificate.pdf',
+    };
   }
 }
 module.exports = new ProfileService();

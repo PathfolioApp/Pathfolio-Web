@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Award, ArrowLeft, FileText, UploadCloud, Trash2, Eye, Plus, Edit2 } from 'lucide-react';
+import { Award, ArrowLeft, FileText, UploadCloud, Trash2, Eye, Plus, Edit2, Briefcase, Building2, Calendar, MapPin, Globe, ExternalLink } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { profileApi, uploadAcademicDocument } from '../services/profileApi';
 import { Modal } from '../components/Modal';
@@ -9,10 +9,13 @@ import { AvatarEditor } from '../components/AvatarEditor';
 import { PdfIcon } from '../components/PdfIcon';
 import { AchievementIcon } from '../components/AchievementIcon';
 import { ACHIEVEMENT_CATEGORIES } from '../features/onboarding/types/config';
+import { InternshipModal } from './InternshipModal';
+import { formatInternshipTimeline, sortInternships } from '../utils/internshipUtils';
 import './ProfilePages.css';
 import './ProfileEditEnhancements.css';
 import './AchievementModal.css';
 import './AcademicStyles.css';
+import './InternshipStyles.css';
 
 const split = value => value.split(',').map(item => item.trim()).filter(Boolean);
 const cleanDescription = value => String(value || '').replace(/\*\*(.*?)\*\*/g, '$1');
@@ -23,6 +26,44 @@ const formatSize = (bytes) => {
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 };
+
+const formatDateMonthYear = (dateStr) => {
+  if (!dateStr) return '';
+  try {
+    const [year, month] = dateStr.split('-');
+    if (!year || !month) return dateStr;
+    const date = new Date(parseInt(year, 10), parseInt(month, 10) - 1, 1);
+    return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+  } catch {
+    return dateStr;
+  }
+};
+
+const formatDuration = (startDate, endDate, currentlyWorking) => {
+  if (!startDate) return '';
+  try {
+    const [startYear, startMonth] = startDate.split('-').map(Number);
+    let endYear, endMonth;
+    if (currentlyWorking || !endDate) {
+      const now = new Date();
+      endYear = now.getFullYear();
+      endMonth = now.getMonth() + 1;
+    } else {
+      [endYear, endMonth] = endDate.split('-').map(Number);
+    }
+    const months = (endYear - startYear) * 12 + (endMonth - startMonth) + 1;
+    if (months <= 0) return '';
+    const yrs = Math.floor(months / 12);
+    const remMonths = months % 12;
+    const parts = [];
+    if (yrs > 0) parts.push(`${yrs} yr${yrs > 1 ? 's' : ''}`);
+    if (remMonths > 0) parts.push(`${remMonths} mo${remMonths > 1 ? 's' : ''}`);
+    return parts.join(' ');
+  } catch {
+    return '';
+  }
+};
+
 
 function AcademicDocUploader({ label, doc, onUpload, onDelete, uploading }) {
   const fileInputRef = useRef(null);
@@ -123,6 +164,11 @@ export function ProfileEditPage() {
   const [isSemesterModalOpen, setIsSemesterModalOpen] = useState(false);
   const [semesterModalData, setSemesterModalData] = useState({ semester: 1, sgpa: '', cgpa: '', academicYear: '', file: null });
   const [savingSemester, setSavingSemester] = useState(false);
+
+  // Internship Modal State
+  const [isInternshipModalOpen, setIsInternshipModalOpen] = useState(false);
+  const [editingInternshipData, setEditingInternshipData] = useState(null);
+  const [deletingInternshipId, setDeletingInternshipId] = useState(null);
 
   useEffect(() => {
     setPersonal(student.personal);
@@ -266,6 +312,34 @@ export function ProfileEditPage() {
       setMessage('Achievement removed.');
     } catch (saveError) {
       setError(saveError.message);
+    }
+  };
+
+  const handleOpenAddInternship = () => {
+    setEditingInternshipData(null);
+    setIsInternshipModalOpen(true);
+  };
+
+  const handleOpenEditInternship = (internship) => {
+    setEditingInternshipData(internship);
+    setIsInternshipModalOpen(true);
+  };
+
+  const handleDeleteInternship = async (id, companyName) => {
+    if (!window.confirm(`Are you sure you want to remove your internship at ${companyName || 'this company'}?`)) {
+      return;
+    }
+    setDeletingInternshipId(id);
+    setError('');
+    setMessage('');
+    try {
+      await profileApi.deleteInternship(id);
+      await refresh();
+      setMessage('Internship record removed successfully.');
+    } catch (delError) {
+      setError(delError.message || 'Failed to remove internship.');
+    } finally {
+      setDeletingInternshipId(null);
     }
   };
 
@@ -672,9 +746,156 @@ export function ProfileEditPage() {
       <label>Roll number<input value={academic.rollNumber} disabled /></label>
     </EditSection>
 
-    <EditSection id="interests" title="Hobbies & passions" note="Use commas to add or remove tags. Custom interests are welcome." onSave={() => save('interests', interests)} saving={savingSection === 'interests'}>
-      <label>Hobbies<input value={interests.hobbies.join(', ')} onChange={event => setInterests({ ...interests, hobbies: split(event.target.value) })} /></label>
-      <label>Passions / interests<input value={interests.passions.join(', ')} onChange={event => setInterests({ ...interests, passions: split(event.target.value) })} /></label>
+    <div id="internships" />
+    <EditSection
+      id="internships-section"
+      title="Internships & work experience"
+      note="Add verified corporate internships, research appointments, or technical training engagements."
+      headerAction={
+        <button
+          type="button"
+          className="pf-achievement-add-button"
+          onClick={handleOpenAddInternship}
+        >
+          <Plus size={16} /> Add internship
+        </button>
+      }
+    >
+      {(() => {
+        const sortedInternships = sortInternships(student.internships);
+        return sortedInternships.length > 0 ? (
+          <div className="pf-internship-editor-list">
+            {sortedInternships.map(internship => {
+              const timelineStr = formatInternshipTimeline(internship.startDate, internship.endDate, internship.currentlyWorking);
+
+              return (
+                <article className="pf-internship-editor" key={internship.id}>
+                {internship.companyLogo ? (
+                  <img
+                    src={internship.companyLogo}
+                    alt={internship.companyName}
+                    className="pf-company-logo"
+                  />
+                ) : (
+                  <div className="pf-company-monogram">
+                    {internship.companyName ? internship.companyName.slice(0, 2).toUpperCase() : <Building2 size={20} />}
+                  </div>
+                )}
+
+                <div className="pf-internship-editor__body">
+                  <div className="pf-internship-editor__header">
+                    <div className="pf-internship-editor__title-row">
+                      <strong>{internship.role}</strong>
+                      <div className="pf-internship-editor__company-line">
+                        <span>{internship.companyName}</span>
+                        {internship.companyWebsite && (
+                          <a
+                            href={internship.companyWebsite.startsWith('http') ? internship.companyWebsite : `https://${internship.companyWebsite}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="pf-company-link"
+                          >
+                            <Globe size={12} /> Website
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                    <div className="pf-internship-editor__actions">
+                      <button
+                        type="button"
+                        onClick={() => handleOpenEditInternship(internship)}
+                        title="Edit internship details"
+                      >
+                        <Edit2 size={13} /> Edit
+                      </button>
+                      <button
+                        type="button"
+                        className="pf-btn-danger"
+                        disabled={deletingInternshipId === internship.id}
+                        onClick={() => handleDeleteInternship(internship.id, internship.companyName)}
+                        title="Remove internship"
+                      >
+                        <Trash2 size={13} /> {deletingInternshipId === internship.id ? '...' : 'Remove'}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="pf-internship-editor__meta">
+                    <span>
+                      <Calendar size={13} style={{ display: 'inline', verticalAlign: 'text-bottom', marginRight: '4px' }} />
+                      {timelineStr}
+                    </span>
+                    {internship.internshipType && (
+                      <span className="pf-internship-pill pf-internship-pill--type">
+                        {internship.internshipType}
+                      </span>
+                    )}
+                    {internship.workMode && (
+                      <span className="pf-internship-pill pf-internship-pill--mode">
+                        {internship.workMode}
+                      </span>
+                    )}
+                    {internship.currentlyWorking && (
+                      <span className="pf-internship-pill pf-internship-pill--present">
+                        <span className="pf-pulse-dot" /> Present
+                      </span>
+                    )}
+                    {internship.location && (
+                      <span>
+                        <MapPin size={13} style={{ display: 'inline', verticalAlign: 'text-bottom', marginRight: '4px' }} />
+                        {internship.location}
+                      </span>
+                    )}
+                  </div>
+
+                  {internship.description && (
+                    <p style={{ margin: '4px 0 0', fontSize: '0.86rem', color: '#445649', lineHeight: 1.45 }}>
+                      {internship.description}
+                    </p>
+                  )}
+
+                  {Array.isArray(internship.skills) && internship.skills.length > 0 && (
+                    <div className="pf-internship-tags" style={{ marginTop: '4px' }}>
+                      {internship.skills.map((skill, i) => (
+                        <span key={i} className="pf-internship-tag">{skill}</span>
+                      ))}
+                    </div>
+                  )}
+
+                  {(internship.certificate?.fileUrl || internship.certificateUrl) && (
+                    <div style={{ marginTop: '4px' }}>
+                      <a
+                        href={internship.certificate?.fileUrl || internship.certificateUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="pf-cert-btn"
+                        style={{ padding: '3px 8px', fontSize: '0.78rem' }}
+                      >
+                        <FileText size={12} /> Certificate attached
+                      </a>
+                    </div>
+                  )}
+                </div>
+              </article>
+            );
+          })}
+        </div>
+        ) : (
+          <div className="pf-internship-empty-card">
+            <Briefcase size={32} style={{ color: '#88998c' }} />
+            <p>No internships added yet</p>
+            <span>Showcase your practical work experience, research internships, projects, and certificates to placement officers.</span>
+            <button
+              type="button"
+              className="pf-achievement-add-button"
+              style={{ marginTop: '8px' }}
+              onClick={handleOpenAddInternship}
+            >
+              <Plus size={15} /> Add an internship
+            </button>
+          </div>
+        );
+      })()}
     </EditSection>
 
     <EditSection id="achievements" title="Achievements" note="Your certifications, hackathons, projects, and milestones." headerAction={<button type="button" className="pf-achievement-add-button" onClick={() => setIsAddAchievementOpen(true)}><Award size={16} /> Add achievement</button>}>
@@ -778,10 +999,28 @@ export function ProfileEditPage() {
       <div className="pf-achievement-modal-form"><label>Title<input autoFocus value={newAchievement.title} onChange={event => setNewAchievement({ ...newAchievement, title: event.target.value })} placeholder="AWS certification or hackathon rank" /></label><label>Type / category<select value={newAchievement.category} onChange={event => setNewAchievement({ ...newAchievement, category: event.target.value, customCategory: '' })}>{ACHIEVEMENT_CATEGORIES.map(category => <option key={category} value={category}>{category}</option>)}<option value="Other">Other</option></select></label>{newAchievement.category === 'Other' && <label>Custom category<input value={newAchievement.customCategory} onChange={event => setNewAchievement({ ...newAchievement, customCategory: event.target.value })} placeholder="Write a category" /></label>}<label>Completion year<input type="number" value={newAchievement.year} onChange={event => setNewAchievement({ ...newAchievement, year: event.target.value })} placeholder="2026" /></label><label className="pf-achievement-modal-form__description">Description<textarea value={newAchievement.description} onChange={event => setNewAchievement({ ...newAchievement, description: event.target.value })} placeholder="What did you achieve, build, or learn?" /></label></div>
     </Modal>
 
+    <EditSection id="interests" title="Hobbies & passions" note="Use commas to add or remove tags. Custom interests are welcome." onSave={() => save('interests', interests)} saving={savingSection === 'interests'}>
+      <label>Hobbies<input value={interests.hobbies.join(', ')} onChange={event => setInterests({ ...interests, hobbies: split(event.target.value) })} /></label>
+      <label>Passions / interests<input value={interests.passions.join(', ')} onChange={event => setInterests({ ...interests, passions: split(event.target.value) })} /></label>
+    </EditSection>
+
     <EditSection title="Personal / family context" note="Optional sensitive information. It is saved only with your explicit consent." onSave={() => save('family-context', family)} saving={savingSection === 'family-context'}>
       <label>Context<textarea value={family.details} onChange={event => setFamily({ ...family, details: event.target.value })} /></label>
       <label className="pf-check"><input type="checkbox" checked={family.consentGiven} onChange={event => setFamily({ ...family, consentGiven: event.target.checked })} /> I consent to storing this sensitive context.</label>
     </EditSection>
+
+    <InternshipModal
+      isOpen={isInternshipModalOpen}
+      onClose={() => {
+        setIsInternshipModalOpen(false);
+        setEditingInternshipData(null);
+      }}
+      initialData={editingInternshipData}
+      onSaved={async () => {
+        await refresh();
+        setMessage(editingInternshipData ? 'Internship updated successfully.' : 'New internship added successfully.');
+      }}
+    />
   </div>;
 }
 

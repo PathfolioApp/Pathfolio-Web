@@ -7,14 +7,60 @@ exports.update = (section) => (req,res) => send(res, () => profile.update(req.st
 exports.addAchievement = (req,res) => send(res, () => profile.achievement(req.student.id, req.body));
 exports.editAchievement = (req,res) => send(res, () => profile.achievement(req.student.id, req.body, req.params.id));
 exports.deleteAchievement = (req,res) => send(res, () => profile.deleteAchievement(req.student.id, req.params.id));
+exports.addInternship = (req,res) => send(res, () => profile.addInternship(req.student.id, req.body));
+exports.editInternship = (req,res) => send(res, () => profile.editInternship(req.student.id, req.params.id, req.body));
+exports.deleteInternship = (req,res) => send(res, () => profile.deleteInternship(req.student.id, req.params.id));
 exports.changePassword = async (req,res) => { try { await profile.changePassword(req.student.id, req.body.currentPassword, req.body.newPassword); res.json({ success: true, message: 'Password updated securely.' }); } catch (e) { res.status(400).json({ success: false, message: e.message }); } };
 exports.setAvatar = (req,res) => send(res, () => profile.setAvatar(req.student.id, req.body.avatarUrl));
 exports.uploadSignature = (req, res) => {
   if (!config.cloudinary.configured) return res.status(503).json({ success: false, message: 'Image uploads are not configured on the API.' });
   const timestamp = Math.floor(Date.now() / 1000);
-  const folder = `${config.cloudinary.uploadFolder}/avatars`;
+  const folder = req.body?.folder === 'internships'
+    ? `${config.cloudinary.uploadFolder}/company-logos`
+    : `${config.cloudinary.uploadFolder}/avatars`;
   const signature = cloudinary.utils.api_sign_request({ timestamp, folder }, config.cloudinary.apiSecret);
   res.json({ success: true, cloudName: config.cloudinary.cloudName, apiKey: config.cloudinary.apiKey, timestamp, folder, signature });
+};
+exports.uploadInternshipCertificate = async (req, res) => {
+  try {
+    const student = await profile.uploadInternshipCertificate(req.student.id, req.params.id, req.file);
+    res.json({ success: true, student });
+  } catch (e) {
+    res.status(e.statusCode || 400).json({ success: false, message: e.message });
+  }
+};
+exports.deleteInternshipCertificate = async (req, res) => {
+  try {
+    const student = await profile.deleteInternshipCertificate(req.student.id, req.params.id);
+    res.json({ success: true, student });
+  } catch (e) {
+    res.status(e.statusCode || 400).json({ success: false, message: e.message });
+  }
+};
+exports.getInternshipCertificateFile = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { mode } = req.query;
+    const { body, contentType, contentLength, filename } = await profile.getInternshipCertificate(
+      req.student.id,
+      id
+    );
+    const safeFilename = String(filename || 'certificate.pdf').replace(/"/g, '');
+    res.setHeader('Content-Type', contentType || 'application/pdf');
+    if (contentLength) res.setHeader('Content-Length', String(contentLength));
+    res.setHeader('Content-Disposition', `${mode === 'download' ? 'attachment' : 'inline'}; filename="${safeFilename}"`);
+    if (typeof body.pipe === 'function') {
+      body.pipe(res);
+    } else if (typeof body.transformToByteArray === 'function') {
+      const bytes = await body.transformToByteArray();
+      res.send(Buffer.from(bytes));
+    } else {
+      const buffer = Buffer.isBuffer(body) ? body : Buffer.from(body);
+      res.send(buffer);
+    }
+  } catch (e) {
+    res.status(e.statusCode || 400).json({ success: false, message: e.message });
+  }
 };
 exports.uploadAcademicDocument = async (req, res) => {
   try {

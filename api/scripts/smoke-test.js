@@ -286,6 +286,218 @@ async function run() {
   expectStatus(result.response, 404, 'nonexistent achievement delete');
   console.log('PASS nonexistent achievement delete rejected');
 
+  // --- Internship Module Tests (Metadata CRUD, Skills, Cloudflare R2 Certificate Upload & Streaming) ---
+  // Rejection on missing required fields
+  result = await request('/profile/internships', {
+    method: 'POST',
+    body: JSON.stringify({ companyName: '', role: 'Software Engineer Intern', startDate: '2025-05-01' })
+  });
+  expectStatus(result.response, 400, 'internship missing company name rejected');
+  console.log('PASS internship missing company name rejected');
+
+  result = await request('/profile/internships', {
+    method: 'POST',
+    body: JSON.stringify({ companyName: 'Acme Corp', role: '', startDate: '2025-05-01' })
+  });
+  expectStatus(result.response, 400, 'internship missing role rejected');
+  console.log('PASS internship missing role rejected');
+
+  result = await request('/profile/internships', {
+    method: 'POST',
+    body: JSON.stringify({ companyName: 'Acme Corp', role: 'Software Engineer Intern', startDate: '' })
+  });
+  expectStatus(result.response, 400, 'internship missing start date rejected');
+  console.log('PASS internship missing start date rejected');
+
+  result = await request('/profile/internships', {
+    method: 'POST',
+    body: JSON.stringify({ companyName: 'Acme Corp', role: 'Software Engineer Intern', startDate: '2025-05-01', currentlyWorking: false, endDate: '' })
+  });
+  expectStatus(result.response, 400, 'internship missing end date when not currently working rejected');
+  console.log('PASS internship missing end date when not currently working rejected');
+
+  result = await request('/profile/internships', {
+    method: 'POST',
+    body: JSON.stringify({ companyName: 'Acme Corp', role: 'Software Engineer Intern', startDate: '2025-06-01', endDate: '2025-05-01', currentlyWorking: false })
+  });
+  expectStatus(result.response, 400, 'internship invalid date chronology rejected');
+  console.log('PASS internship invalid date chronology rejected');
+
+  // Future end date for completed internship rejected
+  result = await request('/profile/internships', {
+    method: 'POST',
+    body: JSON.stringify({
+      companyName: 'Future Corp',
+      role: 'Intern',
+      startDate: '2025-01-01',
+      endDate: '2099-01-01',
+      currentlyWorking: false,
+    })
+  });
+  expectStatus(result.response, 400, 'future end date for completed internship rejected');
+  console.log('PASS future end date for completed internship rejected');
+
+  // Currently working internship without end date accepted
+  result = await request('/profile/internships', {
+    method: 'POST',
+    body: JSON.stringify({
+      companyName: 'Ongoing Tech Lab',
+      role: 'Research Fellow Intern',
+      startDate: '2026-01-10',
+      currentlyWorking: true
+    })
+  });
+  expectStatus(result.response, 200, 'currently working internship without end date');
+  const ongoingInternship = result.body.student.internships[0];
+  assert.equal(ongoingInternship.currentlyWorking, true);
+  assert.equal(ongoingInternship.endDate, '');
+  console.log('PASS currently working internship without end date accepted');
+  await request(`/profile/internships/${ongoingInternship.id}`, { method: 'DELETE' });
+
+  // Successful creation with rich fields
+  result = await request('/profile/internships', {
+    method: 'POST',
+    body: JSON.stringify({
+      companyName: 'Acme Cloud Technologies',
+      role: 'Backend Engineering Intern',
+      startDate: '2025-05-15',
+      endDate: '2025-08-15',
+      currentlyWorking: false,
+      internshipType: 'Summer Internship',
+      workMode: 'Hybrid',
+      location: 'Bengaluru, India',
+      description: 'Worked on distributed caching layers and high-concurrency microservices.',
+      responsibilities: [
+        'Built Redis caching middleware reducing response latency by 35%',
+        'Integrated Prometheus metrics and Grafana dashboards for cluster monitoring'
+      ],
+      skills: ['Node.js', 'Redis', 'Docker', 'PostgreSQL'],
+      companyWebsite: 'https://acmecloud.example.com',
+      projectName: 'Distributed Cache Proxy',
+      projectDescription: 'Scalable read-through cache abstraction layer',
+      projectUrl: 'https://github.com/example/cache-proxy'
+    })
+  });
+  expectStatus(result.response, 200, 'create internship');
+  assert.ok(result.body.student.internships?.length > 0, 'internships array should have entries');
+  const createdInternship = result.body.student.internships.at(-1);
+  assert.equal(createdInternship.companyName, 'Acme Cloud Technologies');
+  assert.equal(createdInternship.role, 'Backend Engineering Intern');
+  assert.equal(createdInternship.workMode, 'Hybrid');
+  assert.equal(createdInternship.internshipType, 'Summer Internship');
+  assert.equal(createdInternship.skills.length, 4);
+  assert.equal(createdInternship.responsibilities.length, 2);
+  const internshipId = createdInternship.id;
+  console.log(`PASS internship created with full metadata (${internshipId})`);
+
+  // Update internship
+  result = await request(`/profile/internships/${internshipId}`, {
+    method: 'PATCH',
+    body: JSON.stringify({
+      role: 'Senior Backend Engineering Intern',
+      workMode: 'Remote'
+    })
+  });
+  expectStatus(result.response, 200, 'update internship');
+  const updatedInternship = result.body.student.internships.find(item => item.id === internshipId);
+  assert.equal(updatedInternship.role, 'Senior Backend Engineering Intern');
+  assert.equal(updatedInternship.workMode, 'Remote');
+  console.log('PASS internship updated');
+
+  // Non-PDF certificate rejection
+  const nonPdfFormData = new FormData();
+  nonPdfFormData.append('file', new Blob(['image payload'], { type: 'image/png' }), 'cert.png');
+  let nonPdfRes = await fetch(`${baseUrl}/profile/internships/${internshipId}/certificate`, {
+    method: 'POST',
+    headers: cookie ? { Cookie: cookie } : {},
+    body: nonPdfFormData,
+  });
+  expectStatus(nonPdfRes, 400, 'upload non-pdf certificate rejected');
+  console.log('PASS non-pdf internship certificate rejected');
+
+  // Certificate upload (Cloudflare R2 simulated/backed)
+  const certBytes = Buffer.from('%PDF-1.4\n%InternshipCertificate\n1 0 obj\n<<>>\nendobj\ntrailer\n<<>>\n%%EOF');
+  const certFormData = new FormData();
+  certFormData.append('file', new Blob([certBytes], { type: 'application/pdf' }), 'Acme_Internship_Certificate.pdf');
+
+  let certUploadRes = await fetch(`${baseUrl}/profile/internships/${internshipId}/certificate`, {
+    method: 'POST',
+    headers: cookie ? { Cookie: cookie } : {},
+    body: certFormData,
+  });
+  expectStatus(certUploadRes, 200, 'upload internship certificate');
+  const certUploadBody = await certUploadRes.json();
+  const certInternship = certUploadBody.student.internships.find(item => item.id === internshipId);
+  assert.ok(certInternship.certificate?.fileUrl, 'internship should have certificate.fileUrl');
+  assert.equal(certInternship.certificate.filename, 'Acme_Internship_Certificate.pdf');
+  console.log('PASS internship certificate uploaded to R2');
+
+  // Certificate streaming / private access
+  let certStreamRes = await fetch(`${baseUrl}/profile/internships/${internshipId}/certificate/file?mode=view`, {
+    headers: cookie ? { Cookie: cookie } : {},
+  });
+  expectStatus(certStreamRes, 200, 'stream internship certificate');
+  assert.equal(certStreamRes.headers.get('content-type'), 'application/pdf');
+  console.log('PASS internship certificate authenticated stream retrieval');
+
+  let certDownloadRes = await fetch(`${baseUrl}/profile/internships/${internshipId}/certificate/file?mode=download`, {
+    headers: cookie ? { Cookie: cookie } : {},
+  });
+  expectStatus(certDownloadRes, 200, 'download internship certificate');
+  assert.ok(certDownloadRes.headers.get('content-disposition')?.includes('attachment'));
+  console.log('PASS internship certificate attachment download header verified');
+
+  // Certificate delete
+  result = await request(`/profile/internships/${internshipId}/certificate`, { method: 'DELETE' });
+  expectStatus(result.response, 200, 'delete internship certificate');
+  const delCertInternship = result.body.student.internships.find(item => item.id === internshipId);
+  assert.equal(delCertInternship.certificate, null);
+  console.log('PASS internship certificate deleted');
+
+  // Reverse chronological ordering test
+  const olderRes = await request('/profile/internships', {
+    method: 'POST',
+    body: JSON.stringify({
+      companyName: 'Beta Labs',
+      role: 'Junior Intern',
+      startDate: '2024-01-01',
+      endDate: '2024-04-01',
+      currentlyWorking: false
+    })
+  });
+  expectStatus(olderRes.response, 200, 'create older internship');
+
+  const ongoingRes = await request('/profile/internships', {
+    method: 'POST',
+    body: JSON.stringify({
+      companyName: 'Alpha Research',
+      role: 'Lead Researcher',
+      startDate: '2026-02-01',
+      currentlyWorking: true
+    })
+  });
+  expectStatus(ongoingRes.response, 200, 'create ongoing internship');
+
+  const orderedList = ongoingRes.body.student.internships;
+  assert.equal(orderedList[0].companyName, 'Alpha Research', 'ongoing internship must be first');
+  assert.equal(orderedList[1].companyName, 'Acme Cloud Technologies', 'more recent completed internship must be second');
+  assert.equal(orderedList[2].companyName, 'Beta Labs', 'older completed internship must be third');
+  console.log('PASS internships returned in reverse chronological order');
+
+  await request(`/profile/internships/${orderedList[0].id}`, { method: 'DELETE' });
+  await request(`/profile/internships/${orderedList[2].id}`, { method: 'DELETE' });
+
+  // Delete internship record
+  result = await request(`/profile/internships/${internshipId}`, { method: 'DELETE' });
+  expectStatus(result.response, 200, 'delete internship');
+  assert.equal(result.body.student.internships.some(item => item.id === internshipId), false);
+  console.log('PASS internship deleted successfully');
+
+  result = await request('/profile/internships/nonexistent_internship_id', { method: 'DELETE' });
+  expectStatus(result.response, 404, 'nonexistent internship delete');
+  console.log('PASS nonexistent internship delete rejected');
+
+
   // --- Resume Module Tests (PDF Upload, Streaming & Role Tags) ---
   result = await request('/resumes');
   expectStatus(result.response, 200, 'list resumes initially');

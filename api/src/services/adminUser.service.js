@@ -3,7 +3,7 @@ const onboarding = require('./onboarding.service');
 const auth = require('./auth.service');
 
 const clean = value => String(value || '').trim();
-const publicUser = student => ({ id: student.id, fullName: student.personal?.fullName || '', email: student.personal?.email || '', phone: student.personal?.phone || '', username: student.personal?.username || '', age: student.personal?.age || null, avatarUrl: student.personal?.avatarUrl || '', department: student.academic?.department || '', batchYear: student.academic?.batchYear || '', rollNumber: student.academic?.rollNumber || '', role: student.isAdmin ? 'admin' : student.isRecruiter ? 'recruiter' : 'student', status: student.status || 'active', blocked: Boolean(student.blocked), achievementsCount: (student.achievements || []).length, interestsCount: ((student.interests?.hobbies || []).length + (student.interests?.passions || []).length), createdAt: student.createdAt, onboarding: student.onboarding || {} });
+const publicUser = student => ({ id: student.id, fullName: student.personal?.fullName || '', email: student.personal?.email || '', phone: student.personal?.phone || '', username: student.personal?.username || '', age: student.personal?.age || null, avatarUrl: student.personal?.avatarUrl || '', department: student.academic?.department || '', batchYear: student.academic?.batchYear || '', rollNumber: student.academic?.rollNumber || '', role: student.isAdmin ? 'admin' : student.isRecruiter ? 'recruiter' : 'student', status: student.status || 'active', blocked: Boolean(student.blocked), achievementsCount: (student.achievements || []).length, internshipsCount: (student.internships || []).length, interestsCount: ((student.interests?.hobbies || []).length + (student.interests?.passions || []).length), createdAt: student.createdAt, onboarding: student.onboarding || {} });
 const validUsername = username => /^[a-z0-9_-]{3,20}$/.test(username);
 
 class AdminUserService {
@@ -40,7 +40,7 @@ class AdminUserService {
     const record = await studentStore.saveStudent({
       personal: { fullName, age: Number(input.age) || 18, email, username, phone: clean(input.phone) },
       academic: { rollNumber: clean(input.rollNumber) || `ADMIN-${Date.now()}`, department: clean(input.department) || 'Not specified', batchYear: clean(input.batchYear) || 'Not specified' },
-      interests: { hobbies: [], passions: [] }, achievements: [], familyContext: { details: '', consentGiven: false },
+      interests: { hobbies: [], passions: [] }, achievements: [], internships: [], familyContext: { details: '', consentGiven: false },
       profileSettings: { visibility: 'private', fieldVisibility: { personal: 'student', academic: 'student', interests: 'shareable', achievements: 'shareable', familyContext: 'student' } },
       passwordHash: await auth.hashPassword(password), isAdmin: role === 'admin', isRecruiter: role === 'recruiter',
       onboarding: { completed: true, completedAt: now }, status: 'active_onboarded', createdAt: now

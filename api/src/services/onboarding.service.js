@@ -129,6 +129,7 @@ class OnboardingService {
         passions: Array.isArray(interests?.passions) ? interests.passions : []
       },
       achievements: sanitizedAchievements,
+      internships: [],
       familyContext: sanitizedFamilyContext,
       profileSettings: { visibility: 'private', fieldVisibility: { personal: 'student', academic: 'student', interests: 'shareable', achievements: 'shareable', familyContext: 'student' } },
       passwordHash: await require('./auth.service').hashPassword(credentials.password),

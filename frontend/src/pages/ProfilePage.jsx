@@ -13,18 +13,45 @@ import {
   ChevronUp,
   Compass,
   Sparkles,
+  Briefcase,
+  Building2,
+  MapPin,
+  Globe,
+  Calendar,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { profileCompleteness } from '../utils/profileCompleteness';
 import { resumeApi } from '../services/resumeApi';
 import { PdfIcon } from '../components/PdfIcon';
 import { AchievementIcon } from '../components/AchievementIcon';
+import { InternshipDetailModal } from './InternshipDetailModal';
+import { formatInternshipTimeline, sortInternships } from '../utils/internshipUtils';
 import './ProfilePages.css';
 import './ProfileEligibility.css';
 import './AcademicStyles.css';
+import './InternshipStyles.css';
 
 const Tags = ({ values, empty }) => values?.length ? <div className="pf-tags">{values.map(value => <span key={value}>{value}</span>)}</div> : <p className="pf-empty">{empty}</p>;
 const displayValue = value => value === undefined || value === '' ? 'Not added yet' : value;
+
+function formatDuration(startDateStr, endDateStr, currentlyWorking) {
+  if (!startDateStr) return '';
+  const start = new Date(startDateStr);
+  const end = currentlyWorking || !endDateStr ? new Date() : new Date(endDateStr);
+  const months = (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth()) + 1;
+  if (months <= 0) return '';
+  if (months < 12) return `${months} mo${months > 1 ? 's' : ''}`;
+  const years = Math.floor(months / 12);
+  const remMonths = months % 12;
+  return `${years} yr${years > 1 ? 's' : ''}${remMonths ? ` ${remMonths} mo${remMonths > 1 ? 's' : ''}` : ''}`;
+}
+
+function formatDateMonthYear(dateStr) {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return dateStr;
+  return d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+}
 
 export function ProfilePage() {
   const { student } = useAuth();
@@ -35,6 +62,12 @@ export function ProfilePage() {
 
   const [resumes, setResumes] = useState([]);
   const [loadingResumes, setLoadingResumes] = useState(true);
+  const [selectedInternshipDetail, setSelectedInternshipDetail] = useState(null);
+  const [showAllInternships, setShowAllInternships] = useState(false);
+
+  const internships = sortInternships(student.internships);
+  const visibleInternships = showAllInternships ? internships : internships.slice(0, 3);
+  const hasMoreInternships = internships.length > 3;
 
   useEffect(() => {
     resumeApi.list()
@@ -441,6 +474,174 @@ export function ProfilePage() {
         </div>
       </section>
 
+      {/* Internships & Experience Section */}
+      <section className="pf-profile-wide pf-internship-section">
+        <div className="pf-title-row-enhanced">
+          <div className="pf-title-group">
+            <div className="pf-title-with-icon">
+              <Briefcase size={18} />
+              <span>Internships & work experience</span>
+              {internships.length > 0 && (
+                <span className="pf-count-pill">{internships.length}</span>
+              )}
+            </div>
+            <p className="pf-card-subtitle">
+              Corporate internships, research engagements, and technical apprenticeships
+            </p>
+          </div>
+          <Link to="/profile/edit#internships" className="pf-section-link">
+            {internships.length ? 'Edit' : 'Add internship'}
+          </Link>
+        </div>
+
+        {internships.length ? (
+          <>
+            <div className="pf-internship-list">
+              {visibleInternships.map(internship => {
+                const timelineStr = formatInternshipTimeline(internship.startDate, internship.endDate, internship.currentlyWorking);
+
+                return (
+                  <article key={internship.id} className="pf-internship-card">
+                    <div className="pf-internship-card__header">
+                      <div className="pf-internship-card__identity">
+                        {internship.companyLogo ? (
+                          <img
+                            src={internship.companyLogo}
+                            alt={internship.companyName}
+                            className="pf-company-logo"
+                          />
+                        ) : (
+                          <div className="pf-company-monogram">
+                            {internship.companyName ? internship.companyName.slice(0, 2).toUpperCase() : <Building2 size={20} />}
+                          </div>
+                        )}
+                        <div className="pf-internship-card__titles">
+                          <h3 className="pf-internship-role">{internship.role}</h3>
+                          <div className="pf-internship-company-row">
+                            <span className="pf-internship-company">{internship.companyName}</span>
+                            {internship.companyWebsite && (
+                              <a
+                                href={internship.companyWebsite.startsWith('http') ? internship.companyWebsite : `https://${internship.companyWebsite}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="pf-company-link"
+                              >
+                                <Globe size={12} /> Website
+                              </a>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="pf-internship-card__badges">
+                        {internship.internshipType && (
+                          <span className="pf-internship-pill pf-internship-pill--type">
+                            {internship.internshipType}
+                          </span>
+                        )}
+                        {internship.workMode && (
+                          <span className="pf-internship-pill pf-internship-pill--mode">
+                            {internship.workMode}
+                          </span>
+                        )}
+                        {internship.currentlyWorking && (
+                          <span className="pf-internship-pill pf-internship-pill--present">
+                            <span className="pf-pulse-dot" /> Present
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="pf-internship-meta-row">
+                      <div className="pf-internship-meta-item">
+                        <Calendar size={14} />
+                        <span>{timelineStr}</span>
+                      </div>
+                      {internship.location && (
+                        <div className="pf-internship-meta-item">
+                          <MapPin size={14} />
+                          <span>{internship.location}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {internship.description && (
+                      <p className="pf-internship-desc">{internship.description}</p>
+                    )}
+
+                    {Array.isArray(internship.responsibilities) && internship.responsibilities.length > 0 && (
+                      <ul className="pf-internship-bullets">
+                        {internship.responsibilities.slice(0, 2).map((resp, i) => (
+                          <li key={i}>{resp}</li>
+                        ))}
+                        {internship.responsibilities.length > 2 && (
+                          <li style={{ listStyle: 'none', color: '#687e6f', fontSize: '0.82rem', fontStyle: 'italic', marginTop: '2px' }}>
+                            +{internship.responsibilities.length - 2} more contributions documented
+                          </li>
+                        )}
+                      </ul>
+                    )}
+
+                    {Array.isArray(internship.skills) && internship.skills.length > 0 && (
+                      <div className="pf-internship-tags">
+                        {internship.skills.map((skill, i) => (
+                          <span key={i} className="pf-internship-tag">{skill}</span>
+                        ))}
+                      </div>
+                    )}
+
+                    <div className="pf-internship-card__footer">
+                      <div>
+                        {internship.certificate?.fileUrl && (
+                          <a
+                            href={internship.certificate.fileUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="pf-cert-btn"
+                          >
+                            <Eye size={13} /> View Certificate (PDF)
+                          </a>
+                        )}
+                      </div>
+                      <button
+                        type="button"
+                        className="pf-details-btn"
+                        onClick={() => setSelectedInternshipDetail(internship)}
+                      >
+                        <Eye size={13} /> View full details
+                      </button>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+
+            {hasMoreInternships && (
+              <div className="pf-expand-row">
+                <button
+                  type="button"
+                  className="pf-expand-btn"
+                  onClick={() => setShowAllInternships(prev => !prev)}
+                >
+                  {showAllInternships ? (
+                    <>Show less <ChevronUp size={15} /></>
+                  ) : (
+                    <>Show all {internships.length} internships ({internships.length - 3} more) <ChevronDown size={15} /></>
+                  )}
+                </button>
+              </div>
+            )}
+          </>
+        ) : (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', background: '#f4f7f4', border: '1px dashed #cfdacf', borderRadius: '10px', marginTop: '12px' }}>
+            <p className="pf-empty" style={{ margin: 0 }}>No internships or corporate experience added yet.</p>
+            <Link to="/profile/edit#internships" className="pf-btn-subtle">
+              Add your first internship
+            </Link>
+          </div>
+        )}
+      </section>
+
       {/* Achievements Section */}
       <section className="pf-profile-wide">
         <div className="pf-title-row-enhanced">
@@ -532,6 +733,12 @@ export function ProfilePage() {
           <p className="pf-empty">This section is optional and can be completed whenever you’re comfortable.</p>
         )}
       </section>
+
+      <InternshipDetailModal
+        isOpen={Boolean(selectedInternshipDetail)}
+        onClose={() => setSelectedInternshipDetail(null)}
+        internship={selectedInternshipDetail}
+      />
     </div>
   </div>;
 }

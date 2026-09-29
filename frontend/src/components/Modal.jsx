@@ -4,7 +4,7 @@ import { X } from 'lucide-react';
 import { Button } from './Button';
 import './Modal.css';
 
-export function Modal({ isOpen, onClose, title, children, footer }) {
+export function Modal({ isOpen, onClose, title, children, footer, className = '', maxWidth }) {
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === 'Escape' && isOpen) {
@@ -24,8 +24,12 @@ export function Modal({ isOpen, onClose, title, children, footer }) {
   if (!isOpen) return null;
 
   return createPortal(
-    <div className="pf-modal-backdrop" onClick={onClose} role="dialog" aria-modal="true">
-      <div className="pf-modal-container" onClick={(e) => e.stopPropagation()}>
+    <div className={`pf-modal-backdrop ${className}`.trim()} onClick={onClose} role="dialog" aria-modal="true">
+      <div
+        className="pf-modal-container"
+        style={maxWidth ? { maxWidth } : undefined}
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="pf-modal-header">
           {title && <h3 className="pf-modal-title">{title}</h3>}
           <button className="pf-modal-close" onClick={onClose} aria-label="Close dialog">

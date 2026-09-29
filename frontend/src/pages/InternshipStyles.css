@@ -1,0 +1,831 @@
+/* Internship Section & Cards Styling */
+.pf-internship-section {
+  grid-column: 1 / -1;
+  background: #ffffff;
+  border: 1px solid #e5eae3;
+  border-radius: 16px;
+  padding: 24px 28px;
+  box-shadow: 0 1px 3px rgba(24, 32, 28, 0.02), 0 4px 14px rgba(24, 32, 28, 0.015);
+}
+
+.pf-internship-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 14px;
+}
+
+.pf-internship-card {
+  position: relative;
+  background: #fbfdfb;
+  border: 1px solid #e3ece2;
+  border-radius: 14px;
+  padding: 20px 24px;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.pf-internship-card:hover {
+  background: #ffffff;
+  border-color: #cad8ca;
+  box-shadow: 0 4px 16px rgba(22, 54, 36, 0.05);
+  transform: translateY(-1px);
+}
+
+.pf-internship-card__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.pf-internship-card__identity {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+
+.pf-company-logo {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  object-fit: contain;
+  background: #ffffff;
+  border: 1px solid #dbe5da;
+  padding: 4px;
+  flex-shrink: 0;
+}
+
+.pf-company-monogram {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #1b4d3e, #2e6b54);
+  color: #ffffff;
+  font-family: var(--font-serif);
+  font-size: 1.15rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+  box-shadow: 0 2px 8px rgba(27, 77, 62, 0.16);
+}
+
+.pf-internship-card__titles {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.pf-internship-role {
+  font-family: var(--font-serif);
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #153422;
+  margin: 0;
+  line-height: 1.3;
+}
+
+.pf-internship-company-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.pf-internship-company {
+  font-size: 0.94rem;
+  font-weight: 600;
+  color: #3b5042;
+}
+
+.pf-company-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.82rem;
+  color: #2b6146;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.15s ease;
+}
+
+.pf-company-link:hover {
+  color: #173824;
+  text-decoration: underline;
+}
+
+.pf-internship-card__badges {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.pf-internship-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 16px;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.pf-internship-pill--type {
+  background: #edf5ef;
+  color: #1d4d33;
+  border: 1px solid #d4e7d8;
+}
+
+.pf-internship-pill--mode {
+  background: #f0f3f6;
+  color: #35495e;
+  border: 1px solid #d9e1e8;
+}
+
+.pf-internship-pill--present {
+  background: #eaf7ee;
+  color: #166434;
+  border: 1px solid #c5ebd0;
+}
+
+.pf-pulse-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #18864b;
+  display: inline-block;
+  box-shadow: 0 0 0 0 rgba(24, 134, 75, 0.7);
+  animation: pfPulse 2s infinite;
+}
+
+@keyframes pfPulse {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(24, 134, 75, 0.7); }
+  70% { transform: scale(1); box-shadow: 0 0 0 5px rgba(24, 134, 75, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(24, 134, 75, 0); }
+}
+
+.pf-internship-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 0.84rem;
+  color: #617266;
+  flex-wrap: wrap;
+}
+
+.pf-internship-meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.pf-internship-desc {
+  font-size: 0.91rem;
+  color: #3a4b3f;
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* Responsibilities preview */
+.pf-internship-bullets {
+  margin: 0;
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.pf-internship-bullets li {
+  font-size: 0.88rem;
+  color: #405245;
+  line-height: 1.45;
+}
+
+/* Skills chip tags */
+.pf-internship-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.pf-internship-tag {
+  background: #f1f6f1;
+  color: #1b4933;
+  border: 1px solid #dce8db;
+  padding: 3px 10px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+
+/* Footer & Certificate */
+.pf-internship-card__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding-top: 12px;
+  border-top: 1px solid #eef3ed;
+  flex-wrap: wrap;
+}
+
+.pf-cert-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: #edf6ef;
+  color: #195236;
+  border: 1px solid #cce3d2;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.15s ease;
+}
+
+.pf-cert-btn:hover {
+  background: #e2f0e5;
+  border-color: #b5d7be;
+  color: #0f3a24;
+}
+
+.pf-details-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: transparent;
+  color: #315840;
+  border: 1px solid #cbd8cb;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.pf-details-btn:hover {
+  background: #f2f7f2;
+  color: #163624;
+  border-color: #a9bea9;
+}
+
+/* Internship Modal Form Styling */
+.pf-internship-modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-height: 72vh;
+  overflow-y: auto;
+  padding: 4px 6px 16px 2px;
+}
+
+.pf-form-fieldset {
+  border: 1px solid #e5ece3;
+  border-radius: 12px;
+  padding: 18px 20px;
+  background: #fafcfa;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.pf-fieldset-legend {
+  font-family: var(--font-serif);
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #173824;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #e2ebe0;
+  margin-bottom: 6px;
+}
+
+.pf-form-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.pf-form-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+.pf-form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.pf-form-field label,
+.pf-form-field span.pf-field-label {
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: #2b3d30;
+}
+
+.pf-required-star {
+  color: #b3392b;
+  margin-left: 2px;
+}
+
+.pf-form-field input,
+.pf-form-field select,
+.pf-form-field textarea {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid #cad5c8;
+  border-radius: 8px;
+  background: #ffffff;
+  font-size: 0.9rem;
+  color: #172b1e;
+  font-family: inherit;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.pf-form-field input:focus,
+.pf-form-field select:focus,
+.pf-form-field textarea:focus {
+  outline: none;
+  border-color: #264e36;
+  box-shadow: 0 0 0 3px rgba(38, 78, 54, 0.12);
+}
+
+.pf-form-field textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
+/* Logo Upload Container & Drag-Drop */
+.pf-logo-dropzone {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 16px;
+  background: #ffffff;
+  border: 1.5px dashed #c6d6c5;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  user-select: none;
+}
+
+.pf-logo-dropzone * {
+  pointer-events: none;
+}
+
+.pf-logo-dropzone input {
+  pointer-events: auto;
+}
+
+.pf-logo-dropzone:hover {
+  background: #f7faf7;
+  border-color: #264e36;
+}
+
+.pf-logo-dropzone--active {
+  background: #edf6ef !important;
+  border-color: #1a5233 !important;
+  box-shadow: 0 0 0 3px rgba(26, 82, 51, 0.12);
+  transform: scale(1.005);
+}
+
+.pf-logo-dropzone__content {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+  min-width: 0;
+}
+
+.pf-logo-dropzone__prompt {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: #173c26;
+}
+
+.pf-logo-dropzone__hint {
+  font-size: 0.77rem;
+  color: #6a7c6e;
+}
+
+.pf-logo-uploader--has-logo {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 14px;
+  background: #ffffff;
+  border: 1.5px solid #dce5dc;
+  border-radius: 12px;
+  transition: all 0.18s ease;
+}
+
+.pf-logo-uploader {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 14px;
+  background: #ffffff;
+  border: 1px dashed #cad5c8;
+  border-radius: 10px;
+}
+
+.pf-logo-preview {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  object-fit: contain;
+  background: #ffffff;
+  border: 1px solid #d4ded3;
+  padding: 2px;
+}
+
+.pf-logo-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.pf-upload-btn-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 13px;
+  background: #edf5ee;
+  color: #1a4d33;
+  border: 1px solid #cbd9cd;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.pf-upload-btn-pill:hover {
+  background: #e2ede3;
+  color: #103823;
+}
+
+.pf-remove-btn-subtle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px;
+  background: transparent;
+  color: #a84236;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.pf-remove-btn-subtle:hover {
+  background: #fff0ee;
+  border-color: #f7cfcb;
+}
+
+/* Bullet list manager */
+.pf-bullet-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pf-bullet-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pf-bullet-row input {
+  flex: 1;
+}
+
+.pf-bullet-delete-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  color: #8c9c8f;
+  padding: 7px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.pf-bullet-delete-btn:hover {
+  background: #feebe8;
+  color: #c93b2b;
+}
+
+.pf-add-bullet-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  align-self: flex-start;
+  padding: 6px 12px;
+  background: #edf4ed;
+  color: #1e4a33;
+  border: 1px dashed #bdd0bf;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.pf-add-bullet-btn:hover {
+  background: #e2ede3;
+  border-color: #9cbca0;
+}
+
+/* Interactive Tag Badges */
+.pf-tags-input-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pf-active-tags-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-height: 24px;
+}
+
+.pf-editable-tag-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  background: #edf5ee;
+  color: #19462f;
+  border: 1px solid #c9dccb;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  font-weight: 500;
+}
+
+.pf-tag-remove-x {
+  background: transparent;
+  border: none;
+  color: #557962;
+  cursor: pointer;
+  padding: 0;
+  line-height: 0;
+  display: inline-flex;
+  align-items: center;
+}
+
+.pf-tag-remove-x:hover {
+  color: #b03828;
+}
+
+/* Certificate uploader */
+.pf-cert-uploader-box {
+  border: 1px dashed #cad6ca;
+  background: #ffffff;
+  border-radius: 10px;
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.pf-cert-file-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.pf-cert-filename {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #1f3727;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pf-cert-filesize {
+  font-size: 0.78rem;
+  color: #6a7c6e;
+}
+
+/* Detail Modal View */
+.pf-detail-modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 6px 4px 16px;
+}
+
+.pf-detail-hero {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid #eef2ee;
+}
+
+.pf-detail-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pf-detail-section-title {
+  font-size: 0.84rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #3b5042;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #e7eee6;
+  margin-bottom: 4px;
+}
+
+.pf-project-card-mini {
+  background: #f7faf7;
+  border: 1px solid #e2ece1;
+  border-radius: 10px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+@media (max-width: 820px) {
+  .pf-form-grid-2,
+  .pf-form-grid-3 {
+    grid-template-columns: 1fr;
+  }
+  .pf-internship-card__header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .pf-internship-card__footer {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .pf-cert-uploader-box {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+/* Edit Page Internship Editor */
+.pf-internship-editor-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  grid-column: 1 / -1;
+}
+
+.pf-internship-editor {
+  display: flex;
+  gap: 16px;
+  padding: 16px 20px;
+  background: #fbfdfb;
+  border: 1px solid #e1ebe0;
+  border-radius: 12px;
+  align-items: flex-start;
+  transition: all 0.15s ease;
+}
+
+.pf-internship-editor:hover {
+  background: #ffffff;
+  border-color: #cad8ca;
+  box-shadow: 0 3px 12px rgba(22, 54, 36, 0.04);
+}
+
+.pf-internship-editor__body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.pf-internship-editor__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.pf-internship-editor__title-row {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.pf-internship-editor__title-row strong {
+  font-family: var(--font-serif);
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #153422;
+}
+
+.pf-internship-editor__company-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.88rem;
+  color: #3b5042;
+}
+
+.pf-internship-editor__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.82rem;
+  color: #647568;
+  margin-top: 2px;
+}
+
+.pf-internship-editor__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.pf-internship-editor__actions button {
+  border: 1px solid #cbd7c8;
+  background: #ffffff;
+  color: #173824;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.15s ease;
+}
+
+.pf-internship-editor__actions button:hover {
+  background: #f0f5f1;
+  border-color: #b5c7b3;
+}
+
+.pf-internship-editor__actions button.pf-btn-danger:hover {
+  background: #fff0ee;
+  color: #c93b2b;
+  border-color: #f5c8c2;
+}
+
+.pf-internship-empty-card {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 32px 20px;
+  background: #fbfdfb;
+  border: 1px dashed #cad8cb;
+  border-radius: 12px;
+  gap: 8px;
+}
+
+.pf-internship-empty-card p {
+  font-family: var(--font-serif);
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #1f3d2b;
+  margin: 0;
+}
+
+.pf-internship-empty-card span {
+  font-size: 0.86rem;
+  color: #627467;
+  max-width: 480px;
+  line-height: 1.45;
+}
+

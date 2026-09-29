@@ -5,9 +5,13 @@ export const profileApi = {
   addAchievement: data => request('/api/profile/achievements', { method: 'POST', body: JSON.stringify(data) }),
   editAchievement: (id,data) => request(`/api/profile/achievements/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
   deleteAchievement: id => request(`/api/profile/achievements/${id}`, { method: 'DELETE' }),
+  addInternship: data => request('/api/profile/internships', { method: 'POST', body: JSON.stringify(data) }),
+  editInternship: (id, data) => request(`/api/profile/internships/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  deleteInternship: id => request(`/api/profile/internships/${id}`, { method: 'DELETE' }),
+  deleteInternshipCertificate: id => request(`/api/profile/internships/${id}/certificate`, { method: 'DELETE' }),
   settings: data => request('/api/profile/settings', { method: 'PATCH', body: JSON.stringify(data) }),
   password: data => request('/api/settings/security/password', { method: 'PATCH', body: JSON.stringify(data) }),
-  uploadSignature: () => request('/api/profile/uploads/signature', { method: 'POST' }),
+  uploadSignature: (params = {}) => request('/api/profile/uploads/signature', { method: 'POST', body: JSON.stringify(params) }),
   setAvatar: avatarUrl => request('/api/profile/avatar', { method: 'POST', body: JSON.stringify({ avatarUrl }) }),
   deleteAccount: () => request('/api/profile/account', { method: 'DELETE' }),
   deleteAcademicDocument: (docType, params = {}) => {
@@ -50,4 +54,31 @@ export async function uploadAvatarImage(file) {
   const data = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(data.error?.message || 'Unable to upload the image. Try a smaller file.');
   return data.secure_url;
+}
+
+export async function uploadCompanyLogo(file) {
+  const signed = await profileApi.uploadSignature({ folder: 'internships' });
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('api_key', signed.apiKey);
+  formData.append('timestamp', signed.timestamp);
+  formData.append('folder', signed.folder);
+  formData.append('signature', signed.signature);
+  const response = await fetch(`https://api.cloudinary.com/v1_1/${signed.cloudName}/image/upload`, { method: 'POST', body: formData });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(data.error?.message || 'Unable to upload company logo. Try a smaller image.');
+  return data.secure_url;
+}
+
+export async function uploadInternshipCertificate(internshipId, file) {
+  const formData = new FormData();
+  formData.append('file', file);
+  const res = await fetch(`/api/profile/internships/${internshipId}/certificate`, {
+    method: 'POST',
+    credentials: 'include',
+    body: formData,
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.message || 'Unable to upload internship certificate.');
+  return data;
 }

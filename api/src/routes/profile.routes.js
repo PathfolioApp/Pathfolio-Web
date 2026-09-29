@@ -2,6 +2,7 @@ const router = require('express').Router();
 const auth = require('../middleware/authenticate');
 const c = require('../controllers/profile.controller');
 const { academicUpload } = require('../middleware/academicUpload');
+const { internshipUpload } = require('../middleware/internshipUpload');
 
 router.use(auth);
 
@@ -12,6 +13,14 @@ router.patch('/interests', c.update('interests'));
 router.patch('/family-context', c.update('familyContext'));
 router.get('/settings', c.get);
 router.patch('/settings', c.update('profileSettings'));
+
+// Internships
+router.post('/internships', c.addInternship);
+router.patch('/internships/:id', c.editInternship);
+router.delete('/internships/:id', c.deleteInternship);
+router.post('/internships/:id/certificate', internshipUpload, c.uploadInternshipCertificate);
+router.get('/internships/:id/certificate/file', c.getInternshipCertificateFile);
+router.delete('/internships/:id/certificate', c.deleteInternshipCertificate);
 
 // Achievements
 router.post('/achievements', c.addAchievement);

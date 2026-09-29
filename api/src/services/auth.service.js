@@ -36,12 +36,60 @@ const enrichAcademicDocuments = (academic) => {
   return enriched;
 };
 
+const sortInternships = (internships) => {
+  if (!Array.isArray(internships)) return [];
+  return [...internships].sort((a, b) => {
+    if (a.currentlyWorking && !b.currentlyWorking) return -1;
+    if (!a.currentlyWorking && b.currentlyWorking) return 1;
+
+    if (a.currentlyWorking && b.currentlyWorking) {
+      const aStart = a.startDate ? new Date(a.startDate).getTime() : 0;
+      const bStart = b.startDate ? new Date(b.startDate).getTime() : 0;
+      if (aStart !== bStart) return bStart - aStart;
+    } else {
+      const aEnd = a.endDate ? new Date(a.endDate).getTime() : 0;
+      const bEnd = b.endDate ? new Date(b.endDate).getTime() : 0;
+      if (aEnd !== bEnd) return bEnd - aEnd;
+
+      const aStart = a.startDate ? new Date(a.startDate).getTime() : 0;
+      const bStart = b.startDate ? new Date(b.startDate).getTime() : 0;
+      if (aStart !== bStart) return bStart - aStart;
+    }
+
+    const aCreated = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+    const bCreated = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+    if (aCreated && bCreated && aCreated !== bCreated) {
+      return aCreated - bCreated;
+    }
+    return String(a.id || '').localeCompare(String(b.id || ''));
+  });
+};
+
+const enrichInternships = (internships) => {
+  if (!Array.isArray(internships)) return [];
+  const sorted = sortInternships(internships);
+  return sorted.map(item => {
+    if (item.certificate?.fileId) {
+      return {
+        ...item,
+        certificate: {
+          ...item.certificate,
+          fileUrl: `/api/profile/internships/${item.id}/certificate/file?mode=view`,
+          downloadUrl: `/api/profile/internships/${item.id}/certificate/file?mode=download`
+        }
+      };
+    }
+    return item;
+  });
+};
+
 const publicStudent = (student) => {
   if (!student) return null;
   const { passwordHash, ...safe } = student;
   if (safe.academic) {
     safe.academic = enrichAcademicDocuments(safe.academic);
   }
+  safe.internships = enrichInternships(safe.internships || []);
   return { ...safe, onboarding: safe.onboarding || { completed: safe.status === 'onboarding_completed' || safe.status === 'active_onboarded', completedAt: safe.completedAt || safe.createdAt } };
 };
 
