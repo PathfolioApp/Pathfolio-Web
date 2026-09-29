@@ -2,6 +2,7 @@ const app = require('./app');
 const config = require('./config');
 const log = require('./shared/logger');
 const { reportDbFailure } = require('./shared/dbDiagnostics');
+const { closeAllPools, isTransientDbError } = require('./shared/db');
 
 // Domain-owned data stores (initialize schema / connections).
 const studentStore = require('./modules/students/studentStore');
@@ -34,7 +35,7 @@ async function runStep(name, fn) {
  * which host it dialed, and the likely causes with fixes.
  */
 function persistenceFailureDiagnosis(storeName, error) {
-  const networkish = error && /ETIMEDOUT|ECONNREFUSED|ENOTFOUND|EAI_AGAIN|ER_ACCESS_DENIED|ER_BAD_DB/.test(String(error.code || ''));
+  const networkish = error && /ETIMEDOUT|ECONNREFUSED|ENOTFOUND|EAI_AGAIN|ECONNRESET|EPIPE|EHOSTUNREACH|ENETUNREACH|ER_ACCESS_DENIED|ER_BAD_DB/.test(String(error.code || ''));
   if (networkish) {
     reportDbFailure('db', error, { host: config.db.host, port: config.db.port, database: config.db.name });
     log.startup.error(`Startup halted at "${storeName}": the database is required (NODE_ENV=${config.nodeEnv}, USE_DATABASE=${process.env.USE_DATABASE || 'unset'}).`);
@@ -89,13 +90,54 @@ async function start() {
     }
   });
 
-  process.on('SIGTERM', () => {
-    log.startup.info('SIGTERM received: closing HTTP server');
-    server.close(() => {
-      log.startup.info('HTTP server closed');
-      process.exit(0);
-    });
+  /**
+   * Last line of defence.
+   *
+   * Every Express handler is now promise-safe (see src/shared/asyncHandler.js),
+   * so nothing should reach here from a request. This exists because Node's
+   * default `--unhandled-rejections=throw` makes any escaped rejection a fatal
+   * crash, and a crashed API takes the Vite proxy with it — the user sees
+   * ECONNREFUSED on every route instead of one failed request. Logging and
+   * continuing is correct for transient transport failures; the process is
+   * still fully consistent because those promises touched no shared state.
+   */
+  process.on('unhandledRejection', reason => {
+    if (isTransientDbError(reason)) {
+      log.db.warn(`Recoverable database transport failure escaped a handler: ${log.describeError(reason)}`);
+      return;
+    }
+    log.startup.error('Unhandled promise rejection (process kept alive):', log.describeError(reason));
+    if (reason && reason.stack) log.startup.error(...log.stack(reason).slice(0, 4));
   });
+
+  // A real uncaught exception leaves unknown state, so this one still exits —
+  // but only after a clear log line instead of a bare stack dump.
+  process.on('uncaughtException', error => {
+    log.startup.error('Uncaught exception; shutting down for a clean restart.', ...log.stack(error));
+    process.exit(1);
+  });
+
+  let shuttingDown = false;
+  const shutdown = signal => {
+    if (shuttingDown) return;
+    shuttingDown = true;
+    log.startup.info(`${signal} received: closing HTTP server and database pools`);
+    // `node --watch` sends SIGTERM on restart; closing pools first stops the
+    // watcher from racing a half-closed pool on the next boot.
+    closeAllPools()
+      .catch(error => log.db.warn(`Pool shutdown: ${log.describeError(error)}`))
+      .finally(() => {
+        server.close(() => {
+          log.startup.info('HTTP server closed');
+          process.exit(0);
+        });
+        // Don't let a lingering keep-alive socket hold the process open.
+        setTimeout(() => process.exit(0), 3000).unref();
+      });
+  };
+
+  process.on('SIGTERM', () => shutdown('SIGTERM'));
+  process.on('SIGINT', () => shutdown('SIGINT'));
 }
 
 start().catch(error => {

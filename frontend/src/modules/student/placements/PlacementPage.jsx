@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { ArrowLeft, Building2, MapPin, Clock, ExternalLink, Paperclip, Send, Calendar, Wallet, GraduationCap, CheckCircle2, AlertTriangle, BriefcaseBusiness } from 'lucide-react';
 import { opportunitiesApi } from './opportunitiesApi';
 import { Button } from '../../../components/ui/Button';
+import { EditedBadge } from '../../../components/ui/EditedBadge';
 import { useAuth } from '../../../app/providers/AuthProvider';
 import './PlacementPage.css';
 
@@ -73,7 +74,7 @@ export function PlacementPage() {
                     )}
                     <div className="pf-job-card-meta">
                       <strong>{job.companyName}</strong>
-                      <span>Posted {formatISTDate(job.publishedAt || job.updatedAt)}</span>
+                      <EditedBadge createdAt={job.createdAt} updatedAt={job.updatedAt} labels={{ edited: 'Edited', created: 'Posted' }} />
                     </div>
                   </div>
                   {job.hasApplied ? <span className="pf-job-applied-badge"><CheckCircle2 size={14} />Applied</span> : !job.eligibility?.meetsAll ? <span className="pf-job-eligibility-badge"><AlertTriangle size={13} />Check eligibility</span> : null}
@@ -152,6 +153,7 @@ function JobProfile({ job, onBack, onApplied }) {
             <h1 className="pf-job-title">{job.title}</h1>
             <div className="pf-job-subtitle">
               <strong>{job.companyName}</strong> · {job.location || 'Location flexible'}{job.workMode ? ` · ${job.workMode}` : ''} · {job.employmentType || 'Full-time'}
+              <EditedBadge createdAt={job.createdAt} updatedAt={job.updatedAt} labels={{ edited: 'Edited', created: 'Posted' }} />
             </div>
 
             {(salaryLabel(job) || job.applicationDeadline || job.eligibility?.minCgpa) && <div className="pf-job-facts">

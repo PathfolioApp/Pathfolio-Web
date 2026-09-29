@@ -52,8 +52,8 @@ router.post('/jobs', (req, res) => send(res, async () => {
 
 router.patch('/jobs/:id', (req, res) => send(res, async () => {
   await ownJob(req);
-  const job = await content.updateJob(req.params.id, req.body);
-  if (req.body.submit) return { jobPost: await content.submitJobForApproval(job.id, req.student.id) };
+  const job = await content.updateJob(req.params.id, req.body, { editorId: req.student.id });
+  if (req.body.submit && ['draft', 'rejected'].includes(job.status)) return { jobPost: await content.submitJobForApproval(job.id, req.student.id) };
   return { jobPost: job };
 }));
 

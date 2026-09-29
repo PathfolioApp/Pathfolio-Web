@@ -1,9 +1,17 @@
 import React from 'react';
 import './Button.css';
 
+// One button system: primary (filled green), secondary (outlined), ghost
+// (text/icon), danger (destructive). Legacy names map onto the system so no
+// call site has to change at once.
+const VARIANT_ALIASES = {
+  outline: 'secondary',
+  destructive: 'danger'
+};
+
 export function Button({
   children,
-  variant = 'primary', // 'primary', 'secondary', 'ghost', 'outline', 'danger'
+  variant = 'primary',
   size = 'md',        // 'sm', 'md', 'lg'
   type = 'button',
   disabled = false,
@@ -14,12 +22,13 @@ export function Button({
   className = '',
   ...props
 }) {
+  const resolvedVariant = VARIANT_ALIASES[variant] || variant;
   return (
     <button
       type={type}
       disabled={disabled || loading}
       onClick={onClick}
-      className={`pf-btn pf-btn--${variant} pf-btn--${size} ${loading ? 'is-loading' : ''} ${className}`}
+      className={`pf-btn pf-btn--${resolvedVariant} pf-btn--${size} ${loading ? 'is-loading' : ''} ${className}`}
       {...props}
     >
       {loading && <span className="pf-btn__spinner" aria-hidden="true" />}

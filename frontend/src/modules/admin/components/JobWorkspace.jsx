@@ -1,7 +1,12 @@
 import React, { useState } from 'react';
-import { Clock, Save, Send, Undo2, Paperclip, X, CheckCircle2, RotateCcw, MessageSquareWarning } from 'lucide-react';
+import { Clock, Save, Send, Undo2, Paperclip, X, CheckCircle2, RotateCcw, MessageSquareWarning, Pencil } from 'lucide-react';
 import { Button } from '../../../components/ui/Button';
-import { Input, PanelHeading, Empty, formatISTDate } from '../utils/adminHelpers';
+import { Drawer } from '../../../components/ui/Drawer';
+import { StatusBadge } from '../../../components/ui/Badge';
+import { DataRow } from '../../../components/ui/DataRow';
+import { EmptyState } from '../../../components/ui/EmptyState';
+import { Input } from '../utils/adminHelpers';
+import { EditedBadge } from '../../../components/ui/EditedBadge';
 
 const formOptions = [['rollNumber', 'Roll number'], ['department', 'Department'], ['batchYear', 'Batch year'], ['resumeUrl', 'Resume link'], ['portfolioUrl', 'Portfolio link'], ['skills', 'Skills'], ['cgpa', 'CGPA']];
 
@@ -15,57 +20,34 @@ const STATUS_LABELS = {
   archived: 'Archived'
 };
 
-export function JobWorkspace({ companies, jobs, jobForm, setJobForm, editingJob, resetJob, saveJob, loading, editJob, jobFilter, setJobFilter, publish, reviewJob, reopenJob, saving, selectedFields, setSelectedFields, namedAttachments, setNamedAttachments, update }) {
+/**
+ * Job posts workspace: full-width list of posts with a single status badge per
+ * row and an actions cluster; the composer lives in a right-side drawer opened
+ * from the page header ("New post") or a row's Edit button.
+ */
+export function JobWorkspace({ companies, jobs, loading, jobFilter, setJobFilter, publish, reviewJob, reopenJob, saving, editJob }) {
   return (
-    <section className="pf-admin-workspace">
-      <div className="pf-admin-panel">
-        <PanelHeading eyebrow="Opportunity composer" title={editingJob ? 'Edit draft' : 'Create a post'} action={editingJob && <Button variant="ghost" size="sm" onClick={resetJob}>Cancel</Button>} />
-        <form className="pf-admin-form" onSubmit={saveJob}>
-          <Input label="Company">
-            <input required list="admin-company-options" value={jobForm.companyName || ''} onChange={update(setJobForm, 'companyName')} placeholder="e.g. Acme Systems" maxLength={180} />
-            <datalist id="admin-company-options">
-              {companies.map(company => <option key={company.id} value={company.name} />)}
-            </datalist>
-          </Input>
-          <Input label="Title"><input required value={jobForm.title} onChange={update(setJobForm, 'title')} placeholder="e.g. Software Engineer" /></Input>
-          <Input label="Location"><input value={jobForm.location} onChange={update(setJobForm, 'location')} placeholder="Bengaluru / Remote" /></Input>
-          <Input label="Employment type"><select value={jobForm.employmentType} onChange={update(setJobForm, 'employmentType')}><option>Full-time</option><option>Part-time</option><option>Internship</option><option>Contract</option></select></Input>
-          <Input label="Description" full><textarea required rows="7" value={jobForm.description} onChange={update(setJobForm, 'description')} placeholder="Write the role, responsibilities, and requirements..." /></Input>
-          <Input label="Application URL" full><input type="url" value={jobForm.applicationUrl} onChange={update(setJobForm, 'applicationUrl')} placeholder="https://..." /></Input>
-          <Input label="Attachments" full><AttachmentList namedAttachments={namedAttachments} setNamedAttachments={setNamedAttachments} /></Input>
-          <fieldset className="pf-admin-fieldset">
-            <legend>Collect with application</legend>
-            {formOptions.map(([id, label]) => (
-              <label key={id}>
-                <input type="checkbox" checked={selectedFields.includes(id)} onChange={() => setSelectedFields(fields => fields.includes(id) ? fields.filter(field => field !== id) : [...fields, id])} />
-                {label}
-              </label>
-            ))}
-          </fieldset>
-          <Button type="submit" loading={saving} icon={Save}>Save draft</Button>
-        </form>
+    <div className="pf-admin-list pf-admin-single">
+      <div className="pf-admin-toolbar">
+        <select className="pf-admin-filter" value={jobFilter} onChange={event => setJobFilter(event.target.value)} aria-label="Filter by status">
+          <option value="">All statuses</option>
+          {Object.entries(STATUS_LABELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+        </select>
       </div>
-      <div className="pf-admin-list">
-        <div className="pf-admin-panel-heading">
-          <div><p className="pf-admin-eyebrow">Published content</p><h2>Posts <span>{jobs.length}</span></h2></div>
-          <select className="pf-admin-filter" value={jobFilter} onChange={event => setJobFilter(event.target.value)}>
-            <option value="">All statuses</option>
-            {Object.entries(STATUS_LABELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
-          </select>
-        </div>
-        {loading ? <Empty text="Loading posts..." /> : jobs.length === 0 ? <Empty text="No posts yet. Save a draft to begin." /> : jobs.map((job, idx) => (
-          <article className="pf-admin-list-item" key={job.id}>
-            <div>
-              <span className={`pf-admin-status-badge is-${job.status === 'published' ? 'published' : job.status === 'pending_approval' ? 'draft' : 'draft'}`}>#{jobs.length - idx} {STATUS_LABELS[job.status] || job.status}</span>
-              <h3>{job.title}</h3>
-              <p>{job.companyName} · {job.location || 'Location flexible'} <span className="pf-admin-date"><Clock size={12} /> {formatISTDate(job.updatedAt)} IST</span></p>
-              {job.status === 'pending_approval' && (
-                <p className="pf-admin-review-note">Submitted by the recruiter, review before publishing to students.</p>
-              )}
-              {job.reviewNote && (
-                <p className="pf-admin-review-note">Last note: “{job.reviewNote}”</p>
-              )}
-            </div>
+      {loading ? <EmptyState text="Loading posts..." /> : jobs.length === 0 ? (
+        <EmptyState icon={Clock} title="No posts yet" text="Save a draft to begin. Posts go live for students after review and publish." />
+      ) : jobs.map(job => (
+        <DataRow
+          key={job.id}
+          title={<>
+            <StatusBadge status={job.status} />
+            {job.title}
+          </>}
+          meta={<>
+            {job.companyName} · {job.location || 'Location flexible'}
+            <EditedBadge createdAt={job.createdAt} updatedAt={job.updatedAt} />
+          </>}
+          aside={
             <div className="pf-admin-item-actions">
               {job.status === 'pending_approval' && (
                 <>
@@ -74,22 +56,71 @@ export function JobWorkspace({ companies, jobs, jobForm, setJobForm, editingJob,
                 </>
               )}
               {job.status === 'approved' && (
-                <Button variant="primary" size="sm" loading={saving} icon={Send} onClick={() => publish(job)}>Publish to students</Button>
+                <Button variant="primary" size="sm" loading={saving} icon={Send} onClick={() => publish(job)}>Publish</Button>
               )}
               {job.status === 'published' && (
-                <Button variant="outline" size="sm" loading={saving} icon={Undo2} onClick={() => publish(job)}>Close</Button>
+                <Button variant="secondary" size="sm" loading={saving} icon={Undo2} onClick={() => publish(job)}>Close</Button>
               )}
               {job.status === 'closed' && (
                 <Button variant="ghost" size="sm" loading={saving} icon={RotateCcw} onClick={() => reopenJob(job)}>Reopen</Button>
               )}
               {job.status !== 'archived' && (
-                <Button variant="ghost" size="sm" onClick={() => editJob(job)} disabled={job.status === 'published'}>Edit</Button>
+                <Button variant="ghost" size="sm" icon={Pencil} onClick={() => editJob(job)}>Edit</Button>
               )}
             </div>
-          </article>
-        ))}
-      </div>
-    </section>
+          }
+        >
+          {(job.status === 'pending_approval' || job.reviewNote) && (
+            <p className="pf-admin-review-note">
+              {job.status === 'pending_approval' && 'Submitted by the recruiter, review before publishing to students. '}
+              {job.reviewNote && `Last note: “${job.reviewNote}”`}
+            </p>
+          )}
+        </DataRow>
+      ))}
+    </div>
+  );
+}
+
+/** Create/edit job post form in a right-side drawer (prefills when editing). */
+export function JobFormDrawer({ open, saving, editingJob, companies, jobForm, setJobForm, selectedFields, setSelectedFields, namedAttachments, setNamedAttachments, update, onClose, onSubmit }) {
+  return (
+    <Drawer
+      isOpen={open}
+      onClose={onClose}
+      width={560}
+      title={editingJob ? 'Edit post' : 'Create a post'}
+      footer={
+        <>
+          <Button variant="ghost" onClick={onClose} disabled={saving}>Cancel</Button>
+          <Button type="submit" form="pf-admin-job-form" loading={saving} icon={Save}>{editingJob ? 'Save changes' : 'Save draft'}</Button>
+        </>
+      }
+    >
+      <form id="pf-admin-job-form" className="pf-admin-form" onSubmit={onSubmit}>
+        <Input label="Company" full>
+          <input required list="admin-company-options" value={jobForm.companyName || ''} onChange={update(setJobForm, 'companyName')} placeholder="e.g. Acme Systems" maxLength={180} />
+          <datalist id="admin-company-options">
+            {companies.map(company => <option key={company.id} value={company.name} />)}
+          </datalist>
+        </Input>
+        <Input label="Title" full><input required value={jobForm.title} onChange={update(setJobForm, 'title')} placeholder="e.g. Software Engineer" /></Input>
+        <Input label="Location" full><input value={jobForm.location} onChange={update(setJobForm, 'location')} placeholder="Bengaluru / Remote" /></Input>
+        <Input label="Employment type" full><select value={jobForm.employmentType} onChange={update(setJobForm, 'employmentType')}><option>Full-time</option><option>Part-time</option><option>Internship</option><option>Contract</option></select></Input>
+        <Input label="Description" full><textarea required rows="7" value={jobForm.description} onChange={update(setJobForm, 'description')} placeholder="Write the role, responsibilities, and requirements..." /></Input>
+        <Input label="Application URL" full><input type="url" value={jobForm.applicationUrl} onChange={update(setJobForm, 'applicationUrl')} placeholder="https://careers.company.com/role" /></Input>
+        <Input label="Attachments" full><AttachmentList namedAttachments={namedAttachments} setNamedAttachments={setNamedAttachments} /></Input>
+        <fieldset className="pf-admin-fieldset">
+          <legend>Collect with application</legend>
+          {formOptions.map(([id, label]) => (
+            <label key={id}>
+              <input type="checkbox" checked={selectedFields.includes(id)} onChange={() => setSelectedFields(fields => fields.includes(id) ? fields.filter(field => field !== id) : [...fields, id])} />
+              {label}
+            </label>
+          ))}
+        </fieldset>
+      </form>
+    </Drawer>
   );
 }
 
@@ -114,7 +145,7 @@ function AttachmentList({ namedAttachments, setNamedAttachments }) {
               <Paperclip size={14} className="pf-admin-attach-icon" />
               <input className="pf-admin-attachment-name" value={item.name} onChange={e => rename(item.id, e.target.value)} placeholder="Attachment name" />
               {item.url && !item.file && <a href={item.url} target="_blank" rel="noreferrer" className="pf-admin-attach-link">View</a>}
-              <button type="button" className="pf-admin-icon-button" onClick={() => remove(item.id)}><X size={14} /></button>
+              <button type="button" className="pf-admin-icon-button" aria-label="Remove attachment" onClick={() => remove(item.id)}><X size={14} /></button>
             </li>
           ))}
         </ul>

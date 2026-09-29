@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Users, FileText, ThumbsUp, MessageSquare, Building2, GraduationCap } from 'lucide-react';
 import { recruiterApi } from '../recruiterApi';
+import { EmptyState } from '../../../components/ui/EmptyState';
+import { StatusBadge } from '../../../components/ui/Badge';
 import './SharedCandidates.css';
 
 const proficiencyLabel = value => {
@@ -67,9 +69,6 @@ export function SharedCandidates() {
   if (loading) {
     return (
       <section className="pf-recruiter-results">
-        <div className="pf-recruiter-results-heading">
-          <div><p className="pf-recruiter-eyebrow">Candidate referrals</p><h2>Shared candidates</h2></div>
-        </div>
         <p className="pf-recruiter-loading">Loading shared candidates…</p>
       </section>
     );
@@ -77,22 +76,16 @@ export function SharedCandidates() {
 
   return (
     <section className="pf-recruiter-results">
-      <div className="pf-recruiter-results-heading">
-        <div>
-          <p className="pf-recruiter-eyebrow">Candidate referrals</p>
-          <h2>Shared candidates</h2>
-        </div>
-        <Users size={22} />
-      </div>
       <p className="pf-recruiter-overview-note">
         Candidate lists shared with your company by the Training &amp; Placement cell. Feedback you record here goes straight back to the placement team.
       </p>
       {error && <div className="pf-recruiter-error" role="alert">{error}</div>}
       {shares.length === 0 && (
-        <div className="pf-recruiter-empty">
-          <h3>No shared candidates yet.</h3>
-          <p>The placement team will share relevant student profiles with your company here. You can also submit job posts for approval, approved roles help the team match candidates to your needs.</p>
-        </div>
+        <EmptyState
+          icon={Users}
+          title="No shared candidates yet"
+          text="The placement team will share relevant student profiles with your company here. Submitting job posts helps the team match candidates to your needs."
+        />
       )}
 
       <div className="pf-shared-list">
@@ -101,7 +94,7 @@ export function SharedCandidates() {
             <button type="button" className="pf-shared-card__header" onClick={() => openShare(share)} aria-expanded={expanded === share.id}>
               <div>
                 <div className="pf-shared-card__badges">
-                  <span className={`pf-recruiter-job-status is-${share.status === 'shared' ? 'draft' : 'published'}`}>{share.status}</span>
+                  <StatusBadge status={share.status} />
                   {share.job && <span className="pf-shared-card__job"><Building2 size={13} /> {share.job.title}</span>}
                 </div>
                 <h3>{share.students?.length ?? 0} candidate{(share.students?.length ?? 0) === 1 ? '' : 's'} shared with you</h3>

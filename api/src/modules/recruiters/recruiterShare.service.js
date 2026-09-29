@@ -1,6 +1,6 @@
 const crypto = require('crypto');
-const mysql = require('mysql2/promise');
 const config = require('../../config');
+const db = require('../../shared/db');
 const studentStore = require('../students/studentStore');
 const auditLog = require('../../shared/auditLog.service');
 const { checkEligibility } = require('../admin/adminContent.service');
@@ -26,7 +26,7 @@ class RecruiterShareService {
 
   async initialize() {
     if (!config.databaseConfigured) { require('../../shared/logger').db.warn('Recruiter shares: database not configured, using volatile in-memory storage.'); return; }
-    this.pool = mysql.createPool({ host: config.db.host, port: config.db.port, user: config.db.user, password: config.db.password, database: config.db.name, waitForConnections: true, connectionLimit: 5 });
+    this.pool = db.createPool({ connectionLimit: 5 });
     const connection = await this.pool.getConnection();
     try {
       await connection.query(`CREATE TABLE IF NOT EXISTS recruiter_shares (id VARCHAR(64) PRIMARY KEY, recruiter_id VARCHAR(64) NOT NULL, job_post_id VARCHAR(64) NULL, note TEXT, status VARCHAR(24) NOT NULL DEFAULT 'shared', student_ids JSON NOT NULL, created_by VARCHAR(64) NOT NULL, created_at DATETIME NOT NULL, updated_at DATETIME NOT NULL, recruiter_viewed_at DATETIME NULL, recruiter_feedback JSON NULL)`);
@@ -68,7 +68,7 @@ class RecruiterShareService {
 
   async getShare(id) {
     if (this.pool) {
-      const [rows] = await this.pool.execute('SELECT * FROM recruiter_shares WHERE id=?', [id]);
+      const [rows] = await db.withRetry(() => this.pool.execute('SELECT * FROM recruiter_shares WHERE id=?', [id]), { label: 'getShare' });
       return this.row(rows[0]);
     }
     return this.row(this.shares.get(id));
@@ -76,7 +76,7 @@ class RecruiterShareService {
 
   async listShares(filter = {}) {
     const all = this.pool
-      ? (await (async () => { const [rows] = await this.pool.execute('SELECT * FROM recruiter_shares ORDER BY created_at DESC'); return rows.map(row => this.row(row)); })())
+      ? (await (async () => { const [rows] = await db.withRetry(() => this.pool.execute('SELECT * FROM recruiter_shares ORDER BY created_at DESC'), { label: 'listShares' }); return rows.map(row => this.row(row)); })())
       : [...this.shares.values()].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).map(row => this.row(row));
     return all.filter(share => (!filter.recruiterId || share.recruiterId === filter.recruiterId) && (!filter.createdBy || share.createdBy === filter.createdBy));
   }

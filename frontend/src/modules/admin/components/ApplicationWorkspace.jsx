@@ -1,23 +1,27 @@
 import React, { useState } from 'react';
-import { Calendar, Eye, Filter, Download } from 'lucide-react';
+import { Calendar, Eye, Filter, Download, BriefcaseBusiness } from 'lucide-react';
 import { Button } from '../../../components/ui/Button';
 import { Modal } from '../../../components/ui/Modal';
+import { DataRow } from '../../../components/ui/DataRow';
+import { StatusBadge } from '../../../components/ui/Badge';
+import { EmptyState } from '../../../components/ui/EmptyState';
 import { Empty, formatISTDate } from '../utils/adminHelpers';
 
 const STATUS_OPTIONS = ['applied', 'shortlisted', 'interview', 'selected', 'rejected'];
 
-export function ApplicationWorkspace({ jobs, applicationJobFilter, setApplicationJobFilter, applications, loading, applicationFilter, setApplicationFilter, updateApplication, saving }) {
+export function ApplicationWorkspace({ jobs, applicationJobFilter, setApplicationJobFilter, applications, loading, updateApplication, saving }) {
   const [filterModalOpen, setFilterModalOpen] = useState(false);
   const [fieldFilters, setFieldFilters] = useState({});
   const [viewingAppId, setViewingAppId] = useState(null);
+  const [applicationFilter, setApplicationFilter] = useState('');
 
   const selectedJob = jobs.find(j => j.id === applicationJobFilter);
   const jobFields = selectedJob?.applicationForm?.fields || [];
 
   const handleFilterChange = (id, value) => setFieldFilters(prev => ({ ...prev, [id]: value }));
 
-  const getFilteredApplications = () => {
-    let filtered = applications;
+  const getFilteredApplications = base => {
+    let filtered = base;
     Object.entries(fieldFilters).forEach(([fieldId, filterValue]) => {
       if (!filterValue) return;
       const lowerFilter = filterValue.toLowerCase();
@@ -32,7 +36,7 @@ export function ApplicationWorkspace({ jobs, applicationJobFilter, setApplicatio
   };
 
   const exportCsv = () => {
-    const filteredApps = getFilteredApplications();
+    const filteredApps = getFilteredApplications(jobApplications.filter(app => !applicationFilter || app.status === applicationFilter));
     if (filteredApps.length === 0) { alert('No applications match the filter criteria.'); return; }
     const allKeys = new Set();
     filteredApps.forEach(app => { if (app.answers) Object.keys(app.answers).forEach(k => allKeys.add(k)); });
@@ -59,18 +63,19 @@ export function ApplicationWorkspace({ jobs, applicationJobFilter, setApplicatio
     return (
       <section className="pf-admin-single">
         <div className="pf-admin-list">
-          <div className="pf-admin-panel-heading">
-            <div><p className="pf-admin-eyebrow">Candidate pipeline</p><h2>Select a job post</h2></div>
-          </div>
-          {jobs.length === 0 ? <Empty text="No posts available." /> : jobs.map((job, idx) => (
-            <article className="pf-admin-list-item" key={job.id} onClick={() => setApplicationJobFilter(job.id)} style={{ cursor: 'pointer', background: '#fff' }}>
-              <div>
-                <span className={`pf-admin-status-badge is-${job.status}`}>#{jobs.length - idx}</span>
-                <h3>{job.title}</h3>
-                <p>{job.companyName}</p>
-              </div>
-              <Button variant="ghost" size="sm" onClick={() => setApplicationJobFilter(job.id)}>View applications &rarr;</Button>
-            </article>
+          {jobs.length === 0 ? (
+            <EmptyState icon={BriefcaseBusiness} title="No posts available" text="Create a job post first; applications will be grouped per post here." />
+          ) : jobs.map(job => (
+            <DataRow
+              key={job.id}
+              onClick={() => setApplicationJobFilter(job.id)}
+              title={<>
+                {job.title}
+                <StatusBadge status={job.status} />
+              </>}
+              meta={job.companyName}
+              aside={<span className="pf-admin-app-count">{applications.filter(app => app.jobPostId === job.id).length} applications</span>}
+            />
           ))}
         </div>
       </section>
@@ -78,57 +83,51 @@ export function ApplicationWorkspace({ jobs, applicationJobFilter, setApplicatio
   }
 
   const viewingApp = applications.find(a => a.id === viewingAppId);
-  const displayApplications = getFilteredApplications();
+  const jobApplications = applications.filter(app => app.jobPostId === applicationJobFilter);
+  const statusFiltered = jobApplications.filter(app => !applicationFilter || app.status === applicationFilter);
+  const displayApplications = getFilteredApplications(statusFiltered);
 
   return (
     <section className="pf-admin-single">
       <div className="pf-admin-list">
-        <div className="pf-admin-panel-heading" style={{ flexWrap: 'wrap', gap: '1rem', flexDirection: 'column', alignItems: 'flex-start' }}>
-          <Button variant="ghost" size="sm" onClick={() => setApplicationJobFilter('')}>&larr; Back to job posts</Button>
-          <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'flex-end', flexWrap: 'wrap', gap: '1rem' }}>
-            <div>
-              <p className="pf-admin-eyebrow">Candidate pipeline</p>
-              <h2>Applications <span>{displayApplications.length}</span></h2>
-              <p style={{ color: '#557550', margin: 0, fontWeight: 500 }}>{selectedJob?.title} ({selectedJob?.companyName})</p>
-            </div>
-            <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
-              <select className="pf-admin-filter" value={applicationFilter} onChange={event => setApplicationFilter(event.target.value)}>
-                <option value="">All statuses</option>
-                {STATUS_OPTIONS.map(status => <option key={status} value={status}>{status}</option>)}
-              </select>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <Button type="button" onClick={() => setFilterModalOpen(true)} size="sm" variant="outline" icon={Filter}>
-                  Filters {Object.values(fieldFilters).some(v => v) ? '(Active)' : ''}
-                </Button>
-                <Button type="button" onClick={exportCsv} size="sm" variant="primary" icon={Download}>Export CSV</Button>
-              </div>
-            </div>
-          </div>
+        <div className="pf-admin-toolbar pf-admin-toolbar--wrap">
+          <Button variant="ghost" size="sm" onClick={() => setApplicationJobFilter('')}>&larr; All job posts</Button>
+          <select className="pf-admin-filter" value={applicationFilter} onChange={event => setApplicationFilter(event.target.value)} aria-label="Filter by status">
+            <option value="">All statuses</option>
+            {STATUS_OPTIONS.map(status => <option key={status} value={status}>{status}</option>)}
+          </select>
+          <Button type="button" onClick={() => setFilterModalOpen(true)} size="sm" variant="secondary" icon={Filter}>
+            Filters {Object.values(fieldFilters).some(v => v) ? '(Active)' : ''}
+          </Button>
+          <Button type="button" onClick={exportCsv} size="sm" variant="primary" icon={Download}>Export CSV</Button>
         </div>
 
-        {loading ? <Empty text="Loading applications..." /> : displayApplications.length === 0 ? <Empty text="No applications match the current filters." /> : displayApplications.map((application, idx) => (
-          <article className="pf-admin-list-item" key={application.id}>
-            <div>
-              <span className={`pf-admin-status-badge is-${application.status}`}>#{displayApplications.length - idx} {application.status}</span>
-              <h3>{application.profileSnapshot.fullName || 'Student applicant'}</h3>
-              <p>
-                {application.profileSnapshot.email}
-                {application.profileSnapshot.department && ` · ${application.profileSnapshot.department}`}
-                {application.profileSnapshot.batchYear && ` · ${application.profileSnapshot.batchYear}`}
-                <span className="pf-admin-date" style={{ marginLeft: '.5rem', paddingLeft: '.5rem', borderLeft: '1px solid #d4dbd2' }}>
-                  <Calendar size={12} /> {formatISTDate(application.createdAt)} IST
-                </span>
-              </p>
-            </div>
-            <div className="pf-admin-item-actions">
-              {application.answers && Object.keys(application.answers).length > 0 && (
-                <Button variant="ghost" size="sm" onClick={() => setViewingAppId(application.id)} icon={Eye}>View Info</Button>
-              )}
-              <select value={application.status} disabled={saving} onChange={event => updateApplication(application.id, event.target.value)}>
-                {STATUS_OPTIONS.map(status => <option key={status} value={status}>{status}</option>)}
-              </select>
-            </div>
-          </article>
+        {loading ? <Empty text="Loading applications..." /> : displayApplications.length === 0 ? (
+          <EmptyState icon={BriefcaseBusiness} title="No applications" text="No applications match the current filters." />
+        ) : displayApplications.map(application => (
+          <DataRow
+            key={application.id}
+            title={<>
+              {application.profileSnapshot.fullName || 'Student applicant'}
+              <StatusBadge status={application.status === 'applied' ? 'draft' : application.status} label={application.status} />
+            </>}
+            meta={<>
+              {application.profileSnapshot.email}
+              {application.profileSnapshot.department && <span> · {application.profileSnapshot.department}</span>}
+              {application.profileSnapshot.batchYear && <span> · {application.profileSnapshot.batchYear}</span>}
+              <span className="pf-data-row__meta-date"><Calendar size={12} /> {formatISTDate(application.createdAt)} IST</span>
+            </>}
+            aside={
+              <div className="pf-admin-item-actions">
+                {application.answers && Object.keys(application.answers).length > 0 && (
+                  <Button variant="ghost" size="sm" onClick={() => setViewingAppId(application.id)} icon={Eye}>View Info</Button>
+                )}
+                <select value={application.status} disabled={saving} onClick={event => event.stopPropagation()} onChange={event => updateApplication(application.id, event.target.value)} aria-label="Application status">
+                  {STATUS_OPTIONS.map(status => <option key={status} value={status}>{status}</option>)}
+                </select>
+              </div>
+            }
+          />
         ))}
       </div>
 

@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { Share2, Users, Building2 } from 'lucide-react';
+import { Share2, Building2 } from 'lucide-react';
 import { adminApi } from '../adminApi';
-import { PanelHeading, Empty } from '../utils/adminHelpers';
-
-const STATUS_TONE = { shared: 'draft', viewed: 'published', feedback: 'published' };
+import { StatusBadge } from '../../../components/ui/Badge';
+import { EmptyState } from '../../../components/ui/EmptyState';
 
 /**
  * History of recruiter shares: who they were shared with, for which job,
@@ -22,23 +21,23 @@ export function SharesWorkspace() {
   }, []);
 
   return (
-    <section className="pf-admin-workspace">
+    <section className="pf-admin-single">
       <div className="pf-admin-list">
-        <div className="pf-admin-panel-heading">
-          <div>
-            <p className="pf-admin-eyebrow">Referral history</p>
-            <h2>Recruiter shares <span>{shares.length}</span></h2>
-          </div>
-        </div>
         {error && <div className="pf-admin-error" role="alert">{error}</div>}
-        {loading && <Empty text="Loading shares…" />}
-        {!loading && shares.length === 0 && <Empty text="No student shares yet. Search students and use “Share with recruiter” to create one." />}
+        {loading && <EmptyState text="Loading shares…" />}
+        {!loading && shares.length === 0 && (
+          <EmptyState
+            icon={Share2}
+            title="No student shares yet"
+            text="Search students and use “Share with recruiter” to create one."
+          />
+        )}
         {shares.map(share => (
           <article className="pf-admin-list-item" key={share.id}>
             <div>
               <div className="pf-admin-user-badges">
-                <span className={`pf-admin-status-badge is-${STATUS_TONE[share.status] || 'draft'}`}>{share.status}</span>
-                <span className="pf-admin-status-badge is-draft">{share.studentCount} students</span>
+                <StatusBadge status={share.status} />
+                <StatusBadge status="draft" label={`${share.studentCount} students`} />
               </div>
               <h3>{share.recruiterName}</h3>
               <p>

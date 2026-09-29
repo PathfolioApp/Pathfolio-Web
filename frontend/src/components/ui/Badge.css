@@ -49,6 +49,12 @@
   border: 1px solid var(--color-success-border);
 }
 
+.pf-badge--danger {
+  background-color: var(--color-error-bg);
+  color: var(--color-error);
+  border: 1px solid var(--color-error-border);
+}
+
 .pf-badge--coming-soon {
   background-color: #f7f3eb;
   color: #7a6e5d;

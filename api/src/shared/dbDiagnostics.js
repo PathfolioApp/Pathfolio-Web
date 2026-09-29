@@ -11,6 +11,19 @@ function diagnoseDbError(error) {
   const full = String(error?.message || '');
 
   const hints = {
+    ECONNRESET: [
+      'The connection was accepted and then dropped by the far end (or a proxy in between).',
+      'This is usually a recycled socket, not a bad configuration:',
+      '  1. MySQL `wait_timeout` reaped an idle pooled connection before it was reused.',
+      '  2. A NAT/firewall idle table expired the TCP session.',
+      'Fixes: keep the pool sockets warm (enableKeepAlive) and recycle idle ones before',
+      'wait_timeout. The API now does this in src/shared/db.js, so see the log line above',
+      'for the "retrying on a fresh connection" note if this recurs under load.'
+    ],
+    EPIPE: [
+      'The API wrote to a socket the far end had already closed.',
+      'Almost always the same root cause as ECONNRESET: a stale pooled connection.'
+    ],
     ETIMEDOUT: [
       'The API could not open a TCP connection to the database host.',
       'Checks:',

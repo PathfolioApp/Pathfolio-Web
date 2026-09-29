@@ -1,0 +1,9 @@
+.pf-edited-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--text-faint);
+  font-size: 0.75rem;
+  white-space: nowrap;
+  cursor: default;
+}

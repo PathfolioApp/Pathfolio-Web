@@ -1,6 +1,6 @@
 const crypto = require('crypto');
-const mysql = require('mysql2/promise');
 const config = require('../config');
+const db = require('./db');
 
 const clean = value => String(value || '').trim();
 
@@ -14,7 +14,7 @@ class AuditLogService {
 
   async initialize() {
     if (!config.databaseConfigured) { require('./logger').db.warn('Audit log: database not configured, keeping entries in memory.'); return; }
-    this.pool = mysql.createPool({ host: config.db.host, port: config.db.port, user: config.db.user, password: config.db.password, database: config.db.name, waitForConnections: true, connectionLimit: 5 });
+    this.pool = db.createPool({ connectionLimit: 5 });
     const connection = await this.pool.getConnection();
     try {
       await connection.query(`CREATE TABLE IF NOT EXISTS audit_logs (id BIGINT AUTO_INCREMENT PRIMARY KEY, actor_id VARCHAR(64) NULL, actor_name VARCHAR(180) NULL, action VARCHAR(64) NOT NULL, entity_type VARCHAR(48) NOT NULL, entity_id VARCHAR(64) NULL, entity_label VARCHAR(220) NULL, detail VARCHAR(500) NULL, created_at DATETIME NOT NULL, INDEX idx_audit_created (created_at), INDEX idx_audit_action (action))`);

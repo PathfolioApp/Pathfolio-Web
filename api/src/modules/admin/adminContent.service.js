@@ -62,7 +62,69 @@ class AdminContentService {
     return store.saveCompany({ name, slug, website: '', description: '', logoUrl: '', logoPublicId: '', status: 'active', createdBy: adminId });
   }
   async createJob(input, adminId, { enforceAudience = false, actorIsRecruiter = false } = {}) { missing(input.companyId || input.companyName, 'Company'); missing(input.title, 'Job title'); missing(input.description, 'Job description'); const company = await this.resolveCompany(input, adminId); return store.saveJobPost({ companyId: company.id, title: clean(input.title), description: clean(input.description), location: clean(input.location), employmentType: clean(input.employmentType), applicationUrl: clean(input.applicationUrl), workMode: clean(input.workMode), salaryMin: input.salaryMin === undefined ? null : Number(input.salaryMin) || null, salaryMax: input.salaryMax === undefined ? null : Number(input.salaryMax) || null, salaryCurrency: clean(input.salaryCurrency) || 'INR', requiredSkills: Array.isArray(input.requiredSkills) ? [...new Set(input.requiredSkills.map(clean).filter(Boolean))].slice(0, 25) : [], eligibility: { minCgpa: input.eligibility?.minCgpa === undefined || input.eligibility?.minCgpa === null || input.eligibility?.minCgpa === '' ? null : Number(input.eligibility.minCgpa), allowedDepartments: Array.isArray(input.eligibility?.allowedDepartments) ? input.eligibility.allowedDepartments.map(clean).filter(Boolean).slice(0, 15) : [], allowedBatches: Array.isArray(input.eligibility?.allowedBatches) ? input.eligibility.allowedBatches.map(clean).filter(Boolean).slice(0, 10) : [], maxActiveBacklogs: input.eligibility?.maxActiveBacklogs === undefined || input.eligibility?.maxActiveBacklogs === '' ? null : Number(input.eligibility.maxActiveBacklogs) }, applicationDeadline: clean(input.applicationDeadline) || null, attachments: normalizeAttachments(input.attachments), applicationForm: normalizeForm(input.applicationForm), audience: enforceAudience ? { type: 'all' } : (input.audience || { type: 'all' }), status: 'draft', createdBy: adminId }); }
-  async updateJob(id, input) { const existing = await store.getJobPost(id); if (!existing) throw notFound('Job post'); if (existing.status === 'published') throw new Error('Unpublish the job before editing it.'); const companyId = (input.companyId !== undefined || input.companyName !== undefined) ? (await this.resolveCompany({ companyId: input.companyId, companyName: input.companyName }, existing.createdBy)).id : existing.companyId; const title = input.title === undefined ? existing.title : clean(input.title); const description = input.description === undefined ? existing.description : clean(input.description); missing(title, 'Job title'); missing(description, 'Job description'); return store.saveJobPost({ ...existing, companyId, title, description, location: input.location === undefined ? existing.location : clean(input.location), employmentType: input.employmentType === undefined ? existing.employmentType : clean(input.employmentType), applicationUrl: input.applicationUrl === undefined ? existing.applicationUrl : clean(input.applicationUrl), workMode: input.workMode === undefined ? existing.workMode : clean(input.workMode), salaryMin: input.salaryMin === undefined ? existing.salaryMin : Number(input.salaryMin) || null, salaryMax: input.salaryMax === undefined ? existing.salaryMax : Number(input.salaryMax) || null, salaryCurrency: input.salaryCurrency === undefined ? existing.salaryCurrency : clean(input.salaryCurrency) || 'INR', requiredSkills: input.requiredSkills === undefined ? existing.requiredSkills : [...new Set(input.requiredSkills.map(clean).filter(Boolean))].slice(0, 25), eligibility: input.eligibility === undefined ? existing.eligibility : { minCgpa: input.eligibility?.minCgpa === undefined || input.eligibility?.minCgpa === null || input.eligibility?.minCgpa === '' ? null : Number(input.eligibility.minCgpa), allowedDepartments: Array.isArray(input.eligibility?.allowedDepartments) ? input.eligibility.allowedDepartments.map(clean).filter(Boolean).slice(0, 15) : [], allowedBatches: Array.isArray(input.eligibility?.allowedBatches) ? input.eligibility.allowedBatches.map(clean).filter(Boolean).slice(0, 10) : [], maxActiveBacklogs: input.eligibility?.maxActiveBacklogs === undefined || input.eligibility?.maxActiveBacklogs === '' ? null : Number(input.eligibility.maxActiveBacklogs) }, applicationDeadline: input.applicationDeadline === undefined ? existing.applicationDeadline : clean(input.applicationDeadline) || null, attachments: input.attachments === undefined ? existing.attachments : normalizeAttachments(input.attachments), applicationForm: input.applicationForm === undefined ? existing.applicationForm : normalizeForm(input.applicationForm), audience: input.audience === undefined ? existing.audience : input.audience, status: existing.status === 'rejected' || existing.status === 'pending_approval' ? 'draft' : existing.status, reviewNote: input.reviewNote === undefined ? existing.reviewNote : clean(input.reviewNote) || null, publishedAt: null }); }
+  /**
+   * Edit a job post. Allowed for every status (draft, pending_approval,
+   * approved, published, closed, rejected): the placement team may need to fix
+   * a typo on a live post without unpublishing it. Saving NEVER changes the
+   * post's status or clears its publish/review bookkeeping — only an explicit
+   * publish/unpublish/review action does. `updated_at`/`updated_by` are
+   * stamped for the "Edited ..." indicator and audit trail.
+   */
+  async updateJob(id, input, { editorId } = {}) {
+    const existing = await store.getJobPost(id);
+    if (!existing) throw notFound('Job post');
+    const companyId = (input.companyId !== undefined || input.companyName !== undefined) ? (await this.resolveCompany({ companyId: input.companyId, companyName: input.companyName }, existing.createdBy)).id : existing.companyId;
+    const title = input.title === undefined ? existing.title : clean(input.title);
+    const description = input.description === undefined ? existing.description : clean(input.description);
+    missing(title, 'Job title');
+    missing(description, 'Job description');
+    const saved = await store.saveJobPost({
+      ...existing,
+      companyId,
+      title,
+      description,
+      location: input.location === undefined ? existing.location : clean(input.location),
+      employmentType: input.employmentType === undefined ? existing.employmentType : clean(input.employmentType),
+      applicationUrl: input.applicationUrl === undefined ? existing.applicationUrl : clean(input.applicationUrl),
+      workMode: input.workMode === undefined ? existing.workMode : clean(input.workMode),
+      salaryMin: input.salaryMin === undefined ? existing.salaryMin : Number(input.salaryMin) || null,
+      salaryMax: input.salaryMax === undefined ? existing.salaryMax : Number(input.salaryMax) || null,
+      salaryCurrency: input.salaryCurrency === undefined ? existing.salaryCurrency : clean(input.salaryCurrency) || 'INR',
+      requiredSkills: input.requiredSkills === undefined ? existing.requiredSkills : [...new Set(input.requiredSkills.map(clean).filter(Boolean))].slice(0, 25),
+      eligibility: input.eligibility === undefined ? existing.eligibility : {
+        minCgpa: input.eligibility?.minCgpa === undefined || input.eligibility?.minCgpa === null || input.eligibility?.minCgpa === '' ? null : Number(input.eligibility.minCgpa),
+        allowedDepartments: Array.isArray(input.eligibility?.allowedDepartments) ? input.eligibility.allowedDepartments.map(clean).filter(Boolean).slice(0, 15) : [],
+        allowedBatches: Array.isArray(input.eligibility?.allowedBatches) ? input.eligibility.allowedBatches.map(clean).filter(Boolean).slice(0, 10) : [],
+        maxActiveBacklogs: input.eligibility?.maxActiveBacklogs === undefined || input.eligibility?.maxActiveBacklogs === '' ? null : Number(input.eligibility.maxActiveBacklogs)
+      },
+      applicationDeadline: input.applicationDeadline === undefined ? existing.applicationDeadline : clean(input.applicationDeadline) || null,
+      attachments: input.attachments === undefined ? existing.attachments : normalizeAttachments(input.attachments),
+      applicationForm: input.applicationForm === undefined ? existing.applicationForm : normalizeForm(input.applicationForm),
+      audience: input.audience === undefined ? existing.audience : input.audience,
+      // Status and lifecycle fields are preserved exactly as they were.
+      status: existing.status,
+      reviewNote: existing.reviewNote,
+      publishedAt: existing.publishedAt,
+      updatedBy: editorId || existing.updatedBy || null
+    });
+    // Audit trail: who edited which post and when (Logs page).
+    let editorName = '';
+    if (editorId) {
+      const editor = await studentStore.getStudentById(editorId);
+      editorName = editor?.personal?.fullName || '';
+    }
+    const companyName = saved.companyName || (await store.getCompany(saved.companyId))?.name || '';
+    await auditLog.record({
+      actorId: editorId || existing.createdBy,
+      actorName: editorName,
+      action: 'job.edit',
+      entityType: 'job_post',
+      entityId: saved.id,
+      entityLabel: saved.title,
+      detail: `Edited "${saved.title}"${companyName ? ` (${companyName})` : ''} while ${saved.status === 'published' ? 'live' : saved.status.replace('_', ' ')}.`
+    });
+    return saved;
+  }
   async publishJob(id, adminId) { const existing = await store.getJobPost(id); if (!existing) throw notFound('Job post'); if (!['published', 'approved'].includes(existing.status)) throw new Error('Only approved jobs can be published by an administrator.'); missing(existing.title, 'Job title'); missing(existing.description, 'Job description'); const company = await store.getCompany(existing.companyId); if (!company || company.status === 'archived') throw notFound('Company'); const published = await store.saveJobPost({ ...existing, status: 'published', publishedAt: new Date().toISOString() });
     if (existing.status !== 'published') { await auditLog.record({ actorId: adminId, action: 'job.publish', entityType: 'job_post', entityId: published.id, entityLabel: published.title, detail: `Published to students (${published.companyName || existing.companyName || 'company'}).` }); } const students = (await studentStore.listStudents()).filter(student => !student.isAdmin && !student.isRecruiter); await Promise.all(students.map(student => studentStore.createNotification(student.id, { title: `New opportunity: ${published.title}`, message: `${published.companyName} has published a new opportunity.`, type: 'opportunity' }))); return published; }
   async unpublishJob(id) { const existing = await store.getJobPost(id); if (!existing) throw notFound('Job post'); return store.saveJobPost({ ...existing, status: 'closed', publishedAt: existing.publishedAt }); }

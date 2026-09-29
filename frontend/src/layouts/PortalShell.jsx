@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { LogOut, ArrowLeft } from 'lucide-react';
+import { LogOut, ArrowLeft, Menu, X } from 'lucide-react';
 import { NotificationPanel } from '../components/ui/NotificationPanel';
 import { SignOutButton } from '../components/ui/SignOutButton';
 import { useAuth } from '../app/providers/AuthProvider';
@@ -34,6 +34,7 @@ export function PortalShell({ navItems = [], portalLinks, showBackButton = true,
   const navigate = useNavigate();
   const location = useLocation();
   const [notice, setNotice] = useState('');
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   // Track the hash section so sidebar items (e.g. /admin#jobs) stay in sync
   // with back/forward navigation and deep links.
   const [activeHash, setActiveHash] = useState(window.location.hash.slice(1));
@@ -44,45 +45,79 @@ export function PortalShell({ navItems = [], portalLinks, showBackButton = true,
     return () => window.removeEventListener('hashchange', onHashChange);
   }, []);
 
+  // Close the mobile drawer when the route or section changes.
+  useEffect(() => { setMobileNavOpen(false); }, [location.pathname, activeHash]);
+
   if (!student) return null;
 
   const name = student.personal?.fullName || '';
   const initials = name.split(' ').map(x => x[0]).join('').slice(0, 2).toUpperCase();
   const avatarUrl = student.personal?.avatarUrl || '';
 
+  const navigateFromNav = (path, hash) => {
+    setMobileNavOpen(false);
+    navigate(path);
+    if (hash) { window.location.hash = hash; }
+    else if (window.location.hash) {
+      window.history.replaceState(null, '', window.location.pathname + window.location.search);
+      window.dispatchEvent(new Event('hashchange'));
+    }
+  };
+
+  const sidebarNav = (onItemClick) => (
+    <nav aria-label="Portal navigation">
+      {navItems.map(([Icon, label, path, hash]) => {
+        // Highlight only the exact current section: a hash item matches its
+        // hash; a plain item matches only when no hash is active. This fixes
+        // "Overview" lighting up on every page.
+        const isActive = hash
+          ? activeHash === hash
+          : (location.pathname === path && !activeHash);
+        return (
+          <button
+            key={label}
+            className={isActive ? 'active' : ''}
+            onClick={() => onItemClick(path, hash)}
+            aria-current={isActive ? 'page' : undefined}
+          >
+            <Icon size={18} />
+            {label}
+          </button>
+        );
+      })}
+    </nav>
+  );
+
   return (
     <div className="pf-dashboard">
       <aside className="pf-dashboard-side">
         <Brand className="pf-dashboard-brand" />
-        <nav aria-label="Portal navigation">
-          {navItems.map(([Icon, label, path, hash]) => {
-            const isActive = hash
-              ? activeHash === hash
-              : (location.pathname === path || (path && path !== '/dashboard' && location.pathname.startsWith(path)));
-            return (
-              <button
-                key={label}
-                className={isActive ? 'active' : ''}
-                onClick={() => {
-                  navigate(path);
-                  if (hash) { window.location.hash = hash; }
-                  else if (window.location.hash) {
-                    window.history.replaceState(null, '', window.location.pathname + window.location.search);
-                    window.dispatchEvent(new Event('hashchange'));
-                  }
-                }}
-              >
-                <Icon size={18} />
-                {label}
-              </button>
-            );
-          })}
-        </nav>
+        {sidebarNav(navigateFromNav)}
         {portalLinks}
         <SignOutButton className="pf-side-signout">
           <LogOut size={18} />Sign out
         </SignOutButton>
       </aside>
+
+      {/* Mobile navigation drawer */}
+      {mobileNavOpen && (
+        <div className="pf-mobile-nav">
+          <div className="pf-mobile-nav__backdrop" onClick={() => setMobileNavOpen(false)} aria-hidden="true" />
+          <aside className="pf-mobile-nav__panel" role="dialog" aria-modal="true" aria-label="Portal navigation">
+            <div className="pf-mobile-nav__head">
+              <Brand className="pf-mobile-nav__brand" />
+              <button className="pf-mobile-nav__close" onClick={() => setMobileNavOpen(false)} aria-label="Close navigation">
+                <X size={20} />
+              </button>
+            </div>
+            {sidebarNav(navigateFromNav)}
+            {portalLinks}
+            <SignOutButton className="pf-side-signout">
+              <LogOut size={18} />Sign out
+            </SignOutButton>
+          </aside>
+        </div>
+      )}
 
       <main className="pf-dashboard-main">
         <header className="pf-dashboard-top">
@@ -92,6 +127,9 @@ export function PortalShell({ navItems = [], portalLinks, showBackButton = true,
                 <ArrowLeft size={20} />
               </button>
             )}
+            <button className="pf-mobile-menu" onClick={() => setMobileNavOpen(true)} aria-label="Open navigation" aria-expanded={mobileNavOpen}>
+              <Menu size={20} />
+            </button>
             <Brand className="pf-mobile-dashboard-brand" />
           </div>
           <div>

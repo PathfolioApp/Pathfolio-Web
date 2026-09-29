@@ -8,6 +8,8 @@
     "start": "node src/server.js",
     "dev": "node --watch src/server.js",
     "test:smoke": "node scripts/smoke-test.js",
+    "test:resilience": "node scripts/test-db-reset-resilience.js",
+    "verify:async": "node scripts/verify-async-safety.js",
     "admin:promote": "node scripts/promote-admin.js",
     "recruiter:promote": "node scripts/promote-recruiter.js",
     "test:tnp": "node scripts/tnp-smoke-test.js"

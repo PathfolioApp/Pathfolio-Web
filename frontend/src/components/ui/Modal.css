@@ -76,3 +76,17 @@
   justify-content: flex-end;
   gap: var(--space-sm);
 }
+
+/* Full screen on small viewports */
+@media (max-width: 620px) {
+  .pf-modal-backdrop {
+    padding: 0;
+  }
+  .pf-modal-container {
+    max-width: 100vw;
+    max-height: 100dvh;
+    height: 100dvh;
+    border-radius: 0;
+    border: none;
+  }
+}

@@ -1,26 +1,31 @@
 import React from 'react';
-import { Building2, MapPin, Clock, Calendar, Wallet, GraduationCap, Pencil, Send, FileText, Eye } from 'lucide-react';
+import { Building2, MapPin, Clock, Calendar, Wallet, GraduationCap, Pencil, Send, Eye } from 'lucide-react';
 import { Button } from '../../../components/ui/Button';
+import { StatusBadge } from '../../../components/ui/Badge';
+import { EditedBadge } from '../../../components/ui/EditedBadge';
 import { salaryLabel, deadlineLabel, deadlinePassed } from '../utils/jobFormatting';
 
 const STATUS_LABELS = {
   draft: 'Draft',
-  pending_approval: 'Pending approval',
+  pending_approval: 'Pending',
   approved: 'Approved',
   rejected: 'Changes requested',
   published: 'Live',
   closed: 'Closed'
 };
 
-/** A single job-post card in the recruiter's "My job posts" list. */
+/** A single job-post row in the recruiter's "My job posts" list. */
 export function JobPostCard({ job, onEdit, onSubmit, onViewApplications }) {
+  // One badge only: status; if the deadline passed but the post is still
+  // live, the status label carries that context instead of a second badge.
+  const statusLabel = STATUS_LABELS[job.status] || job.status;
+  const expiredLive = job.status === 'published' && deadlinePassed(job);
   return (
     <article className={`pf-recruiter-job ${job.status === 'published' ? 'is-live' : ''}`}>
       <div className="pf-recruiter-job-top">
         <div>
           <div className="pf-recruiter-job-badges">
-            <span className={`pf-recruiter-job-status is-${job.status === 'published' ? 'published' : job.status === 'pending_approval' ? 'draft' : 'draft'}`}>{STATUS_LABELS[job.status] || job.status}</span>
-            {deadlinePassed(job) && <span className="pf-recruiter-job-status is-expired">deadline passed</span>}
+            <StatusBadge status={job.status} label={expiredLive ? `${statusLabel} · deadline passed` : statusLabel} />
           </div>
           <h3>{job.title}</h3>
           <p className="pf-recruiter-job-company">
@@ -31,7 +36,7 @@ export function JobPostCard({ job, onEdit, onSubmit, onViewApplications }) {
       </div>
       <p className="pf-recruiter-job-desc">{job.description.length > 180 ? `${job.description.slice(0, 180)}…` : job.description}</p>
       {job.reviewNote && (
-        <p className="pf-recruiter-job-review-note" style={{ margin: '8px 0', padding: '8px 12px', background: 'var(--bg-subtle)', borderRadius: 8, fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+        <p className="pf-recruiter-job-review-note">
           <b>Placement team:</b> {job.reviewNote}
         </p>
       )}
@@ -40,19 +45,21 @@ export function JobPostCard({ job, onEdit, onSubmit, onViewApplications }) {
         {salaryLabel(job) && <span><Wallet size={13} />{salaryLabel(job)}</span>}
         {deadlineLabel(job) && <span><Calendar size={13} />Apply by {deadlineLabel(job)}</span>}
         {job.eligibility?.minCgpa && <span><GraduationCap size={13} />CGPA {job.eligibility.minCgpa}+</span>}
+        <EditedBadge createdAt={job.createdAt} updatedAt={job.updatedAt} />
       </div>
       {(job.requiredSkills || []).length > 0 && (
         <div className="pf-recruiter-job-skills">{job.requiredSkills.slice(0, 8).map(skill => <b key={skill}>{skill}</b>)}</div>
       )}
       <div className="pf-recruiter-job-actions">
-        <span className="pf-recruiter-job-meta">
-          {job.status === 'published' ? 'Live for students' : job.status === 'pending_approval' ? 'Awaiting placement team review' : job.status === 'approved' ? 'Approved, the placement team will publish it' : 'Manage this opportunity'}
-        </span>
-        {['draft', 'rejected', 'pending_approval'].includes(job.status) && <Button variant="ghost" size="sm" icon={Pencil} onClick={() => onEdit(job)}>Edit</Button>}
-        {['draft', 'rejected'].includes(job.status) && <Button size="sm" icon={Send} onClick={() => onSubmit(job)}>Submit for approval</Button>}
-        {['pending_approval', 'approved', 'published', 'closed'].includes(job.status) && onViewApplications && (
-          <Button variant="ghost" size="sm" icon={Eye} onClick={() => onViewApplications(job)}>Applications</Button>
-        )}
+        {job.status === 'published' ? 'Live for students' : job.status === 'pending_approval' ? 'Awaiting placement team review' : job.status === 'approved' ? 'Approved, the placement team will publish it' : ''}
+        <div className="pf-recruiter-job-actions-cluster">
+          {/* Editable in every status — a live post can be fixed without closing it. */}
+          <Button variant="secondary" size="sm" icon={Pencil} onClick={() => onEdit(job)}>Edit</Button>
+          {['draft', 'rejected'].includes(job.status) && <Button size="sm" icon={Send} onClick={() => onSubmit(job)}>Submit for approval</Button>}
+          {['pending_approval', 'approved', 'published', 'closed'].includes(job.status) && onViewApplications && (
+            <Button variant="ghost" size="sm" icon={Eye} onClick={() => onViewApplications(job)}>Applications</Button>
+          )}
+        </div>
       </div>
     </article>
   );

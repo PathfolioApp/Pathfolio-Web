@@ -2,13 +2,23 @@ import React, { useState } from 'react';
 import { Eye, UserRound, Ban, CheckCircle2, Trash2, Mail, UserPlus } from 'lucide-react';
 import { Button } from '../../../components/ui/Button';
 import { Modal } from '../../../components/ui/Modal';
+import { DataRow, RowMenu } from '../../../components/ui/DataRow';
+import { StatusBadge } from '../../../components/ui/Badge';
+import { EmptyState } from '../../../components/ui/EmptyState';
 import { adminApi } from '../adminApi';
-import { PanelHeading, Empty, FilePicker, downloadCsvFile } from '../utils/adminHelpers';
+import { FilePicker, downloadCsvFile, parseCsv } from '../utils/adminHelpers';
 
-export function UserWorkspace({ users, userImportRows, userImportErrors, userImportSummary, readUserImport, importUsers, promoteUser, saving, loading, reload }) {
+const USERS_PAGE_SIZE = 25;
+
+/**
+ * Users workspace: compact single-line rows, filters on one row, per-row
+ * "..." menu, confirmation dialogs for block/delete, and load-more paging.
+ */
+export function UserWorkspace({ users, saving, loading, reload, adminId }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [visibleCount, setVisibleCount] = useState(USERS_PAGE_SIZE);
   const [viewingUser, setViewingUser] = useState(null);
   const [confirmingBlock, setConfirmingBlock] = useState(null);
   const [confirmingDelete, setConfirmingDelete] = useState(null);
@@ -22,6 +32,7 @@ export function UserWorkspace({ users, userImportRows, userImportErrors, userImp
     if (!searchTerm.trim()) return true;
     return `${user.fullName} ${user.email} ${user.rollNumber || ''} ${user.department}`.toLowerCase().includes(searchTerm.toLowerCase());
   });
+  const visibleUsers = filteredUsers.slice(0, visibleCount);
 
   const runAction = async action => {
     setActionError(''); setActionMessage('');
@@ -41,75 +52,68 @@ export function UserWorkspace({ users, userImportRows, userImportErrors, userImp
     await reload();
   });
 
-  const downloadTemplate = () => downloadCsvFile(
-    'pathfolio-users-template.csv',
-    'fullName,email,password,role,department,batchYear,rollNumber\nExample Student,2024CS101@kiit.ac.in,change-me-123,student,Computer Science,2028,2024CS101\nExample Recruiter,recruiter@company.com,change-me-123,recruiter,Recruitment,Operations,\n'
-  );
+  const promoteUser = user => runAction(async () => {
+    await adminApi.setUserRole(user.id, user.role === 'recruiter' ? 'student' : 'recruiter');
+    await reload();
+  });
 
   return (
     <>
       {actionError && <div className="pf-admin-error" role="alert">{actionError}</div>}
       {actionMessage && <div className="pf-admin-success" role="status">{actionMessage}</div>}
-      <section className="pf-admin-import">
-        <PanelHeading eyebrow="Directory access" title="Bulk add users" />
-        <p className="pf-admin-import-copy">Import student or recruiter accounts in one CSV. Passwords are hashed before storage; users should change temporary passwords after their first sign-in.</p>
-        <div className="pf-admin-import-actions">
-          <FilePicker accept=".csv,text/csv" onFile={readUserImport}>Choose CSV file</FilePicker>
-          <Button variant="outline" size="sm" onClick={downloadTemplate}>Download template</Button>
+      <section className="pf-admin-list pf-admin-single">
+        <div className="pf-admin-toolbar">
+          <input type="search" className="pf-admin-filter pf-admin-filter--grow" placeholder="Search users by name, email, roll number..." value={searchTerm} onChange={event => setSearchTerm(event.target.value)} />
+          <select className="pf-admin-filter" value={roleFilter} onChange={event => setRoleFilter(event.target.value)} aria-label="Filter by role">
+            <option value="">All roles</option><option value="student">Students</option><option value="recruiter">Recruiters</option><option value="admin">Admins</option>
+          </select>
+          <select className="pf-admin-filter" value={statusFilter} onChange={event => setStatusFilter(event.target.value)} aria-label="Filter by status">
+            <option value="">All statuses</option><option value="active">Active</option><option value="blocked">Blocked</option>
+          </select>
         </div>
-        {userImportRows.length > 0 && (
-          <div className="pf-admin-import-preview">
-            <strong>Preview: {userImportRows.length} rows</strong>
-            {userImportRows.slice(0, 5).map((row, index) => <span key={index}>{row.fullname} · {row.email} · {row.role || 'student'}</span>)}
+
+        {loading ? <EmptyState text="Loading users..." /> : visibleUsers.length === 0 ? (
+          <EmptyState icon={UserRound} title="No users found" text="No accounts match this search. Adjust the filters or import users via CSV." />
+        ) : visibleUsers.map(user => (
+          <DataRow
+            key={user.id}
+            className={user.blocked ? 'is-blocked' : ''}
+            icon={user.avatarUrl
+              ? <img className="pf-admin-user-avatar" src={user.avatarUrl} alt="" />
+              : <span className="pf-admin-user-avatar pf-admin-user-avatar--fallback"><UserRound size={16} /></span>}
+            title={<>
+              {user.fullName}
+              <StatusBadge status={user.role === 'admin' ? 'published' : 'draft'} label={user.role} />
+              {user.blocked && <StatusBadge status="blocked" />}
+            </>}
+            meta={<>
+              {user.email}
+              {user.rollNumber ? <span> · Roll {user.rollNumber}</span> : null}
+              {user.department ? <span> · {user.department}</span> : null}
+            </>}
+            aside={
+              <RowMenu
+                label={`Actions for ${user.fullName}`}
+                items={[
+                  { label: 'Details', icon: Eye, onSelect: () => setViewingUser(user) },
+                  ...(user.id !== adminId && user.role !== 'admin' ? [
+                    { label: user.role === 'recruiter' ? 'Make student' : 'Make recruiter', icon: UserRound, onSelect: () => promoteUser(user), disabled: saving },
+                    { label: user.blocked ? 'Unblock' : 'Block', icon: user.blocked ? CheckCircle2 : Ban, onSelect: () => setConfirmingBlock(user), disabled: saving },
+                    { label: 'Delete', icon: Trash2, onSelect: () => setConfirmingDelete(user), danger: true, disabled: saving }
+                  ] : [])
+                ]}
+              />
+            }
+          />
+        ))}
+
+        {filteredUsers.length > visibleCount && (
+          <div className="pf-admin-load-more">
+            <Button variant="secondary" size="sm" onClick={() => setVisibleCount(count => count + USERS_PAGE_SIZE)}>
+              Load more ({filteredUsers.length - visibleCount} remaining)
+            </Button>
           </div>
         )}
-        {userImportErrors.length > 0 && <div className="pf-admin-import-errors">{userImportErrors.map((item, index) => <span key={index}>Row {item.row}: {item.message}</span>)}</div>}
-        {userImportRows.length > 0 && <Button loading={saving} disabled={userImportErrors.length > 0} icon={UserPlus} onClick={importUsers}>Import {userImportRows.length} users</Button>}
-        {userImportSummary && <div className="pf-admin-import-summary"><b>Imported {userImportSummary.imported}</b><span>{userImportSummary.errors.length} validation errors</span></div>}
-      </section>
-      <section className="pf-admin-single pf-admin-user-list">
-        <div className="pf-admin-list">
-          <div className="pf-admin-panel-heading">
-            <div>
-              <p className="pf-admin-eyebrow">Account directory</p>
-              <h2>Users <span>{filteredUsers.length}</span></h2>
-            </div>
-            <div className="pf-admin-user-filters">
-              <input type="search" className="pf-admin-filter" placeholder="Search users..." value={searchTerm} onChange={event => setSearchTerm(event.target.value)} />
-              <select className="pf-admin-filter" value={roleFilter} onChange={event => setRoleFilter(event.target.value)}>
-                <option value="">All roles</option><option value="student">Students</option><option value="recruiter">Recruiters</option><option value="admin">Admins</option>
-              </select>
-              <select className="pf-admin-filter" value={statusFilter} onChange={event => setStatusFilter(event.target.value)}>
-                <option value="">All statuses</option><option value="active">Active</option><option value="blocked">Blocked</option>
-              </select>
-            </div>
-          </div>
-          {loading ? <Empty text="Loading users..." /> : filteredUsers.length === 0 ? <Empty text="No users match this search." /> : filteredUsers.map(user => (
-            <article className={`pf-admin-list-item${user.blocked ? ' is-blocked' : ''}`} key={user.id}>
-              <div className="pf-admin-user-row">
-                {user.avatarUrl ? <img className="pf-admin-user-avatar" src={user.avatarUrl} alt="" /> : <span className="pf-admin-user-avatar pf-admin-user-avatar--fallback"><UserRound size={16} /></span>}
-                <div>
-                  <div className="pf-admin-user-badges">
-                    <span className={`pf-admin-status-badge is-${user.role === 'admin' ? 'published' : 'draft'}`}>{user.role}</span>
-                    {user.blocked && <span className="pf-admin-status-badge is-blocked">blocked</span>}
-                  </div>
-                  <h3>{user.fullName}</h3>
-                  <p>{user.email}{user.rollNumber ? ` · Roll ${user.rollNumber}` : ''}{user.department ? ` · ${user.department}` : ''}</p>
-                </div>
-              </div>
-              <div className="pf-admin-item-actions">
-                <Button variant="ghost" size="sm" icon={Eye} onClick={() => setViewingUser(user)}>Details</Button>
-                {user.role !== 'admin' && (
-                  <>
-                    <Button variant="ghost" size="sm" disabled={saving} onClick={() => promoteUser(user)}>{user.role === 'recruiter' ? 'Make student' : 'Make recruiter'}</Button>
-                    <Button variant={user.blocked ? 'outline' : 'ghost'} size="sm" icon={user.blocked ? CheckCircle2 : Ban} onClick={() => setConfirmingBlock(user)}>{user.blocked ? 'Unblock' : 'Block'}</Button>
-                    <button className="pf-admin-icon-button pf-admin-icon-button--danger" title="Delete user" onClick={() => setConfirmingDelete(user)}><Trash2 size={16} /></button>
-                  </>
-                )}
-              </div>
-            </article>
-          ))}
-        </div>
       </section>
 
       <Modal isOpen={!!viewingUser} onClose={() => setViewingUser(null)} title="User details">
@@ -150,5 +154,61 @@ export function UserWorkspace({ users, userImportRows, userImportErrors, userImp
         <p>This permanently removes {confirmingDelete?.fullName}'s account, profile, achievements, and applications. This action cannot be undone.</p>
       </Modal>
     </>
+  );
+}
+
+/** CSV bulk import for users, opened from the page header "Import CSV" button. */
+export function UserImportModal({ open, saving, reload, onClose }) {
+  const [userImportRows, setUserImportRows] = useState([]);
+  const [userImportErrors, setUserImportErrors] = useState([]);
+  const [userImportSummary, setUserImportSummary] = useState(null);
+
+  const readUserImport = event => {
+    const file = event.target.files?.[0]; if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const rows = parseCsv(String(reader.result || ''));
+      const errors = rows.flatMap((row, index) => (!row.fullname || !row.email || !row.password ? [{ row: index + 2, message: 'fullName, email, and password are required.' }] : []));
+      setUserImportRows(rows); setUserImportErrors(errors); setUserImportSummary(null);
+    };
+    reader.readAsText(file);
+  };
+
+  const importUsers = async () => {
+    if (!userImportRows.length || userImportErrors.length) return;
+    try {
+      const result = await adminApi.importUsers(userImportRows);
+      setUserImportSummary(result.summary); setUserImportRows([]);
+      await reload?.();
+    } catch { /* errors surface in the summary area */ }
+  };
+
+  const downloadTemplate = () => downloadCsvFile(
+    'pathfolio-users-template.csv',
+    'fullName,email,password,role,department,batchYear,rollNumber\nExample Student,2024CS101@kiit.ac.in,change-me-123,student,Computer Science,2028,2024CS101\nExample Recruiter,recruiter@company.com,change-me-123,recruiter,Recruitment,Operations,\n'
+  );
+
+  const close = () => { setUserImportRows([]); setUserImportErrors([]); setUserImportSummary(null); onClose(); };
+
+  return (
+    <Modal isOpen={open} onClose={close} title="Bulk add users"
+      footer={<>
+        <Button variant="ghost" onClick={close} disabled={saving}>Close</Button>
+        <Button loading={saving} disabled={userImportRows.length === 0 || userImportErrors.length > 0} icon={UserPlus} onClick={importUsers}>Import {userImportRows.length} users</Button>
+      </>}>
+      <p className="pf-admin-import-copy">Import student or recruiter accounts in one CSV. Passwords are hashed before storage; users should change temporary passwords after their first sign-in.</p>
+      <div className="pf-admin-import-actions">
+        <FilePicker accept=".csv,text/csv" onFile={readUserImport}>Choose CSV file</FilePicker>
+        <Button variant="secondary" size="sm" onClick={downloadTemplate}>Download template</Button>
+      </div>
+      {userImportRows.length > 0 && (
+        <div className="pf-admin-import-preview">
+          <strong>Preview: {userImportRows.length} rows</strong>
+          {userImportRows.slice(0, 5).map((row, index) => <span key={index}>{row.fullname} · {row.email} · {row.role || 'student'}</span>)}
+        </div>
+      )}
+      {userImportErrors.length > 0 && <div className="pf-admin-import-errors">{userImportErrors.map((item, index) => <span key={index}>Row {item.row}: {item.message}</span>)}</div>}
+      {userImportSummary && <div className="pf-admin-import-summary"><b>Imported {userImportSummary.imported}</b><span>{userImportSummary.errors.length} validation errors</span></div>}
+    </Modal>
   );
 }

@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { History } from 'lucide-react';
 import { adminApi } from '../adminApi';
-import { PanelHeading, Empty } from '../utils/adminHelpers';
+import { EmptyState } from '../../../components/ui/EmptyState';
 import './LogsWorkspace.css';
 
 const ACTION_LABELS = {
   'job.submit': 'Job submitted',
   'job.approve': 'Job approved',
   'job.reject': 'Changes requested',
+  'job.edit': 'Job edited',
   'job.publish': 'Job published',
   'share.create': 'Students shared',
   'share.feedback': 'Recruiter feedback',
@@ -22,6 +23,7 @@ const ENTITY_LABELS = { job_post: 'Job post', recruiter_share: 'Share', user: 'U
 /**
  * Audit trail for the placement workspace: job submissions, review decisions,
  * publishes, recruiter shares, and account actions, newest first.
+ * Layout: title row, one row of filters, then the log table full width.
  */
 export function LogsWorkspace() {
   const [logs, setLogs] = useState([]);
@@ -51,31 +53,31 @@ export function LogsWorkspace() {
   };
 
   return (
-    <section className="pf-admin-workspace">
+    <section className="pf-admin-single">
       <div className="pf-admin-list">
-        <div className="pf-admin-panel-heading">
-          <div>
-            <p className="pf-admin-eyebrow">Activity</p>
-            <h2>Logs <span>{logs.length}</span></h2>
-          </div>
-          <div className="pf-logs-filters">
-            <select className="pf-admin-filter" value={filters.action} onChange={event => setFilters(prev => ({ ...prev, action: event.target.value }))}>
-              <option value="">All events</option>
-              {actions.map(action => <option key={action} value={action}>{ACTION_LABELS[action] || action}</option>)}
-            </select>
-            <select className="pf-admin-filter" value={filters.entity} onChange={event => setFilters(prev => ({ ...prev, entity: event.target.value }))}>
-              <option value="">All records</option>
-              {Object.entries(ENTITY_LABELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
-            </select>
-            <form onSubmit={submitSearch}>
-              <input type="search" className="pf-admin-filter" placeholder="Search actor or record..." value={filters.search} onChange={event => setFilters(prev => ({ ...prev, search: event.target.value }))} />
-            </form>
-          </div>
+        <div className="pf-admin-toolbar">
+          <select className="pf-admin-filter" value={filters.action} onChange={event => setFilters(prev => ({ ...prev, action: event.target.value }))} aria-label="Filter by event type">
+            <option value="">All events</option>
+            {actions.map(action => <option key={action} value={action}>{ACTION_LABELS[action] || action}</option>)}
+          </select>
+          <select className="pf-admin-filter" value={filters.entity} onChange={event => setFilters(prev => ({ ...prev, entity: event.target.value }))} aria-label="Filter by record type">
+            <option value="">All records</option>
+            {Object.entries(ENTITY_LABELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+          </select>
+          <form onSubmit={submitSearch} className="pf-admin-toolbar__grow">
+            <input type="search" className="pf-admin-filter pf-admin-filter--grow" placeholder="Search actor or record..." value={filters.search} onChange={event => setFilters(prev => ({ ...prev, search: event.target.value }))} />
+          </form>
         </div>
 
         {error && <div className="pf-admin-error" role="alert">{error}</div>}
-        {loading && <Empty text="Loading logs..." />}
-        {!loading && logs.length === 0 && <Empty text="No activity recorded yet. Job submissions, reviews, publishes, shares, and account actions will appear here." />}
+        {loading && <EmptyState text="Loading logs..." />}
+        {!loading && logs.length === 0 && (
+          <EmptyState
+            icon={History}
+            title="No activity yet"
+            text="Job submissions, reviews, publishes, shares, and account actions will appear here."
+          />
+        )}
 
         {logs.map(log => (
           <article className="pf-admin-list-item pf-log-row" key={log.id}>

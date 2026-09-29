@@ -3,6 +3,7 @@ const cors = require('cors');
 const morgan = require('morgan');
 const config = require('./config');
 const errorHandler = require('./shared/errorHandler');
+const { wrapRouter } = require('./shared/asyncHandler');
 const log = require('./shared/logger');
 
 // Domain modules, each owns its routes, controllers, services, and data access.
@@ -52,6 +53,17 @@ app.get('/api/health', (req, res) => {
 });
 
 // Mount API modules (public URL contract is unchanged)
+//
+// Express 4 does not forward rejected promises from `async` handlers, so a
+// single failed `await` (e.g. `read ECONNRESET` from a recycled MySQL socket)
+// escaped as an unhandled rejection and killed the process. `wrapRouter`
+// rewrites each registered handler to hand its rejection to `next(err)`, which
+// lands in the error handler below instead of the crash dump. Mounting happens
+// after wrapping because a mounted sub-router is referenced by its parent layer.
+for (const router of [onboardingRoutes, authRoutes, profileRoutes, settingsRoutes, notificationRoutes, preferenceRoutes, resumeRoutes, adminRoutes, recruiterRoutes, opportunityRoutes]) {
+  wrapRouter(router);
+}
+
 app.use('/api/onboarding', onboardingRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/profile', profileRoutes);
@@ -73,5 +85,9 @@ app.use((req, res) => {
 
 // Error handling middleware
 app.use(errorHandler);
+
+// Cover handlers registered directly on the app (health, 404) and any added
+// later, so a rejected promise can never escape the Express stack again.
+wrapRouter(app._router);
 
 module.exports = app;

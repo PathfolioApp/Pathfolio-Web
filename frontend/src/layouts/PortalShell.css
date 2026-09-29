@@ -1,6 +1,6 @@
 .pf-dashboard { min-height: 100dvh; background: var(--bg-page); display: flex; }
-.pf-dashboard-side { width: 245px; padding: 27px 16px; background: var(--bg-surface); border-right: 1px solid var(--border-subtle); display: flex; flex-direction: column; position: fixed; inset: 0 auto 0 0; }
-.pf-dashboard-brand { padding: 0 14px 36px; }
+.pf-dashboard-side { width: 245px; padding: 20px 16px; background: var(--bg-surface); border-right: 1px solid var(--border-subtle); display: flex; flex-direction: column; position: fixed; inset: 0 auto 0 0; }
+.pf-dashboard-brand { padding: 0 14px 24px; }
 .pf-dashboard-brand .pf-brand__name { transition: color var(--transition-fast); }
 .pf-dashboard-brand:hover .pf-brand__name { color: var(--color-primary); }
 .pf-mobile-dashboard-brand { display: none; }
@@ -12,23 +12,27 @@
 .pf-dashboard-side .pf-side-signout { margin-top: auto; color: #87504a; display: flex; align-items: center; gap: 11px; padding: 11px 13px; border: 0; border-radius: 8px; background: transparent; text-align: left; font: inherit; font-size: .92rem; cursor: pointer; }
 .pf-dashboard-side .pf-side-signout:hover { background: #fff0ef; }
 
+/* Portal switcher: an indicator strip, not a second nav — quieter styling so
+   it never reads as a highlighted navigation item. */
 .pf-portal-links { display: grid; gap: 4px; margin: auto 12px 16px; padding-top: 16px; border-top: 1px solid var(--border-subtle); }
 .pf-portal-links span { padding: 0 10px 4px; color: var(--text-muted); font-size: .68rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
-.pf-portal-links button { display: flex; align-items: center; gap: 9px; padding: 9px 10px; color: var(--text-secondary); font-size: .8rem; text-align: left; background: transparent; border: 0; border-radius: var(--radius-sm); cursor: pointer; transition: color var(--transition-fast), background var(--transition-fast); }
+.pf-portal-links button { display: flex; align-items: center; gap: 9px; padding: 7px 10px; color: var(--text-muted); font-size: .8rem; text-align: left; background: transparent; border: 0; border-radius: var(--radius-sm); cursor: pointer; transition: color var(--transition-fast), background var(--transition-fast); }
 .pf-portal-links button:hover { color: var(--color-primary); background: var(--bg-subtle); }
-.pf-portal-links button.active { color: var(--color-primary); background: var(--color-primary-light); font-weight: 700; }
+/* Active portal: text + dot only, deliberately unlike the nav active state. */
+.pf-portal-links button.active { color: var(--color-primary); background: transparent; font-weight: 600; position: relative; padding-left: 22px; }
+.pf-portal-links button.active::before { content: ''; position: absolute; left: 10px; top: 50%; transform: translateY(-50%); width: 6px; height: 6px; border-radius: 50%; background: var(--color-primary); }
 .pf-portal-links button svg { flex: 0 0 auto; }
-.pf-portal-links button:not(:has(svg)) { padding-left: 16px; }
 
 .pf-dashboard-main { margin-left: 245px; width: calc(100% - 245px); padding: 0 40px 52px; }
 
-.pf-dashboard-top { height: 78px; display: flex; align-items: center; justify-content: flex-end; border-bottom: 1px solid var(--border-subtle); }
-.pf-dashboard-top > div { display: flex; gap: 12px; align-items: center; }
+/* Slim top bar: notifications + avatar inline, no empty band of its own. */
+.pf-dashboard-top { min-height: 52px; display: flex; align-items: center; justify-content: flex-end; }
+.pf-dashboard-top > div { display: flex; gap: 10px; align-items: center; }
 
 .pf-icon-btn, .pf-avatar { border: 0; background: var(--bg-surface); border: 1px solid var(--border-subtle); cursor: pointer; }
-.pf-icon-btn { padding: 9px; border-radius: 50%; color: var(--color-sage); display: inline-flex; align-items: center; justify-content: center; line-height: 0; transition: background var(--transition-fast), border-color var(--transition-fast); }
+.pf-icon-btn { padding: 8px; border-radius: 50%; color: var(--color-sage); display: inline-flex; align-items: center; justify-content: center; line-height: 0; transition: background var(--transition-fast), border-color var(--transition-fast); }
 .pf-icon-btn:hover { background: var(--bg-subtle); border-color: var(--border-medium); }
-.pf-avatar { width: 38px; height: 38px; border-radius: 50%; background: var(--color-sage-light); color: var(--color-primary); font-weight: 700; line-height: 1; display: inline-flex; align-items: center; justify-content: center; transition: border-color var(--transition-fast); overflow: hidden; padding: 0; }
+.pf-avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--color-sage-light); color: var(--color-primary); font-weight: 700; line-height: 1; display: inline-flex; align-items: center; justify-content: center; transition: border-color var(--transition-fast); overflow: hidden; padding: 0; font-size: .85rem; }
 .pf-avatar--image img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: block; }
 .pf-avatar:hover { border-color: var(--color-sage-soft); }
 
@@ -37,6 +41,16 @@
 .pf-dashboard-notice { background: var(--color-success-bg); border: 1px solid var(--color-success-border); padding: 11px 16px; margin-top: 18px; border-radius: var(--radius-md); color: var(--color-success); font-size: .9rem; display: flex; justify-content: space-between; gap: 12px; }
 .pf-dashboard-notice button { border: 0; background: transparent; color: var(--color-success); text-decoration: underline; cursor: pointer; }
 
+/* Mobile navigation drawer */
+.pf-mobile-nav__backdrop { position: fixed; inset: 0; background: rgba(24, 32, 28, 0.4); z-index: 1100; animation: pf-nav-fade 160ms ease-out; }
+.pf-mobile-nav__panel { position: fixed; top: 0; left: 0; bottom: 0; width: min(300px, 84vw); background: var(--bg-surface); border-right: 1px solid var(--border-subtle); box-shadow: var(--shadow-lg); z-index: 1101; display: flex; flex-direction: column; padding: 20px 16px; animation: pf-nav-slide 200ms cubic-bezier(0.16, 1, 0.3, 1); }
+.pf-mobile-nav__head { display: flex; align-items: center; justify-content: space-between; padding: 0 8px 18px; }
+.pf-mobile-nav__brand { padding: 0; }
+.pf-mobile-nav__close { display: grid; place-items: center; width: 34px; height: 34px; border: 0; border-radius: var(--radius-sm); background: transparent; color: var(--text-muted); cursor: pointer; }
+.pf-mobile-nav__close:hover { background: var(--bg-subtle); color: var(--text-primary); }
+.pf-mobile-nav__panel .pf-side-signout { margin-top: auto; }
+.pf-mobile-menu { display: none; }
+
 @media(max-width: 850px) {
   .pf-dashboard-side { display: none; }
   .pf-dashboard-main { margin: 0; width: 100%; padding: 0 22px 35px; }
@@ -44,10 +58,21 @@
   .pf-mobile-top-left { display: flex !important; align-items: center; gap: 12px; }
   .pf-mobile-back { border: 0; background: transparent; color: #334; padding: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; border-radius: 8px; }
   .pf-mobile-back:hover { background: #f0f0e6; }
+  .pf-mobile-menu { display: grid; place-items: center; width: 36px; height: 36px; border: 1px solid var(--border-subtle); border-radius: var(--radius-md); background: var(--bg-surface); color: var(--text-primary); cursor: pointer; }
+  .pf-mobile-menu:hover { background: var(--bg-subtle); }
   .pf-mobile-dashboard-brand { display: inline-flex; padding: 0; }
   .pf-mobile-dashboard-brand .pf-brand__logo { width: 30px; height: 30px; }
   .pf-mobile-dashboard-brand .pf-brand__name { font-size: 1.2rem; }
 }
 @media(max-width: 480px) {
   .pf-dashboard-main { padding: 0 15px 28px; }
+}
+
+@keyframes pf-nav-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes pf-nav-slide {
+  from { transform: translateX(-16px); opacity: 0.6; }
+  to { transform: translateX(0); opacity: 1; }
 }

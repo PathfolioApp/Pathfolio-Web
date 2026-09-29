@@ -46,7 +46,7 @@ router.delete('/companies/:id', (req, res) => send(res, async () => ({ company: 
 // ---------------------------------------------------------------------------
 router.get('/job-posts', (req, res) => send(res, async () => ({ jobPosts: await content.jobs(req.query.status) })));
 router.post('/job-posts', (req, res) => send(res, async () => ({ jobPost: await content.createJob(req.body, req.student.id) })));
-router.patch('/job-posts/:id', (req, res) => send(res, async () => ({ jobPost: await content.updateJob(req.params.id, req.body) })));
+router.patch('/job-posts/:id', (req, res) => send(res, async () => ({ jobPost: await content.updateJob(req.params.id, req.body, { editorId: req.student.id }) })));
 router.get('/job-posts/:id', (req, res) => send(res, async () => ({ jobPost: await content.getJobPost(req.params.id) })));
 // Review a pending job: approve / reject with an optional note.
 router.post('/job-posts/:id/review', (req, res) => send(res, async () => ({ jobPost: await content.reviewJob(req.params.id, req.student.id, { decision: req.body.decision, note: req.body.note }) })));
