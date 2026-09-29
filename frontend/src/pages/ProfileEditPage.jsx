@@ -314,6 +314,7 @@ export function ProfileEditPage() {
     <EditSection title="Personal information" note="Your email is linked to your institutional identity and can't be changed here." onSave={() => save('personal', personal)} saving={savingSection === 'personal'}>
       <label>Full name<input value={personal.fullName} onChange={event => setPersonal({ ...personal, fullName: event.target.value })} /></label>
       <label>Age<input type="number" value={personal.age} onChange={event => setPersonal({ ...personal, age: event.target.value })} /></label>
+      <label>Phone number<input type="tel" placeholder="+91 98765 43210" value={personal.phone || ''} onChange={event => setPersonal({ ...personal, phone: event.target.value })} /></label>
       <label>Username<input value={personal.username} onChange={event => setPersonal({ ...personal, username: event.target.value.toLowerCase() })} /></label>
       <label>Institutional email<input value={personal.email} disabled /></label>
     </EditSection>
@@ -338,7 +339,7 @@ export function ProfileEditPage() {
           </div>
 
           <div className="pf-schooling-card__fields">
-            <label>
+            <label style={{ gridColumn: '1 / -1' }}>
               School name
               <input
                 placeholder="e.g. St. Xavier's High School"
@@ -346,7 +347,7 @@ export function ProfileEditPage() {
                 onChange={e => updateAcademic('tenthSchool', e.target.value)}
               />
             </label>
-            <label>
+            <label style={{ gridColumn: '1 / -1' }}>
               Board / Council
               <input
                 placeholder="e.g. CBSE, ICSE, State Board"
@@ -398,7 +399,7 @@ export function ProfileEditPage() {
           </div>
 
           <div className="pf-schooling-card__fields">
-            <label>
+            <label style={{ gridColumn: '1 / -1' }}>
               School / College name
               <input
                 placeholder="e.g. Delhi Public School"
@@ -433,7 +434,7 @@ export function ProfileEditPage() {
                 onChange={e => updateAcademic('twelfthYear', e.target.value)}
               />
             </label>
-            <label style={{ gridColumn: '1 / -1' }}>
+            <label>
               12th Percentage (%)
               <input
                 type="number"
@@ -657,7 +658,8 @@ export function ProfileEditPage() {
       </div>
     </Modal>
 
-    <EditSection title="Academic eligibility" note="These fields help TNP determine eligibility for placement opportunities. Leave fields blank until you have verified information." onSave={() => save('academic', academic)} saving={savingSection === 'academic'}>
+    <div id="academic" />
+    <EditSection id="eligibility" title="Academic eligibility" note="These fields help TNP determine eligibility for placement opportunities. Leave fields blank until you have verified information." onSave={() => save('academic', academic)} saving={savingSection === 'academic'}>
       <label>Degree / program<input placeholder="B.Tech" value={academic.degreeProgram || ''} onChange={event => updateAcademic('degreeProgram', event.target.value)} /></label>
       <label>Graduation year<input type="number" min="2027" placeholder="2027" value={academic.graduationYear || ''} onChange={event => updateAcademic('graduationYear', event.target.value)} /></label>
       <label>Current semester<input type="number" min="1" max="20" value={academic.currentSemester || ''} onChange={event => updateAcademic('currentSemester', event.target.value)} /></label>
@@ -784,5 +786,19 @@ export function ProfileEditPage() {
 }
 
 function EditSection({ id, title, note, onSave, saveLabel = 'Save changes', saving = false, headerAction, children }) {
-  return <section id={id} className="pf-edit-section pf-edit-section--target"><div className="pf-edit-section__heading"><h2>{title}</h2>{headerAction}</div><p>{note}</p><div className="pf-edit-fields">{children}</div>{onSave && <button className="pf-save" disabled={saving} onClick={onSave}>{saving ? 'Saving...' : saveLabel}</button>}</section>;
+  return (
+    <section id={id} className="pf-edit-section pf-edit-section--target">
+      <div className="pf-edit-section__heading">
+        <h2>{title}</h2>
+        {headerAction}
+      </div>
+      {note && <p className="pf-edit-section__note">{note}</p>}
+      <div className="pf-edit-fields">{children}</div>
+      {onSave && (
+        <button className="pf-save" disabled={saving} onClick={onSave}>
+          {saving ? 'Saving...' : saveLabel}
+        </button>
+      )}
+    </section>
+  );
 }

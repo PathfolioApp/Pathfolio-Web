@@ -55,8 +55,18 @@ class ProfileService {
     if (section === 'personal') {
       if (values.fullName !== undefined && values.fullName.trim().length < 2) throw new Error('Full name must be at least 2 characters.');
       if (values.age !== undefined && (!Number.isInteger(Number(values.age)) || values.age < 15 || values.age > 100)) throw new Error('Please provide a valid age.');
+      if (values.phone !== undefined && String(values.phone).trim()) {
+        const cleanedPhone = String(values.phone).trim();
+        if (!/^[+]?[\d\s\-()]{7,20}$/.test(cleanedPhone)) throw new Error('Please provide a valid phone number.');
+      }
       if (values.username && values.username !== student.personal.username) { if (!/^[a-z0-9_-]{3,20}$/i.test(values.username)) throw new Error('Username must be 3-20 valid characters.'); if (await store.isUsernameTaken(values.username)) throw new Error('That username is already taken.'); }
-      student.personal = { ...student.personal, ...Object.fromEntries(Object.entries(values).filter(([k]) => ['fullName','age','username'].includes(k))) };
+      const allowed = ['fullName', 'age', 'username', 'phone'];
+      const updates = Object.fromEntries(
+        Object.entries(values)
+          .filter(([k]) => allowed.includes(k))
+          .map(([k, v]) => [k, k === 'phone' ? String(v || '').trim() : v])
+      );
+      student.personal = { ...student.personal, ...updates };
     } else if (section === 'academic') {
       if (values.department !== undefined && !String(values.department).trim()) throw new Error('Department is required.');
       if (values.batchYear !== undefined && !String(values.batchYear).trim()) throw new Error('Batch year is required.');

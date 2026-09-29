@@ -9,6 +9,7 @@ const initialFormData = {
   personal: {
     fullName: '',
     age: '',
+    phone: '',
     email: '',
     username: ''
   },

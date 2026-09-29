@@ -101,6 +101,75 @@ export function ProfilePage() {
     </section>
     <p className="pf-profile-intro">Everything you’ve shared so far, in one place.</p>
     <div className="pf-profile-grid">
+      {/* Personal Information Section */}
+      <section>
+        <div className="pf-title-row-enhanced">
+          <div className="pf-title-with-icon">
+            <UserCheck size={18} />
+            <span>Personal information</span>
+          </div>
+          <Link to="/profile/edit" className="pf-section-link">Edit</Link>
+        </div>
+        <div className="pf-info-list">
+          <div className="pf-info-row">
+            <span className="pf-info-label">Full name</span>
+            <span className="pf-info-value">{personal.fullName}</span>
+          </div>
+          <div className="pf-info-row">
+            <span className="pf-info-label">Age</span>
+            <span className="pf-info-value">{personal.age || '—'}</span>
+          </div>
+          <div className="pf-info-row">
+            <span className="pf-info-label">Phone number</span>
+            <span className="pf-info-value">{personal.phone || '—'}</span>
+          </div>
+          <div className="pf-info-row">
+            <span className="pf-info-label">Institutional email</span>
+            <span className="pf-info-value pf-email-verified">
+              {personal.email}
+              <CheckCircle2 size={14} className="pf-verified-icon" />
+            </span>
+          </div>
+          <div className="pf-info-row">
+            <span className="pf-info-label">Username</span>
+            <span className="pf-info-value">@{personal.username}</span>
+          </div>
+        </div>
+      </section>
+
+      {/* Academic Identity Section */}
+      <section>
+        <div className="pf-title-row-enhanced">
+          <div className="pf-title-with-icon">
+            <GraduationCap size={18} />
+            <span>Academic identity</span>
+          </div>
+          <Link to="/profile/edit#academic" className="pf-section-link">Edit</Link>
+        </div>
+        <div className="pf-info-list">
+          <div className="pf-info-row">
+            <span className="pf-info-label">Roll number</span>
+            <span className="pf-info-value">{academic.rollNumber}</span>
+          </div>
+          <div className="pf-info-row">
+            <span className="pf-info-label">Department</span>
+            <span className="pf-info-value">{academic.department}</span>
+          </div>
+          <div className="pf-info-row">
+            <span className="pf-info-label">Batch year</span>
+            <span className="pf-info-value">{academic.batchYear}</span>
+          </div>
+          <div className="pf-info-row">
+            <span className="pf-info-label">Degree / program</span>
+            <span className="pf-info-value">{displayValue(academic.degreeProgram)}</span>
+          </div>
+          <div className="pf-info-row">
+            <span className="pf-info-label">Graduation year</span>
+            <span className="pf-info-value">{displayValue(academic.graduationYear)}</span>
+          </div>
+        </div>
+      </section>
+
       {/* Resumes Section */}
       <section className="pf-profile-wide">
         <div className="pf-title-row-enhanced">
@@ -176,71 +245,6 @@ export function ProfilePage() {
         )}
       </section>
 
-      {/* Personal Information Section */}
-      <section>
-        <div className="pf-title-row-enhanced">
-          <div className="pf-title-with-icon">
-            <UserCheck size={18} />
-            <span>Personal information</span>
-          </div>
-          <Link to="/profile/edit" className="pf-section-link">Edit</Link>
-        </div>
-        <div className="pf-info-list">
-          <div className="pf-info-row">
-            <span className="pf-info-label">Full name</span>
-            <span className="pf-info-value">{personal.fullName}</span>
-          </div>
-          <div className="pf-info-row">
-            <span className="pf-info-label">Age</span>
-            <span className="pf-info-value">{personal.age || '—'}</span>
-          </div>
-          <div className="pf-info-row">
-            <span className="pf-info-label">Institutional email</span>
-            <span className="pf-info-value pf-email-verified">
-              {personal.email}
-              <CheckCircle2 size={14} className="pf-verified-icon" />
-            </span>
-          </div>
-          <div className="pf-info-row">
-            <span className="pf-info-label">Username</span>
-            <span className="pf-info-value">@{personal.username}</span>
-          </div>
-        </div>
-      </section>
-
-      {/* Academic Identity Section */}
-      <section>
-        <div className="pf-title-row-enhanced">
-          <div className="pf-title-with-icon">
-            <GraduationCap size={18} />
-            <span>Academic identity</span>
-          </div>
-          <span className="pf-verified-badge">Registrar Verified</span>
-        </div>
-        <div className="pf-info-list">
-          <div className="pf-info-row">
-            <span className="pf-info-label">Roll number</span>
-            <span className="pf-info-value">{academic.rollNumber}</span>
-          </div>
-          <div className="pf-info-row">
-            <span className="pf-info-label">Department</span>
-            <span className="pf-info-value">{academic.department}</span>
-          </div>
-          <div className="pf-info-row">
-            <span className="pf-info-label">Batch year</span>
-            <span className="pf-info-value">{academic.batchYear}</span>
-          </div>
-          <div className="pf-info-row">
-            <span className="pf-info-label">Degree / program</span>
-            <span className="pf-info-value">{displayValue(academic.degreeProgram)}</span>
-          </div>
-          <div className="pf-info-row">
-            <span className="pf-info-label">Graduation year</span>
-            <span className="pf-info-value">{displayValue(academic.graduationYear)}</span>
-          </div>
-        </div>
-      </section>
-
       {/* Schooling Showcase */}
       <section className="pf-profile-wide">
         <div className="pf-title-row-enhanced">
@@ -289,7 +293,7 @@ export function ProfilePage() {
                     <CheckCircle2 size={13} /> Verified & Attached
                   </a>
                 ) : (
-                  <span className="pf-not-attached">Not uploaded</span>
+                  <span className="pf-not-attached">Pending upload</span>
                 )}
               </div>
             </div>
@@ -332,7 +336,7 @@ export function ProfilePage() {
                     <CheckCircle2 size={13} /> Verified & Attached
                   </a>
                 ) : (
-                  <span className="pf-not-attached">Not uploaded</span>
+                  <span className="pf-not-attached">Pending upload</span>
                 )}
               </div>
             </div>
@@ -416,49 +420,28 @@ export function ProfilePage() {
         )}
       </section>
 
+      {/* Academic Eligibility Section */}
       <section className="pf-profile-wide pf-eligibility-card">
         <div className="pf-title-row-enhanced">
           <div className="pf-title-with-icon">
             <ShieldCheck size={18} />
             <span>Academic eligibility</span>
           </div>
-          <Link to="/profile/edit" className="pf-section-link">Complete eligibility</Link>
+          <Link to="/profile/edit#eligibility" className="pf-section-link">Edit</Link>
         </div>
         <div className="pf-eligibility-grid">
+          <div><dt>Graduation year</dt><dd>{displayValue(academic.graduationYear)}</dd></div>
           <div><dt>Current semester</dt><dd>{displayValue(academic.currentSemester)}</dd></div>
           <div><dt>CGPA</dt><dd>{displayValue(academic.cgpa)}</dd></div>
-          <div><dt>10th percentage</dt><dd>{displayValue(academic.tenthPercentage)}</dd></div>
-          <div><dt>12th percentage</dt><dd>{displayValue(academic.twelfthPercentage)}</dd></div>
           <div><dt>Active backlogs</dt><dd>{displayValue(academic.activeBacklogs)}</dd></div>
           <div><dt>Historical backlogs</dt><dd>{displayValue(academic.historicalBacklogs)}</dd></div>
           <div><dt>Gap years</dt><dd>{displayValue(academic.gapYears)}</dd></div>
+          <div><dt>10th percentage</dt><dd>{academic.tenthPercentage !== undefined && academic.tenthPercentage !== '' ? (String(academic.tenthPercentage).endsWith('%') ? academic.tenthPercentage : `${academic.tenthPercentage}%`) : 'Not added yet'}</dd></div>
+          <div><dt>12th percentage</dt><dd>{academic.twelfthPercentage !== undefined && academic.twelfthPercentage !== '' ? (String(academic.twelfthPercentage).endsWith('%') ? academic.twelfthPercentage : `${academic.twelfthPercentage}%`) : 'Not added yet'}</dd></div>
         </div>
       </section>
 
-      {/* Hobbies Section */}
-      <section>
-        <div className="pf-title-row-enhanced">
-          <div className="pf-title-with-icon">
-            <Compass size={18} />
-            <span>Hobbies</span>
-          </div>
-          <Link to="/profile/edit#interests" className="pf-section-link">Edit</Link>
-        </div>
-        <Tags values={student.interests.hobbies} empty="Your interests will appear here as you add them." />
-      </section>
-
-      {/* Passions & Interests Section */}
-      <section>
-        <div className="pf-title-row-enhanced">
-          <div className="pf-title-with-icon">
-            <Sparkles size={18} />
-            <span>Passions & interests</span>
-          </div>
-          <Link to="/profile/edit#interests" className="pf-section-link">Edit</Link>
-        </div>
-        <Tags values={student.interests.passions} empty="Your interests will appear here as you add them." />
-      </section>
-
+      {/* Achievements Section */}
       <section className="pf-profile-wide">
         <div className="pf-title-row-enhanced">
           <div className="pf-title-group">
@@ -510,6 +493,31 @@ export function ProfilePage() {
         )}
       </section>
 
+      {/* Hobbies Section */}
+      <section>
+        <div className="pf-title-row-enhanced">
+          <div className="pf-title-with-icon">
+            <Compass size={18} />
+            <span>Hobbies</span>
+          </div>
+          <Link to="/profile/edit#interests" className="pf-section-link">Edit</Link>
+        </div>
+        <Tags values={student.interests.hobbies} empty="Your interests will appear here as you add them." />
+      </section>
+
+      {/* Passions & Interests Section */}
+      <section>
+        <div className="pf-title-row-enhanced">
+          <div className="pf-title-with-icon">
+            <Sparkles size={18} />
+            <span>Passions & interests</span>
+          </div>
+          <Link to="/profile/edit#interests" className="pf-section-link">Edit</Link>
+        </div>
+        <Tags values={student.interests.passions} empty="Your interests will appear here as you add them." />
+      </section>
+
+      {/* Personal Context Section */}
       <section className="pf-profile-wide pf-sensitive">
         <div className="pf-title-row-enhanced">
           <div className="pf-title-with-icon">

@@ -116,7 +116,8 @@ class OnboardingService {
         fullName: personal.fullName.trim(),
         age: Number(personal.age),
         email: personal.email.trim().toLowerCase(),
-        username: personal.username.trim().toLowerCase()
+        username: personal.username.trim().toLowerCase(),
+        phone: (personal.phone || '').trim()
       },
       academic: {
         rollNumber: academic.rollNumber.trim(),

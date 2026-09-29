@@ -1,5 +1,5 @@
-import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { LandingPage } from './pages/LandingPage';
 import { OnboardingPage } from './pages/OnboardingPage';
 import { CompletionPage } from './pages/CompletionPage';
@@ -20,14 +20,28 @@ import { StoryPage } from './pages/StoryPage';
 import { ResumePage } from './pages/ResumePage';
 import { PrivacyPolicyPage, TermsPage, CookiePolicyPage } from './pages/PolicyPages';
 
+function ScrollToTop() {
+  const { pathname, hash } = useLocation();
+  useEffect(() => {
+    if (!hash) {
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+    }
+  }, [pathname, hash]);
+  return null;
+}
+
 function Protected({ children }) { const { student, loading } = useAuth(); if (loading) return <main className="pf-auth-page">Loading your Pathfolio…</main>; return student?.onboarding?.completed ? <AppLayout>{children}</AppLayout> : <Navigate to={student ? '/onboarding' : '/signin'} replace />; }
 function AdminProtected({ children }) { const { student, loading } = useAuth(); if (loading) return <main className="pf-auth-page">Loading your Pathfolio…</main>; if (!student) return <Navigate to="/signin?portal=admin" replace />; return student.isAdmin ? children : <Navigate to="/dashboard" replace />; }
 function RecruiterProtected({ children }) { const { student, loading } = useAuth(); if (loading) return <main className="pf-auth-page">Loading your Pathfolio…</main>; if (!student) return <Navigate to="/signin?portal=recruiter" replace />; return student.isRecruiter || student.isAdmin ? children : <Navigate to="/dashboard" replace />; }
 
 export default function App() {
   return (
-    <BrowserRouter><AuthProvider>
-      <ConsentBanner />
+    <BrowserRouter>
+      <ScrollToTop />
+      <AuthProvider>
+        <ConsentBanner />
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/onboarding" element={<OnboardingPage />} />

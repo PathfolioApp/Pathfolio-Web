@@ -189,6 +189,7 @@ function UserWorkspace({ users, userImportRows, userImportErrors, userImportSumm
         </div>
         <dl>
           <dt>Email</dt><dd>{viewingUser.email}</dd>
+          <dt>Phone</dt><dd>{viewingUser.phone || '—'}</dd>
           <dt>Username</dt><dd>@{viewingUser.username}</dd>
           <dt>Department</dt><dd>{viewingUser.department || 'Not specified'}</dd>
           <dt>Batch</dt><dd>{viewingUser.batchYear || 'Not specified'}</dd>
@@ -412,7 +413,10 @@ function ApplicationWorkspace({ jobs, applicationJobFilter, setApplicationJobFil
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             <div style={{ borderBottom: '1px solid #eaeaea', paddingBottom: '1rem' }}>
               <h3 style={{ margin: '0 0 0.5rem' }}>{viewingApp.profileSnapshot.fullName}</h3>
-              <p style={{ margin: 0, color: '#557550' }}>{viewingApp.profileSnapshot.email}</p>
+              <p style={{ margin: 0, color: '#557550' }}>
+                {viewingApp.profileSnapshot.email}
+                {viewingApp.profileSnapshot.phone ? ` · ${viewingApp.profileSnapshot.phone}` : ''}
+              </p>
             </div>
             <div>
               <h4 style={{ fontSize: '0.85rem', textTransform: 'uppercase', color: 'var(--text-muted)', margin: '0 0 1rem' }}>Submitted Information</h4>
