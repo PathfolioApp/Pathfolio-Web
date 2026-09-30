@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { BriefcaseBusiness, Building2, FileSearch, LayoutDashboard, UserPlus, Users, Search, Share2, History, Plus, Upload, ShieldCheck } from 'lucide-react';
 import { useAuth } from '../../app/providers/AuthProvider';
 import { PageHeader } from '../../components/ui/PageHeader';
@@ -17,7 +18,12 @@ import { LogsWorkspace } from './components/LogsWorkspace';
 import './AdminPage.css';
 
 const emptyCompany = { name: '', website: '', description: '', logoUrl: '', logoPublicId: '' };
-const emptyJob = { companyName: '', title: '', description: '', location: '', employmentType: 'Full-time', applicationUrl: '' };
+const emptyJob = {
+  companyName: '', title: '', description: '', location: '', employmentType: 'Full-time', applicationUrl: '',
+  salaryMin: '', salaryMax: '', salaryCurrency: 'INR',
+  minCgpa: '', minTenthPercentage: '', minTwelfthPercentage: '', maxActiveBacklogs: '',
+  allowedBatches: '', allowedDepartments: '', applicationDeadline: ''
+};
 
 const SECTION_META = {
   overview: { icon: LayoutDashboard, label: 'Overview' },
@@ -41,7 +47,11 @@ const TAB_IDS = Object.keys(SECTION_META);
  */
 export function AdminPage() {
   const { student } = useAuth();
-  const sectionFromUrl = () => (TAB_IDS.includes(window.location.hash.slice(1)) ? window.location.hash.slice(1) : 'overview');
+  const location = useLocation();
+  const sectionFromUrl = () => {
+    const raw = (window.location.hash || location.hash || '').replace(/^#/, '');
+    return TAB_IDS.includes(raw) ? raw : 'overview';
+  };
   const [tab, setTab] = useState(sectionFromUrl);
   const [overview, setOverview] = useState(null);
   const [companies, setCompanies] = useState([]);
@@ -49,7 +59,7 @@ export function AdminPage() {
   const [applications, setApplications] = useState([]);
   const [users, setUsers] = useState([]);
   const [companyForm, setCompanyForm] = useState(emptyCompany); const [logoFile, setLogoFile] = useState(null);
-  const [jobForm, setJobForm] = useState(emptyJob); const [selectedFields, setSelectedFields] = useState([]); const [namedAttachments, setNamedAttachments] = useState([]);
+  const [jobForm, setJobForm] = useState(emptyJob); const [namedAttachments, setNamedAttachments] = useState([]);
   const [editingCompany, setEditingCompany] = useState(null); const [editingJob, setEditingJob] = useState(null);
   const [companyDrawerOpen, setCompanyDrawerOpen] = useState(false);
   const [jobDrawerOpen, setJobDrawerOpen] = useState(false);
@@ -84,8 +94,16 @@ export function AdminPage() {
   };
 
   useEffect(() => { loadBase(); }, [jobFilter]);
-  useEffect(() => { if (tab === 'applications') loadApplications(); }, [tab]);
+  useEffect(() => {
+    if (tab === 'applications') {
+      loadApplications();
+      setApplicationJobFilter('');
+    }
+  }, [tab]);
   useEffect(() => { if (tab === 'users') loadUsers(); }, [tab]);
+  useEffect(() => {
+    setTab(sectionFromUrl());
+  }, [location.hash]);
   useEffect(() => {
     const onHashChange = () => setTab(sectionFromUrl());
     window.addEventListener('hashchange', onHashChange);
@@ -95,7 +113,7 @@ export function AdminPage() {
   useEffect(() => { if (tab === 'overview' || tab === 'applications') loadOverview(); }, [tab]);
 
   const resetCompany = () => { setCompanyForm({ ...emptyCompany }); setLogoFile(null); setEditingCompany(null); };
-  const resetJob = () => { setJobForm({ ...emptyJob, companyId: companies[0]?.id || '' }); setSelectedFields([]); setNamedAttachments([]); setEditingJob(null); };
+  const resetJob = () => { setJobForm({ ...emptyJob, companyId: companies[0]?.id || '' }); setNamedAttachments([]); setEditingJob(null); };
 
   const openNewCompany = () => { resetCompany(); setCompanyDrawerOpen(true); };
   const editCompany = company => { setEditingCompany(company.id); setCompanyForm({ name: company.name, website: company.website, description: company.description, logoUrl: company.logoUrl || '', logoPublicId: company.logoPublicId || '' }); setLogoFile(null); setCompanyDrawerOpen(true); };
@@ -103,8 +121,13 @@ export function AdminPage() {
   const openNewJob = () => { resetJob(); setJobDrawerOpen(true); };
   const editJob = job => {
     setEditingJob(job.id);
-    setJobForm({ companyName: job.companyName || '', title: job.title, description: job.description, location: job.location, employmentType: job.employmentType, applicationUrl: job.applicationUrl });
-    setSelectedFields((job.applicationForm?.fields || []).map(field => field.id));
+    setJobForm({
+      companyName: job.companyName || '', title: job.title || '', description: job.description || '', location: job.location || '', employmentType: job.employmentType || 'Full-time', applicationUrl: job.applicationUrl || '',
+      salaryMin: job.salaryMin ?? '', salaryMax: job.salaryMax ?? '', salaryCurrency: job.salaryCurrency || 'INR',
+      minCgpa: job.eligibility?.minCgpa ?? '', minTenthPercentage: job.eligibility?.minTenthPercentage ?? '', minTwelfthPercentage: job.eligibility?.minTwelfthPercentage ?? '', maxActiveBacklogs: job.eligibility?.maxActiveBacklogs ?? '',
+      allowedBatches: (job.eligibility?.allowedBatches || []).join(', '), allowedDepartments: (job.eligibility?.allowedDepartments || []).join(', '),
+      applicationDeadline: job.applicationDeadline ? new Date(job.applicationDeadline).toISOString().slice(0, 16) : ''
+    });
     setNamedAttachments((job.attachments || []).map((item, i) => ({ id: `existing_${i}`, name: item.name, url: item.url, type: item.type, file: null })));
     setJobDrawerOpen(true);
   };
@@ -119,7 +142,7 @@ export function AdminPage() {
     } catch (err) { setError(err.message); } finally { setSaving(false); }
   };
 
-  const formOptions = [['rollNumber', 'Roll number'], ['department', 'Department'], ['batchYear', 'Batch year'], ['resumeUrl', 'Resume link'], ['portfolioUrl', 'Portfolio link'], ['skills', 'Skills'], ['cgpa', 'CGPA']];
+
 
   const saveJob = async event => {
     event.preventDefault(); setSaving(true); setError('');
@@ -128,7 +151,22 @@ export function AdminPage() {
         if (item.file) { const uploaded = await uploadToCloudinary(item.file); return { name: item.name || uploaded.name, url: uploaded.url, publicId: uploaded.publicId, type: uploaded.type }; }
         return { name: item.name, url: item.url, type: item.type || 'link' };
       }));
-      const payload = { ...jobForm, attachments, applicationForm: { fields: selectedFields.map(id => ({ id, label: formOptions.find(option => option[0] === id)?.[1], type: id.includes('Url') ? 'url' : 'text', required: false })) } };
+      const payload = { 
+        ...jobForm, 
+        attachments,
+        salaryMin: jobForm.salaryMin !== '' ? Number(jobForm.salaryMin) : null,
+        salaryMax: jobForm.salaryMax !== '' ? Number(jobForm.salaryMax) : null,
+        applicationDeadline: jobForm.applicationDeadline ? new Date(jobForm.applicationDeadline).toISOString() : null,
+        eligibility: {
+          minCgpa: jobForm.minCgpa !== '' ? Number(jobForm.minCgpa) : null,
+          minTenthPercentage: jobForm.minTenthPercentage !== '' ? Number(jobForm.minTenthPercentage) : null,
+          minTwelfthPercentage: jobForm.minTwelfthPercentage !== '' ? Number(jobForm.minTwelfthPercentage) : null,
+          maxActiveBacklogs: jobForm.maxActiveBacklogs !== '' ? Number(jobForm.maxActiveBacklogs) : null,
+          allowedBatches: jobForm.allowedBatches.split(',').map(s => s.trim()).filter(Boolean),
+          allowedDepartments: jobForm.allowedDepartments.split(',').map(s => s.trim()).filter(Boolean)
+        },
+        applicationForm: { fields: [] }
+      };
       if (editingJob) await adminApi.updateJobPost(editingJob, payload); else await adminApi.createJobPost(payload);
       setJobDrawerOpen(false); resetJob(); await loadBase();
     } catch (err) { setError(err.message); } finally { setSaving(false); }
@@ -253,8 +291,6 @@ export function AdminPage() {
             companies={companies}
             jobForm={jobForm}
             setJobForm={setJobForm}
-            selectedFields={selectedFields}
-            setSelectedFields={setSelectedFields}
             namedAttachments={namedAttachments}
             setNamedAttachments={setNamedAttachments}
             update={update}
@@ -267,7 +303,16 @@ export function AdminPage() {
       {tab === 'shares' && <SharesWorkspace />}
       {tab === 'logs' && <LogsWorkspace />}
       {tab === 'applications' && (
-        <ApplicationWorkspace jobs={jobs} applicationJobFilter={applicationJobFilter} setApplicationJobFilter={setApplicationJobFilter} applications={applications} loading={loading} updateApplication={updateApplication} saving={saving} />
+        <ApplicationWorkspace
+          companies={companies}
+          jobs={jobs}
+          applicationJobFilter={applicationJobFilter}
+          setApplicationJobFilter={setApplicationJobFilter}
+          applications={applications}
+          loading={loading}
+          updateApplication={updateApplication}
+          saving={saving}
+        />
       )}
       {tab === 'policy' && <PlacementPolicyWorkspace />}
       {tab === 'users' && (

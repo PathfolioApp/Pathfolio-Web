@@ -16,7 +16,7 @@ export function RecruiterLayout({ children }) {
   const location = useLocation();
 
   const navItems = [
-    [LayoutDashboard, 'Overview', '/recruiter'],
+    [LayoutDashboard, 'Overview', '/recruiter', 'overview'],
     [BriefcaseBusiness, 'My job posts', '/recruiter', 'jobs'],
     [Users, 'Shared candidates', '/recruiter', 'candidates']
   ];

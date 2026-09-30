@@ -57,6 +57,7 @@ router.post('/job-posts/:id/unpublish', (req, res) => send(res, async () => ({ j
 router.post('/job-posts/:id/reopen', (req, res) => send(res, async () => ({ jobPost: await content.reopenJob(req.params.id) })));
 router.post('/jd/analyze', (req, res) => send(res, async () => jdAnalyzer.analyze(req.body)));
 router.get('/applications', (req, res) => send(res, async () => ({ applications: await content.applications(req.query.jobPostId) })));
+router.patch('/applications/bulk', (req, res) => send(res, async () => ({ result: await content.updateApplicationsBulk(req.body.ids, req.body) })));
 router.patch('/applications/:id', (req, res) => send(res, async () => ({ application: await content.updateApplication(req.params.id, req.body) })));
 
 // ---------------------------------------------------------------------------

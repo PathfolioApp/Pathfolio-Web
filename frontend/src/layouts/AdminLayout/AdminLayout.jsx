@@ -14,7 +14,7 @@ export function AdminLayout({ children }) {
   const location = useLocation();
 
   const navItems = [
-    [LayoutDashboard, 'Overview', '/admin'],
+    [LayoutDashboard, 'Overview', '/admin', 'overview'],
     [BriefcaseBusiness, 'Job posts', '/admin', 'jobs'],
     [Search, 'Student search', '/admin', 'students'],
     [Share2, 'Shares', '/admin', 'shares'],

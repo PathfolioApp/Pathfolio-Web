@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { BriefcaseBusiness, Users, Plus } from 'lucide-react';
 import { recruiterApi } from './recruiterApi';
 import { PageHeader } from '../../components/ui/PageHeader';
@@ -16,7 +17,11 @@ const SECTION_META = { overview: 'Overview', jobs: 'My job posts', candidates: '
  * and in the sidebar; there is no separate tab bar.
  */
 export function RecruiterPage() {
-  const sectionFromUrl = () => (Object.keys(SECTION_META).includes(window.location.hash.slice(1)) ? window.location.hash.slice(1) : 'overview');
+  const location = useLocation();
+  const sectionFromUrl = () => {
+    const raw = (window.location.hash || location.hash || '').replace(/^#/, '');
+    return Object.keys(SECTION_META).includes(raw) ? raw : 'overview';
+  };
   const [tab, setTab] = useState(sectionFromUrl);
   const [jobs, setJobs] = useState([]);
   const [jobsLoading, setJobsLoading] = useState(false);
@@ -40,6 +45,9 @@ export function RecruiterPage() {
   }, []);
 
   useEffect(() => { loadOverview(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    setTab(sectionFromUrl());
+  }, [location.hash]);
   useEffect(() => {
     const onHashChange = () => setTab(sectionFromUrl());
     window.addEventListener('hashchange', onHashChange);

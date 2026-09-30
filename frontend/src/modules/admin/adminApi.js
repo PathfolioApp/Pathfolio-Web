@@ -38,6 +38,7 @@ export const adminApi = {
   analyzeJobDescription: data => request('/jd/analyze', { method: 'POST', body: JSON.stringify(data) }),
   applications: jobPostId => request(`/applications${jobPostId ? `?jobPostId=${jobPostId}` : ''}`),
   updateApplication: (id, data) => request(`/applications/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  updateApplicationsBulk: (ids, data) => request('/applications/bulk', { method: 'PATCH', body: JSON.stringify({ ids, ...data }) }),
   getPlacementPolicy: () => request('/placement-policy'),
   updatePlacementPolicy: data => request('/placement-policy', { method: 'PUT', body: JSON.stringify(data) })
 };

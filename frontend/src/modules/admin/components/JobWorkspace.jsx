@@ -8,7 +8,7 @@ import { EmptyState } from '../../../components/ui/EmptyState';
 import { Input } from '../utils/adminHelpers';
 import { EditedBadge } from '../../../components/ui/EditedBadge';
 
-const formOptions = [['rollNumber', 'Roll number'], ['department', 'Department'], ['batchYear', 'Batch year'], ['resumeUrl', 'Resume link'], ['portfolioUrl', 'Portfolio link'], ['skills', 'Skills'], ['cgpa', 'CGPA']];
+
 
 const STATUS_LABELS = {
   draft: 'Draft',
@@ -29,61 +29,81 @@ export function JobWorkspace({ companies, jobs, loading, jobFilter, setJobFilter
   return (
     <div className="pf-admin-list pf-admin-single">
       <div className="pf-admin-toolbar">
-        <select className="pf-admin-filter" value={jobFilter} onChange={event => setJobFilter(event.target.value)} aria-label="Filter by status">
+        <select
+          className="pf-admin-filter pf-app-sort-select"
+          style={{ maxWidth: '200px' }}
+          value={jobFilter}
+          onChange={event => setJobFilter(event.target.value)}
+          aria-label="Filter by status"
+        >
           <option value="">All statuses</option>
           {Object.entries(STATUS_LABELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
         </select>
       </div>
       {loading ? <EmptyState text="Loading posts..." /> : jobs.length === 0 ? (
         <EmptyState icon={Clock} title="No posts yet" text="Save a draft to begin. Posts go live for students after review and publish." />
-      ) : jobs.map(job => (
-        <DataRow
-          key={job.id}
-          title={<>
-            <StatusBadge status={job.status} />
-            {job.title}
-          </>}
-          meta={<>
-            {job.companyName} · {job.location || 'Location flexible'}
-            <EditedBadge createdAt={job.createdAt} updatedAt={job.updatedAt} />
-          </>}
-          aside={
-            <div className="pf-admin-item-actions">
-              {job.status === 'pending_approval' && (
-                <>
-                  <Button variant="primary" size="sm" loading={saving} icon={CheckCircle2} onClick={() => reviewJob(job, 'approve')}>Approve</Button>
-                  <Button variant="ghost" size="sm" loading={saving} icon={MessageSquareWarning} onClick={() => reviewJob(job, 'reject')}>Request changes</Button>
-                </>
-              )}
-              {job.status === 'approved' && (
-                <Button variant="primary" size="sm" loading={saving} icon={Send} onClick={() => publish(job)}>Publish</Button>
-              )}
-              {job.status === 'published' && (
-                <Button variant="secondary" size="sm" loading={saving} icon={Undo2} onClick={() => publish(job)}>Close</Button>
-              )}
-              {job.status === 'closed' && (
-                <Button variant="ghost" size="sm" loading={saving} icon={RotateCcw} onClick={() => reopenJob(job)}>Reopen</Button>
-              )}
-              {job.status !== 'archived' && (
-                <Button variant="ghost" size="sm" icon={Pencil} onClick={() => editJob(job)}>Edit</Button>
-              )}
-            </div>
-          }
-        >
-          {(job.status === 'pending_approval' || job.reviewNote) && (
-            <p className="pf-admin-review-note">
-              {job.status === 'pending_approval' && 'Submitted by the recruiter, review before publishing to students. '}
-              {job.reviewNote && `Last note: “${job.reviewNote}”`}
-            </p>
-          )}
-        </DataRow>
-      ))}
+      ) : jobs.map(job => {
+        const company = (companies || []).find(
+          c => c.id === job.companyId || c.name?.toLowerCase() === job.companyName?.toLowerCase()
+        );
+        const logo = company?.logoUrl ? (
+          <img src={company.logoUrl} alt={job.companyName} className="pf-app-job-logo" />
+        ) : (
+          <div className="pf-app-job-logo-fallback">
+            {job.companyName?.slice(0, 2).toUpperCase() || 'CO'}
+          </div>
+        );
+
+        return (
+          <DataRow
+            key={job.id}
+            icon={logo}
+            title={<>
+              {job.title}
+              <StatusBadge status={job.status} />
+            </>}
+            meta={<>
+              {job.companyName} · {job.location || 'Location flexible'}
+              <EditedBadge createdAt={job.createdAt} updatedAt={job.updatedAt} />
+            </>}
+            aside={
+              <div className="pf-admin-item-actions">
+                {job.status === 'pending_approval' && (
+                  <>
+                    <Button variant="primary" size="sm" loading={saving} icon={CheckCircle2} onClick={() => reviewJob(job, 'approve')}>Approve</Button>
+                    <Button variant="ghost" size="sm" loading={saving} icon={MessageSquareWarning} onClick={() => reviewJob(job, 'reject')}>Request changes</Button>
+                  </>
+                )}
+                {(job.status === 'approved' || job.status === 'draft') && (
+                  <Button variant="primary" size="sm" loading={saving} icon={Send} onClick={() => publish(job)}>Publish</Button>
+                )}
+                {job.status === 'published' && (
+                  <Button variant="secondary" size="sm" loading={saving} icon={Undo2} onClick={() => publish(job)}>Close</Button>
+                )}
+                {job.status === 'closed' && (
+                  <Button variant="ghost" size="sm" loading={saving} icon={RotateCcw} onClick={() => reopenJob(job)}>Reopen</Button>
+                )}
+                {job.status !== 'archived' && (
+                  <Button variant="ghost" size="sm" icon={Pencil} onClick={() => editJob(job)}>Edit</Button>
+                )}
+              </div>
+            }
+          >
+            {(job.status === 'pending_approval' || job.reviewNote) && (
+              <p className="pf-admin-review-note">
+                {job.status === 'pending_approval' && 'Submitted by the recruiter, review before publishing to students. '}
+                {job.reviewNote && `Last note: “${job.reviewNote}”`}
+              </p>
+            )}
+          </DataRow>
+        );
+      })}
     </div>
   );
 }
 
 /** Create/edit job post form in a right-side drawer (prefills when editing). */
-export function JobFormDrawer({ open, saving, editingJob, companies, jobForm, setJobForm, selectedFields, setSelectedFields, namedAttachments, setNamedAttachments, update, onClose, onSubmit }) {
+export function JobFormDrawer({ open, saving, editingJob, companies, jobForm, setJobForm, namedAttachments, setNamedAttachments, update, onClose, onSubmit }) {
   return (
     <Drawer
       isOpen={open}
@@ -111,13 +131,34 @@ export function JobFormDrawer({ open, saving, editingJob, companies, jobForm, se
         <Input label="Application URL" full><input type="url" value={jobForm.applicationUrl} onChange={update(setJobForm, 'applicationUrl')} placeholder="https://careers.company.com/role" /></Input>
         <Input label="Attachments" full><AttachmentList namedAttachments={namedAttachments} setNamedAttachments={setNamedAttachments} /></Input>
         <fieldset className="pf-admin-fieldset">
-          <legend>Collect with application</legend>
-          {formOptions.map(([id, label]) => (
-            <label key={id}>
-              <input type="checkbox" checked={selectedFields.includes(id)} onChange={() => setSelectedFields(fields => fields.includes(id) ? fields.filter(field => field !== id) : [...fields, id])} />
-              {label}
-            </label>
-          ))}
+          <legend>Compensation & Deadline</legend>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+            <Input label="Min CTC (LPA)"><input type="number" step="0.1" value={jobForm.salaryMin || ''} onChange={update(setJobForm, 'salaryMin')} placeholder="e.g. 6.5" /></Input>
+            <Input label="Max CTC (LPA)"><input type="number" step="0.1" value={jobForm.salaryMax || ''} onChange={update(setJobForm, 'salaryMax')} placeholder="e.g. 12.0" /></Input>
+          </div>
+          <Input label="Application Deadline" full>
+            <input type="datetime-local" value={jobForm.applicationDeadline || ''} onChange={update(setJobForm, 'applicationDeadline')} />
+          </Input>
+        </fieldset>
+
+        <fieldset className="pf-admin-fieldset">
+          <legend>Academic Eligibility Criteria</legend>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+            <Input label="Min CGPA"><input type="number" step="0.1" min="0" max="10" value={jobForm.minCgpa || ''} onChange={update(setJobForm, 'minCgpa')} placeholder="e.g. 7.0" /></Input>
+            <Input label="Max Active Backlogs"><input type="number" step="1" min="0" value={jobForm.maxActiveBacklogs || ''} onChange={update(setJobForm, 'maxActiveBacklogs')} placeholder="e.g. 0" /></Input>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+            <Input label="Min 10th %"><input type="number" step="1" min="0" max="100" value={jobForm.minTenthPercentage || ''} onChange={update(setJobForm, 'minTenthPercentage')} placeholder="e.g. 60" /></Input>
+            <Input label="Min 12th %"><input type="number" step="1" min="0" max="100" value={jobForm.minTwelfthPercentage || ''} onChange={update(setJobForm, 'minTwelfthPercentage')} placeholder="e.g. 60" /></Input>
+          </div>
+          <Input label="Allowed Batches" full>
+            <input type="text" value={jobForm.allowedBatches || ''} onChange={update(setJobForm, 'allowedBatches')} placeholder="e.g. 2024, 2025" />
+            <small style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Comma separated list of graduating years</small>
+          </Input>
+          <Input label="Allowed Departments" full>
+            <input type="text" value={jobForm.allowedDepartments || ''} onChange={update(setJobForm, 'allowedDepartments')} placeholder="e.g. Computer Science, IT, ECE" />
+            <small style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Comma separated list of branch names</small>
+          </Input>
         </fieldset>
       </form>
     </Drawer>

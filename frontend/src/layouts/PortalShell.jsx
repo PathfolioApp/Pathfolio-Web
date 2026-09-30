@@ -57,9 +57,12 @@ export function PortalShell({ navItems = [], portalLinks, showBackButton = true,
   const navigateFromNav = (path, hash) => {
     setMobileNavOpen(false);
     navigate(path);
-    if (hash) { window.location.hash = hash; }
-    else if (window.location.hash) {
+    if (hash) {
+      window.location.hash = hash;
+      setActiveHash(hash);
+    } else if (window.location.hash) {
       window.history.replaceState(null, '', window.location.pathname + window.location.search);
+      setActiveHash('');
       window.dispatchEvent(new Event('hashchange'));
     }
   };
@@ -68,10 +71,10 @@ export function PortalShell({ navItems = [], portalLinks, showBackButton = true,
     <nav aria-label="Portal navigation">
       {navItems.map(([Icon, label, path, hash]) => {
         // Highlight only the exact current section: a hash item matches its
-        // hash; a plain item matches only when no hash is active. This fixes
-        // "Overview" lighting up on every page.
+        // hash (or 'overview' when no hash is active); a plain item matches
+        // only when no hash is active and pathname matches.
         const isActive = hash
-          ? activeHash === hash
+          ? (activeHash === hash || (!activeHash && hash === 'overview'))
           : (location.pathname === path && !activeHash);
         return (
           <button

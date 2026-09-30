@@ -9,6 +9,25 @@
   padding-right: 0.5rem;
 }
 
+/* Modal candidate stepper navigation */
+.pf-app-modal-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 0.75rem;
+  margin-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--bg-subtle);
+  border-radius: var(--radius-sm);
+  padding: 0.5rem 0.75rem;
+}
+
+.pf-app-modal-counter {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
 .pf-app-details-header {
   display: flex;
   justify-content: space-between;
@@ -176,52 +195,6 @@
   border-color: var(--color-primary);
 }
 
-/* Projects list */
-.pf-app-projects-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
-}
-
-.pf-app-project-item {
-  background: var(--bg-subtle);
-  border: 1px solid var(--border-soft);
-  border-radius: var(--radius-sm);
-  padding: 0.65rem 0.85rem;
-  font-size: 0.85rem;
-}
-
-.pf-app-project-title {
-  font-weight: 600;
-  color: var(--text-primary);
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 0.25rem;
-}
-
-.pf-app-project-desc {
-  margin: 0 0 0.4rem 0;
-  color: var(--text-muted);
-  font-size: 0.8rem;
-  line-height: 1.4;
-}
-
-.pf-app-project-tech {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem;
-}
-
-.pf-app-tech-tag {
-  font-size: 0.7rem;
-  padding: 0.15rem 0.45rem;
-  background: var(--bg-surface);
-  border: 1px solid var(--border-soft);
-  border-radius: 3px;
-  color: var(--text-secondary);
-}
-
 /* Custom Answers */
 .pf-app-answers-list {
   display: flex;
@@ -247,6 +220,177 @@
   font-size: 0.88rem;
   color: var(--text-primary);
   word-break: break-word;
+}
+
+/* ========================================= */
+/* FUNNEL / STATUS METRICS BAR               */
+/* ========================================= */
+
+.pf-app-funnel-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+  margin-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.pf-app-funnel-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-medium);
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all var(--transition-fast);
+  user-select: none;
+}
+
+.pf-app-funnel-pill:hover {
+  background: var(--bg-subtle);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.pf-app-funnel-pill.active {
+  background: #edf6ed;
+  border-color: #8bc38a;
+  color: #1b4d1b;
+  font-weight: 700;
+  box-shadow: 0 1px 3px rgba(32, 78, 32, 0.08);
+}
+
+.pf-app-funnel-count {
+  display: inline-block;
+  padding: 0.1rem 0.45rem;
+  border-radius: 10px;
+  background: var(--bg-subtle);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.pf-app-funnel-pill.active .pf-app-funnel-count {
+  background: #c2dfc2;
+  color: #174217;
+}
+
+/* ========================================= */
+/* SEARCH & TOOLBAR EXTENSIONS               */
+/* ========================================= */
+
+.pf-app-search-toolbar {
+  margin-bottom: 0.65rem;
+}
+
+.pf-app-search-input {
+  flex: 1 1 220px;
+  min-height: 38px;
+  height: 38px;
+  padding: 0 0.75rem;
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  font-size: 0.88rem;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.pf-app-search-input--full {
+  width: 100%;
+  display: block;
+}
+
+.pf-app-search-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-light);
+}
+
+.pf-app-actions-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.65rem;
+  margin-bottom: 1rem;
+}
+
+.pf-app-actions-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.pf-app-sort-select {
+  width: auto !important;
+  min-width: 150px;
+  max-width: 185px;
+  flex: 0 0 auto;
+  height: 38px;
+  min-height: 38px;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+/* ========================================= */
+/* BULK ACTIONS BAR                          */
+/* ========================================= */
+
+.pf-app-bulk-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.65rem 1rem;
+  background: #eef7ee;
+  border: 1.5px solid #a8d5a8;
+  border-radius: var(--radius-sm);
+  margin-bottom: 0.75rem;
+  flex-wrap: wrap;
+  animation: pfFadeIn 0.15s ease-in-out;
+}
+
+@keyframes pfFadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.pf-app-bulk-info {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #1c521c;
+}
+
+.pf-app-bulk-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.pf-app-row-select {
+  display: flex;
+  align-items: center;
+  margin-right: 0.75rem;
+  cursor: pointer;
+}
+
+.pf-app-row-select input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--color-primary);
+  cursor: pointer;
 }
 
 /* ========================================= */
@@ -376,4 +520,122 @@
   cursor: pointer;
   width: 15px;
   height: 15px;
+}
+
+/* ========================================= */
+/* RECRUITER SHARE MODAL                     */
+/* ========================================= */
+
+.pf-share-modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.pf-share-modal-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.pf-share-modal-field label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.pf-share-modal-field select,
+.pf-share-modal-field textarea {
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface);
+  font-size: 0.9rem;
+  color: var(--text-primary);
+}
+
+/* Job Card Company Logo */
+.pf-app-job-row {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.pf-app-job-row--clickable {
+  cursor: pointer;
+  padding: 0.5rem;
+  margin: -0.5rem;
+  border-radius: var(--radius-md);
+  transition: background-color 0.15s ease;
+}
+
+.pf-app-job-row--clickable:hover {
+  background-color: var(--bg-subtle);
+}
+
+.pf-app-job-logo {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-sm);
+  object-fit: contain;
+  background: #ffffff;
+  border: 1px solid var(--border-soft);
+  flex-shrink: 0;
+  padding: 2px;
+}
+
+.pf-app-job-logo-fallback {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-sm);
+  background: #eef6ee;
+  border: 1.5px solid #c2e0c2;
+  color: #2b592b;
+  font-weight: 700;
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* Academic Filter Modal Form */
+.pf-filter-modal-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 1.25rem;
+}
+
+.pf-filter-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.pf-filter-field label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.pf-filter-field input,
+.pf-filter-field select {
+  padding: 0.55rem 0.75rem;
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface);
+  font-size: 0.88rem;
+  color: var(--text-primary);
+}
+
+.pf-filter-field input:focus,
+.pf-filter-field select:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-light);
+}
+
+.pf-filter-field small {
+  font-size: 0.72rem;
+  color: var(--text-muted);
 }
