@@ -20,6 +20,7 @@ export function AdminLayout({ children }) {
     [Share2, 'Shares', '/admin', 'shares'],
     [Building2, 'Companies', '/admin', 'companies'],
     [Users, 'Applications', '/admin', 'applications'],
+    [ShieldCheck, 'Placement policy', '/admin', 'policy'],
     [UserRound, 'Users', '/admin', 'users'],
     [History, 'Logs', '/admin', 'logs'],
     [FileSearch, 'JD analyser', '/admin', 'jd']

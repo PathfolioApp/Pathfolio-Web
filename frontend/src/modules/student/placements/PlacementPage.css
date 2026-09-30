@@ -67,3 +67,41 @@
 .pf-apply-closed { display: flex; flex-direction: column; align-items: flex-start; gap: .5rem; padding: 1.2rem; background: var(--color-warning-bg); border: 1px solid #f0d9b0; border-radius: var(--radius-md); color: var(--color-warning); }
 .pf-apply-closed h3 { margin: 0; color: inherit; font-size: 1.05rem; }
 .pf-apply-closed p { margin: 0; font-size: .85rem; }
+
+.pf-apply-card-internal {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pf-apply-card-internal h3 {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #163624;
+}
+
+.pf-apply-card-internal p {
+  margin: 0;
+  font-size: 0.86rem;
+  color: #556c5c;
+  line-height: 1.45;
+}
+
+.pf-apply-ineligible-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  background: #fff8f6;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  color: #991b1b;
+  font-size: 0.84rem;
+  line-height: 1.4;
+}
+
+.pf-apply-ineligible-banner ul {
+  margin: 4px 0 0 16px;
+  padding: 0;
+}

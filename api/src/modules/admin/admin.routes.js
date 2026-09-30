@@ -9,6 +9,7 @@ const jdAnalyzer = require('./jdAnalyzer.service');
 const studentSearch = require('./studentSearch.service');
 const shares = require('../recruiters/recruiterShare.service');
 const auditLog = require('../../shared/auditLog.service');
+const placementPolicy = require('./placementPolicy.service');
 
 router.use(authenticate, requireAdmin);
 
@@ -57,6 +58,12 @@ router.post('/job-posts/:id/reopen', (req, res) => send(res, async () => ({ jobP
 router.post('/jd/analyze', (req, res) => send(res, async () => jdAnalyzer.analyze(req.body)));
 router.get('/applications', (req, res) => send(res, async () => ({ applications: await content.applications(req.query.jobPostId) })));
 router.patch('/applications/:id', (req, res) => send(res, async () => ({ application: await content.updateApplication(req.params.id, req.body) })));
+
+// ---------------------------------------------------------------------------
+// Placement upgrade policy & bracket configuration
+// ---------------------------------------------------------------------------
+router.get('/placement-policy', (req, res) => send(res, async () => ({ policy: await placementPolicy.getPolicy() })));
+router.put('/placement-policy', (req, res) => send(res, async () => ({ policy: await placementPolicy.updatePolicy(req.body, req.student.id) })));
 
 // ---------------------------------------------------------------------------
 // Student search & discovery (admin-only by design, recruiters have no

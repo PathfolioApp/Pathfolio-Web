@@ -6,11 +6,22 @@ export const opportunitiesApi = {
     if (!data.success) throw new Error(data.message);
     return data;
   },
-  apply: async (jobId, answers) => {
+  getEligibility: async (jobId) => {
+    const res = await fetch(`/api/opportunities/${jobId}/eligibility`, { credentials: 'include' });
+    if (!res.ok) throw new Error('Failed to load eligibility status');
+    const data = await res.json();
+    if (!data.success) throw new Error(data.message);
+    return data;
+  },
+  apply: async (jobId, payload) => {
+    const body = typeof payload === 'object' && payload !== null && ('resumeId' in payload || 'answers' in payload)
+      ? payload
+      : { answers: payload };
     const res = await fetch(`/api/opportunities/${jobId}/applications`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ answers })
+      body: JSON.stringify(body),
+      credentials: 'include'
     });
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));

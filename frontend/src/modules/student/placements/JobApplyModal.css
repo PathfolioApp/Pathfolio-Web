@@ -1,0 +1,326 @@
+/* ==========================================================================
+   Job Application Modal Styling
+   ========================================================================== */
+
+.pf-apply-modal-content {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 4px 0;
+}
+
+/* Job Overview Bar */
+.pf-apply-job-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 16px;
+  background: #f7faf8;
+  border: 1px solid #e1ebe2;
+  border-radius: 10px;
+}
+
+.pf-apply-job-header__info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.pf-apply-job-header__company {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #1a4d33;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.pf-apply-job-header__title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #132e1f;
+}
+
+.pf-apply-job-header__badge {
+  font-size: 0.76rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  background: #e9f5ed;
+  color: #1b5e39;
+  border: 1px solid #cce8d5;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+
+/* Eligibility Warning / Blocker */
+.pf-apply-eligibility-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  background: #fff8f6;
+  border: 1.5px solid #fecaca;
+  border-radius: 10px;
+  color: #991b1b;
+}
+
+.pf-apply-eligibility-warning__icon {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.pf-apply-eligibility-warning__body {
+  font-size: 0.86rem;
+  line-height: 1.45;
+}
+
+.pf-apply-eligibility-warning__title {
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.pf-apply-eligibility-warning ul {
+  margin: 4px 0 0 18px;
+  padding: 0;
+}
+
+.pf-apply-eligibility-warning li {
+  margin-bottom: 2px;
+}
+
+/* Resume Selection Section */
+.pf-apply-section-title {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #1c3626;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.pf-apply-resume-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Selectable Resume Radio Card */
+.pf-resume-radio-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 16px;
+  border: 1.5px solid #d8e4db;
+  border-radius: 10px;
+  background: #ffffff;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  position: relative;
+}
+
+.pf-resume-radio-card:hover {
+  border-color: #23593d;
+  background: #fbfdfb;
+}
+
+.pf-resume-radio-card--selected {
+  border-color: #1b4d36;
+  background: #f4f9f5;
+  box-shadow: 0 0 0 1px #1b4d36;
+}
+
+.pf-resume-radio-card__radio {
+  width: 18px;
+  height: 18px;
+  accent-color: #1b4d36;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.pf-resume-radio-card__icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: #fee2e2;
+  color: #b91c1c;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.pf-resume-radio-card__details {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.pf-resume-radio-card__name-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.pf-resume-radio-card__name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #173824;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pf-resume-radio-card__default-badge {
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 1px 7px;
+  background: #e2f4e8;
+  color: #14532d;
+  border-radius: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.pf-resume-radio-card__meta {
+  font-size: 0.78rem;
+  color: #5d7162;
+}
+
+.pf-resume-radio-card__preview-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #23543b;
+  background: #ffffff;
+  border: 1px solid #cad8cf;
+  padding: 5px 10px;
+  border-radius: 6px;
+  text-decoration: none;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.pf-resume-radio-card__preview-btn:hover {
+  background: #f1f7f2;
+  border-color: #1e4a34;
+  color: #143522;
+}
+
+/* Empty Resume Card */
+.pf-apply-no-resume {
+  padding: 24px;
+  text-align: center;
+  background: #fafcfa;
+  border: 1.5px dashed #cbdad0;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.pf-apply-no-resume p {
+  margin: 0;
+  font-weight: 600;
+  color: #1a3c2a;
+}
+
+.pf-apply-no-resume span {
+  font-size: 0.84rem;
+  color: #5a6e60;
+  max-width: 380px;
+}
+
+/* Immutable Snapshot Banner */
+.pf-apply-snapshot-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 14px;
+  background: #f0f7f3;
+  border: 1px solid #cbe3d3;
+  border-radius: 8px;
+}
+
+.pf-apply-snapshot-banner__icon {
+  color: #1b5e39;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.pf-apply-snapshot-banner__text {
+  font-size: 0.82rem;
+  color: #264b36;
+  line-height: 1.45;
+}
+
+.pf-apply-snapshot-banner__text strong {
+  color: #143522;
+}
+
+.pf-apply-snapshot-banner__link {
+  color: #1b5e39;
+  font-weight: 600;
+  text-decoration: underline;
+  margin-left: 4px;
+}
+
+.pf-apply-snapshot-banner__link:hover {
+  color: #0f3d24;
+}
+
+/* Success View in Modal */
+.pf-apply-success-view {
+  padding: 24px 10px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.pf-apply-success-icon-wrap {
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  background: #e7f7ed;
+  border: 2px solid #b7e6c6;
+  color: #15803d;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 4px;
+}
+
+.pf-apply-success-view h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #153e28;
+}
+
+.pf-apply-success-view p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #4b6352;
+  max-width: 440px;
+  line-height: 1.5;
+}
+
+.pf-apply-success-details {
+  margin-top: 8px;
+  padding: 10px 18px;
+  background: #f7faf8;
+  border: 1px solid #dce8df;
+  border-radius: 8px;
+  font-size: 0.84rem;
+  color: #2b4836;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}

@@ -17,15 +17,68 @@ const ensureLegacyInterests = interests => {
 const allowedApplicationFields = new Set(['fullName', 'email', 'rollNumber', 'department', 'batchYear', 'resumeUrl', 'portfolioUrl', 'skills', 'cgpa']);
 const normalizeAttachments = attachments => Array.isArray(attachments) ? attachments.map(item => ({ name: clean(item.name), url: clean(item.url), type: clean(item.type) })).filter(item => item.name && item.url).slice(0, 10) : [];
 const normalizeForm = form => ({ fields: Array.isArray(form?.fields) ? form.fields.map((field, index) => ({ id: clean(field.id) || `field_${index + 1}`, label: clean(field.label), type: ['text', 'textarea', 'url'].includes(field.type) ? field.type : 'text', required: Boolean(field.required) })).filter(field => field.label).slice(0, 20) : [] });
-const checkEligibility = (student, job) => {
+const placementPolicy = require('./placementPolicy.service');
+const resumeStore = require('../resumes/resumeStore');
+
+const checkEligibility = (student, job, upgradeCheck = null) => {
   const issues = [];
   const criteria = job.eligibility || {};
+
+  // CGPA Check
   const cgpa = Number(student.academic?.cgpa);
-  if (criteria.minCgpa !== null && criteria.minCgpa !== undefined) { if (!Number.isFinite(cgpa)) issues.push(`minimum CGPA ${criteria.minCgpa} (your CGPA is not on record)`); else if (cgpa < criteria.minCgpa) issues.push(`minimum CGPA ${criteria.minCgpa} (yours is ${cgpa})`); }
+  if (criteria.minCgpa !== null && criteria.minCgpa !== undefined) {
+    if (!Number.isFinite(cgpa)) issues.push(`minimum CGPA ${criteria.minCgpa} (your CGPA is not on record)`);
+    else if (cgpa < criteria.minCgpa) issues.push(`minimum CGPA ${criteria.minCgpa} (yours is ${cgpa})`);
+  }
+
+  // 10th Percentage Check
+  if (criteria.minTenthPercentage !== null && criteria.minTenthPercentage !== undefined) {
+    const tenth = Number(student.academic?.tenthPercentage);
+    if (!Number.isFinite(tenth)) issues.push(`minimum 10th percentage ${criteria.minTenthPercentage}% (not on record)`);
+    else if (tenth < criteria.minTenthPercentage) issues.push(`minimum 10th percentage ${criteria.minTenthPercentage}% (yours is ${tenth}%)`);
+  }
+
+  // 12th Percentage Check
+  if (criteria.minTwelfthPercentage !== null && criteria.minTwelfthPercentage !== undefined) {
+    const twelfth = Number(student.academic?.twelfthPercentage);
+    if (!Number.isFinite(twelfth)) issues.push(`minimum 12th percentage ${criteria.minTwelfthPercentage}% (not on record)`);
+    else if (twelfth < criteria.minTwelfthPercentage) issues.push(`minimum 12th percentage ${criteria.minTwelfthPercentage}% (yours is ${twelfth}%)`);
+  }
+
+  // Active Backlogs Check
   const backlogs = Number(student.academic?.activeBacklogs);
-  if (criteria.maxActiveBacklogs !== null && criteria.maxActiveBacklogs !== undefined) { const value = Number.isFinite(backlogs) ? backlogs : 0; if (value > criteria.maxActiveBacklogs) issues.push(`at most ${criteria.maxActiveBacklogs} active backlog(s) (you have ${value})`); }
-  if (criteria.allowedDepartments?.length && !criteria.allowedDepartments.some(dept => (student.academic?.department || '').toLowerCase().includes(dept.toLowerCase()) || dept.toLowerCase().includes((student.academic?.department || '').toLowerCase()))) issues.push(`department restriction (${criteria.allowedDepartments.join(', ')})`);
-  if (criteria.allowedBatches?.length && !criteria.allowedBatches.some(batch => String(student.academic?.batchYear || '').includes(batch))) issues.push(`batch restriction (${criteria.allowedBatches.join(', ')})`);
+  if (criteria.maxActiveBacklogs !== null && criteria.maxActiveBacklogs !== undefined) {
+    const value = Number.isFinite(backlogs) ? backlogs : 0;
+    if (value > criteria.maxActiveBacklogs) issues.push(`at most ${criteria.maxActiveBacklogs} active backlog(s) (you have ${value})`);
+  }
+
+  // Historical Backlogs Check
+  if (criteria.maxHistoricalBacklogs !== null && criteria.maxHistoricalBacklogs !== undefined) {
+    const hist = Number(student.academic?.historicalBacklogs) || 0;
+    if (hist > criteria.maxHistoricalBacklogs) issues.push(`at most ${criteria.maxHistoricalBacklogs} historical backlog(s) (you have ${hist})`);
+  }
+
+  // Gap Years Check
+  if (criteria.maxGapYears !== null && criteria.maxGapYears !== undefined) {
+    const gaps = Number(student.academic?.gapYears) || 0;
+    if (gaps > criteria.maxGapYears) issues.push(`at most ${criteria.maxGapYears} gap year(s) (you have ${gaps})`);
+  }
+
+  // Department Restriction
+  if (criteria.allowedDepartments?.length && !criteria.allowedDepartments.some(dept => (student.academic?.department || '').toLowerCase().includes(dept.toLowerCase()) || dept.toLowerCase().includes((student.academic?.department || '').toLowerCase()))) {
+    issues.push(`department restriction (${criteria.allowedDepartments.join(', ')})`);
+  }
+
+  // Batch Restriction
+  if (criteria.allowedBatches?.length && !criteria.allowedBatches.some(batch => String(student.academic?.batchYear || '').includes(batch))) {
+    issues.push(`batch restriction (${criteria.allowedBatches.join(', ')})`);
+  }
+
+  // Placement Upgrade Policy Check
+  if (upgradeCheck && Array.isArray(upgradeCheck.issues) && upgradeCheck.issues.length > 0) {
+    issues.push(...upgradeCheck.issues);
+  }
+
   return issues;
 };
 
@@ -154,18 +207,152 @@ class AdminContentService {
     const student = await studentStore.getStudentById(studentId);
     if (!student) throw notFound('Student');
     const jobs = await store.listJobPosts('published');
-    const applied = new Set((await store.listApplications()).filter(application => application.studentId === studentId).map(application => application.jobPostId));
-    return jobs.map(job => {
-      const issues = checkEligibility(student, job);
-      return {
+    const myApps = (await store.listApplications()).filter(application => application.studentId === studentId);
+    const appliedMap = new Map(myApps.map(a => [a.jobPostId, a]));
+
+    const result = [];
+    for (const job of jobs) {
+      const upgradeCheck = await placementPolicy.evaluateUpgradeEligibility(studentId, job);
+      const issues = checkEligibility(student, job, upgradeCheck);
+      const existingApplication = appliedMap.get(job.id) || null;
+
+      result.push({
         ...job,
-        hasApplied: applied.has(job.id),
+        hasApplied: Boolean(existingApplication),
+        application: existingApplication,
         deadlinePassed: Boolean(job.applicationDeadline && new Date(job.applicationDeadline) < new Date()),
-        eligibility: { ...job.eligibility, issues, meetsAll: issues.length === 0 }
-      };
+        eligibility: {
+          ...job.eligibility,
+          issues,
+          meetsAll: issues.length === 0,
+          upgradePolicy: upgradeCheck
+        }
+      });
+    }
+    return result;
+  }
+
+  async apply(jobPostId, studentId, payload = {}) {
+    const job = await store.getJobPost(jobPostId);
+    if (!job || job.status !== 'published') throw notFound('Published job post');
+    if (job.applicationDeadline && new Date(job.applicationDeadline) < new Date()) {
+      throw new Error('The application deadline for this role has passed.');
+    }
+    if (await store.findApplication(jobPostId, studentId)) {
+      throw new Error('You have already applied to this opportunity.');
+    }
+    const student = await studentStore.getStudentById(studentId);
+    if (!student) throw notFound('Student');
+
+    // Run eligibility checks (academics + placement upgrade policy)
+    const upgradeCheck = await placementPolicy.evaluateUpgradeEligibility(studentId, job);
+    const eligibilityIssues = checkEligibility(student, job, upgradeCheck);
+    if (eligibilityIssues.length) {
+      throw new Error(`You do not meet the eligibility criteria: ${eligibilityIssues.join('; ')}.`);
+    }
+
+    // Extract resumeId & custom form answers
+    const resumeId = typeof payload === 'object' && payload?.resumeId ? payload.resumeId : null;
+    const answers = typeof payload === 'object' && payload?.answers ? payload.answers : (typeof payload === 'object' && !payload?.resumeId ? payload : {});
+
+    // Resolve resume
+    let chosenResume = null;
+    if (resumeId) {
+      chosenResume = await resumeStore.findOwnedResume(studentId, resumeId);
+    }
+    if (!chosenResume) {
+      const resumes = await resumeStore.list(studentId);
+      chosenResume = resumes.find(r => r.isDefault) || resumes[0];
+    }
+    if (!chosenResume) {
+      throw new Error('Please upload at least one resume before submitting an application.');
+    }
+
+    const form = job.applicationForm || { fields: [] };
+    const safeAnswers = {};
+    for (const field of form.fields || []) {
+      const value = clean(answers?.[field.id]);
+      if (field.required && !value) throw new Error(`${field.label} is required.`);
+      if (value) safeAnswers[field.id] = value;
+    }
+
+    // Generate lightweight, verified immutable profile snapshot
+    const socials = {
+      linkedin: student.social?.linkedin || '',
+      github: student.social?.github || '',
+      portfolio: student.social?.portfolio || '',
+      leetcode: student.social?.leetcode || '',
+      codeforces: student.social?.codeforces || '',
+      codechef: student.social?.codechef || '',
+      links: Array.isArray(student.social?.links) ? student.social.links : []
+    };
+    if (Array.isArray(student.social?.links)) {
+      for (const item of student.social.links) {
+        const p = String(item.platform || '').toLowerCase();
+        if (p === 'github' && !socials.github) socials.github = item.url;
+        if ((p === 'portfolio' || p === 'website') && !socials.portfolio) socials.portfolio = item.url;
+        if (p === 'leetcode' && !socials.leetcode) socials.leetcode = item.url;
+        if (p === 'codeforces' && !socials.codeforces) socials.codeforces = item.url;
+        if (p === 'codechef' && !socials.codechef) socials.codechef = item.url;
+        if (p === 'linkedin' && !socials.linkedin) socials.linkedin = item.url;
+      }
+    }
+
+    const snapshot = {
+      studentId: student.id,
+      personal: {
+        fullName: student.personal.fullName,
+        email: student.personal.email,
+        phone: student.personal.phone || '',
+        dateOfBirth: student.personal.dateOfBirth || null
+      },
+      academic: {
+        rollNumber: student.academic?.rollNumber || student.rollNumber || '',
+        department: student.academic?.department || '',
+        batchYear: student.academic?.batchYear || '',
+        degreeProgram: student.academic?.degreeProgram || '',
+        currentSemester: student.academic?.currentSemester ?? null,
+        graduationYear: student.academic?.graduationYear ?? null,
+        cgpa: student.academic?.cgpa ?? null,
+        tenthPercentage: student.academic?.tenthPercentage ?? null,
+        twelfthPercentage: student.academic?.twelfthPercentage ?? null,
+        activeBacklogs: student.academic?.activeBacklogs ?? 0,
+        historicalBacklogs: student.academic?.historicalBacklogs ?? 0,
+        gapYears: student.academic?.gapYears ?? 0
+      },
+      selectedResume: {
+        id: chosenResume.id,
+        filename: chosenResume.filename || chosenResume.originalName || 'Resume.pdf',
+        url: `/api/resumes/${chosenResume.id}/file`,
+        driveLink: chosenResume.driveLink || null,
+        isCloud: Boolean(chosenResume.isCloud),
+        uploadedAt: chosenResume.uploadedAt
+      },
+      social: socials,
+      // Flat fallbacks for backward compatibility
+      fullName: student.personal.fullName,
+      email: student.personal.email,
+      phone: student.personal.phone || '',
+      rollNumber: student.academic?.rollNumber || student.rollNumber || '',
+      department: student.academic?.department || '',
+      batchYear: student.academic?.batchYear || '',
+      cgpa: student.academic?.cgpa ?? null,
+      tenthPercentage: student.academic?.tenthPercentage ?? null,
+      twelfthPercentage: student.academic?.twelfthPercentage ?? null,
+      activeBacklogs: student.academic?.activeBacklogs ?? 0,
+      appliedAt: new Date().toISOString()
+    };
+
+    return store.saveApplication({
+      jobPostId,
+      studentId,
+      resumeId: chosenResume.id,
+      selectedResume: snapshot.selectedResume,
+      profileSnapshot: snapshot,
+      answers: safeAnswers,
+      status: 'applied'
     });
   }
-  async apply(jobPostId, studentId, answers) { const job = await store.getJobPost(jobPostId); if (!job || job.status !== 'published') throw notFound('Published job post'); if (job.applicationDeadline && new Date(job.applicationDeadline) < new Date()) throw new Error('The application deadline for this role has passed.'); if (await store.findApplication(jobPostId, studentId)) throw new Error('You have already applied to this opportunity.'); const student = await studentStore.getStudentById(studentId); if (!student) throw notFound('Student'); const eligibilityIssues = checkEligibility(student, job); if (eligibilityIssues.length) throw new Error(`You do not meet the eligibility criteria: ${eligibilityIssues.join('; ')}.`); const form = job.applicationForm || { fields: [] }; const safeAnswers = {}; for (const field of form.fields || []) { const value = clean(answers?.[field.id]); if (field.required && !value) throw new Error(`${field.label} is required.`); if (value) safeAnswers[field.id] = value; } const snapshot = { fullName: student.personal.fullName, email: student.personal.email, phone: student.personal.phone || '', rollNumber: student.academic.rollNumber, department: student.academic.department, batchYear: student.academic.batchYear, interests: ensureLegacyInterests(student.interests), achievements: student.achievements, internships: student.internships || [] }; return store.saveApplication({ jobPostId, studentId, profileSnapshot: snapshot, answers: safeAnswers, status: 'applied' }); }
 }
 
 module.exports = new AdminContentService();

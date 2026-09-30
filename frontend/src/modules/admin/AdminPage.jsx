@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { BriefcaseBusiness, Building2, FileSearch, LayoutDashboard, UserPlus, Users, Search, Share2, History, Plus, Upload } from 'lucide-react';
+import { BriefcaseBusiness, Building2, FileSearch, LayoutDashboard, UserPlus, Users, Search, Share2, History, Plus, Upload, ShieldCheck } from 'lucide-react';
 import { useAuth } from '../../app/providers/AuthProvider';
 import { PageHeader } from '../../components/ui/PageHeader';
 import { OverviewCards } from '../../components/ui/StatCard';
@@ -8,6 +8,7 @@ import { parseCsv, downloadCsvFile, uploadToCloudinary } from './utils/adminHelp
 import { CompanyWorkspace, CompanyImport, CompanyFormDrawer } from './components/CompanyWorkspace';
 import { JobWorkspace, JobFormDrawer } from './components/JobWorkspace';
 import { ApplicationWorkspace } from './components/ApplicationWorkspace';
+import { PlacementPolicyWorkspace } from './components/PlacementPolicyWorkspace';
 import { UserWorkspace, UserImportModal } from './components/UserWorkspace';
 import { JDWorkspace } from './components/JDWorkspace';
 import { StudentSearchWorkspace } from './components/StudentSearchWorkspace';
@@ -25,6 +26,7 @@ const SECTION_META = {
   shares: { icon: Share2, label: 'Shares' },
   companies: { icon: Building2, label: 'Companies' },
   applications: { icon: Users, label: 'Applications' },
+  policy: { icon: ShieldCheck, label: 'Placement policy' },
   users: { icon: UserPlus, label: 'Users' },
   logs: { icon: History, label: 'Logs' },
   jd: { icon: FileSearch, label: 'JD analyser' }
@@ -207,6 +209,7 @@ export function AdminPage() {
             <button onClick={() => { window.location.hash = 'jobs'; }}><BriefcaseBusiness size={17} /><span>Review & publish job posts</span></button>
             <button onClick={() => { window.location.hash = 'students'; }}><Search size={17} /><span>Search & share students</span></button>
             <button onClick={() => { window.location.hash = 'applications'; }}><Users size={17} /><span>Review applications</span></button>
+            <button onClick={() => { window.location.hash = 'policy'; }}><ShieldCheck size={17} /><span>Placement upgrade policy</span></button>
             <button onClick={() => { window.location.hash = 'users'; }}><UserPlus size={17} /><span>Add or manage users</span></button>
             <button onClick={() => { window.location.hash = 'jd'; }}><FileSearch size={17} /><span>Analyse a job description</span></button>
           </div>
@@ -266,6 +269,7 @@ export function AdminPage() {
       {tab === 'applications' && (
         <ApplicationWorkspace jobs={jobs} applicationJobFilter={applicationJobFilter} setApplicationJobFilter={setApplicationJobFilter} applications={applications} loading={loading} updateApplication={updateApplication} saving={saving} />
       )}
+      {tab === 'policy' && <PlacementPolicyWorkspace />}
       {tab === 'users' && (
         <>
           <UserWorkspace users={users} saving={saving} loading={loading} reload={loadUsers} adminId={student?.id} />

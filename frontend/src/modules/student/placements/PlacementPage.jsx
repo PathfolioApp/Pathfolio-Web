@@ -4,6 +4,7 @@ import { opportunitiesApi } from './opportunitiesApi';
 import { Button } from '../../../components/ui/Button';
 import { EditedBadge } from '../../../components/ui/EditedBadge';
 import { useAuth } from '../../../app/providers/AuthProvider';
+import { JobApplyModal } from './JobApplyModal';
 import './PlacementPage.css';
 
 const formatISTDate = dateString => {
@@ -103,43 +104,10 @@ export function PlacementPage() {
 }
 
 function JobProfile({ job, onBack, onApplied }) {
-  const { student } = useAuth();
-  const [answers, setAnswers] = useState({});
-  const [applying, setApplying] = useState(false);
-  const [applyError, setApplyError] = useState('');
   const [applied, setApplied] = useState(Boolean(job.hasApplied));
+  const [isApplyModalOpen, setIsApplyModalOpen] = useState(false);
   const eligibilityIssues = job.eligibility?.issues || [];
   const deadlinePassed = Boolean(job.deadlinePassed);
-
-  useEffect(() => {
-    if (job?.applicationForm?.fields) {
-      const initialAnswers = {};
-      job.applicationForm.fields.forEach(field => {
-        let val = '';
-        if (field.id === 'rollNumber') val = student?.academic?.rollNumber || '';
-        if (field.id === 'department') val = student?.academic?.department || '';
-        if (field.id === 'batchYear') val = student?.academic?.batchYear || '';
-        if (field.id === 'cgpa') val = student?.academic?.cgpa || '';
-        initialAnswers[field.id] = val;
-      });
-      setAnswers(initialAnswers);
-    }
-  }, [job, student]);
-
-  const handleApply = async (e) => {
-    e.preventDefault();
-    setApplying(true);
-    setApplyError('');
-    try {
-      await opportunitiesApi.apply(job.id, answers);
-      setApplied(true);
-      onApplied?.();
-    } catch (err) {
-      setApplyError(err.message);
-    } finally {
-      setApplying(false);
-    }
-  };
 
   return (
     <main className="pf-placement-page">
@@ -191,51 +159,75 @@ function JobProfile({ job, onBack, onApplied }) {
               <div className="pf-apply-success">
                 <CheckCircle2 size={22} />
                 <h3>Application submitted</h3>
-                <p>You have successfully applied for this role. Your profile snapshot was included.</p>
+                <p>You have successfully applied for this role. Your profile snapshot and chosen resume were securely attached.</p>
+                {job.application?.selectedResume?.filename && (
+                  <p style={{ fontSize: '0.8rem', color: '#4b6352', margin: 0 }}>
+                    Attached resume: <strong>{job.application.selectedResume.filename}</strong>
+                  </p>
+                )}
                 <Button variant="outline" size="sm" onClick={onBack}>Browse more roles</Button>
               </div>
             ) : deadlinePassed ? (
-              <div className="pf-apply-closed"><AlertTriangle size={20} /><h3>Applications closed</h3><p>The deadline for this role passed on {formatISTDate(job.applicationDeadline)}.</p><Button variant="outline" size="sm" onClick={onBack}>Back to opportunities</Button></div>
+              <div className="pf-apply-closed">
+                <AlertTriangle size={20} />
+                <h3>Applications closed</h3>
+                <p>The deadline for this role passed on {formatISTDate(job.applicationDeadline)}.</p>
+                <Button variant="outline" size="sm" onClick={onBack}>Back to opportunities</Button>
+              </div>
             ) : (
-              <form className="pf-apply-form" onSubmit={handleApply}>
-                {(job.applicationForm?.fields?.length > 0 || (job.applicationUrl && job.applicationUrl.trim() !== '')) && (
-                  <h3>Apply for this role</h3>
-                )}
-                {applyError && <div style={{ color: '#98483d', fontSize: '0.85rem' }}>{applyError}</div>}
-                
-                {job.applicationForm?.fields?.map(field => (
-                  <label key={field.id}>
-                    {field.label} {field.required && '*'}
-                    <input 
-                      type={field.type === 'url' ? 'url' : 'text'} 
-                      required={field.required} 
-                      value={answers[field.id] || ''}
-                      onChange={e => setAnswers({ ...answers, [field.id]: e.target.value })}
-                    />
-                  </label>
-                ))}
-                
-                {job.applicationUrl && job.applicationUrl.trim() !== '' && (
-                  <Button type="button" onClick={() => window.open(job.applicationUrl, '_blank')} icon={ExternalLink}>
-                    External application
-                  </Button>
-                )}
-                
-                {job.applicationForm?.fields?.length > 0 && (
+              <div className="pf-apply-card-internal">
+                {job.applicationUrl && job.applicationUrl.trim() !== '' ? (
                   <>
-                    <Button type="submit" loading={applying} icon={Send} variant="primary">
-                      Submit application
+                    <h3>External application</h3>
+                    <p>This hiring partner accepts applications directly on their careers portal.</p>
+                    <Button type="button" onClick={() => window.open(job.applicationUrl, '_blank')} icon={ExternalLink} variant="primary">
+                      Apply on company site
                     </Button>
-                    <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: 0 }}>
-                      Your current profile information will be securely attached to this application.
-                    </p>
+                  </>
+                ) : (
+                  <>
+                    <h3>Apply for this role</h3>
+                    <p>Submit your verified Pathfolio credentials with 1-click. You can choose which resume to attach.</p>
+
+                    {eligibilityIssues.length > 0 ? (
+                      <div className="pf-apply-ineligible-banner">
+                        <AlertTriangle size={16} />
+                        <div>
+                          <strong>Eligibility criteria not met:</strong>
+                          <ul>
+                            {eligibilityIssues.map((issue, idx) => (
+                              <li key={idx}>{issue}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      </div>
+                    ) : (
+                      <Button
+                        type="button"
+                        variant="primary"
+                        icon={Send}
+                        onClick={() => setIsApplyModalOpen(true)}
+                      >
+                        Apply Now (1-Click)
+                      </Button>
+                    )}
                   </>
                 )}
-              </form>
+              </div>
             )}
           </div>
         </article>
       </div>
+
+      <JobApplyModal
+        isOpen={isApplyModalOpen}
+        onClose={() => setIsApplyModalOpen(false)}
+        job={job}
+        onApplied={(app) => {
+          setApplied(true);
+          onApplied?.(app);
+        }}
+      />
     </main>
   );
 }

@@ -34,7 +34,12 @@ class AdminContentStore {
       // Backfill updated_by for rows that predate the column (updated_at was
       // already NOT NULL from creation, so no backfill needed for it).
       try { await connection.query('UPDATE job_posts SET updated_by = created_by WHERE updated_by IS NULL'); } catch (error) { /* best-effort backfill */ }
-      await connection.query(`CREATE TABLE IF NOT EXISTS applications (id VARCHAR(64) PRIMARY KEY, job_post_id VARCHAR(64) NOT NULL, student_id VARCHAR(64) NOT NULL, profile_snapshot JSON NOT NULL, answers JSON NOT NULL, status VARCHAR(32) NOT NULL DEFAULT 'applied', internal_note TEXT, created_at DATETIME NOT NULL, updated_at DATETIME NOT NULL, UNIQUE KEY unique_job_student (job_post_id, student_id), FOREIGN KEY (job_post_id) REFERENCES job_posts(id))`);
+      await connection.query(`CREATE TABLE IF NOT EXISTS applications (id VARCHAR(64) PRIMARY KEY, job_post_id VARCHAR(64) NOT NULL, student_id VARCHAR(64) NOT NULL, resume_id VARCHAR(64) NULL, selected_resume JSON NULL, profile_snapshot JSON NOT NULL, answers JSON NOT NULL, status VARCHAR(32) NOT NULL DEFAULT 'applied', internal_note TEXT, created_at DATETIME NOT NULL, updated_at DATETIME NOT NULL, UNIQUE KEY unique_job_student (job_post_id, student_id), FOREIGN KEY (job_post_id) REFERENCES job_posts(id))`);
+      await connection.query(`CREATE TABLE IF NOT EXISTS placement_policy (id VARCHAR(32) PRIMARY KEY, config JSON NOT NULL, updated_by VARCHAR(64) NULL, updated_at DATETIME NOT NULL)`);
+      for (const statement of [
+        'ALTER TABLE applications ADD COLUMN resume_id VARCHAR(64) NULL',
+        'ALTER TABLE applications ADD COLUMN selected_resume JSON NULL'
+      ]) { try { await connection.query(statement); } catch (error) { if (error.code !== 'ER_DUP_FIELDNAME') throw error; } }
     } finally { connection.release(); }
   }
 
@@ -53,11 +58,123 @@ class AdminContentStore {
   async getJobPost(id) { if (this.pool) { const [rows] = await db.withRetry(() => this.pool.execute('SELECT j.*, c.name company_name, c.logo_url company_logo_url FROM job_posts j JOIN companies c ON c.id=j.company_id WHERE j.id=?', [id]), { label: 'getJobPost' }); return rows[0] ? { ...this.jobPost(rows[0]), companyName: rows[0].company_name, companyLogoUrl: rows[0].company_logo_url } : null; } const job = this.jobPosts.get(id); if (!job) return null; const comp = this.companies.get(job.companyId); return { ...this.jobPost(job), companyName: comp?.name || 'Unknown company', companyLogoUrl: comp?.logoUrl || '' }; }
   async archiveJobPost(id) { const job = await this.getJobPost(id); if (!job) return null; const record = { ...job, status: 'archived', publishedAt: null }; if (this.pool) { await this.pool.execute("UPDATE job_posts SET status='archived', published_at=NULL, updated_at=NOW() WHERE id=?", [id]); return record; } this.jobPosts.set(id, record); return record; }
   async saveJobPost(job) { const record = { ...job, id: job.id || this.makeId('job'), workMode: job.workMode || '', salaryMin: job.salaryMin ?? null, salaryMax: job.salaryMax ?? null, salaryCurrency: job.salaryCurrency || 'INR', requiredSkills: job.requiredSkills || [], eligibility: job.eligibility || { minCgpa: null, allowedDepartments: [], allowedBatches: [], maxActiveBacklogs: null }, applicationDeadline: job.applicationDeadline || null, attachments: job.attachments || [], applicationForm: job.applicationForm || { fields: [] }, audience: job.audience || { type: 'all' }, status: job.status || 'draft', publishedAt: job.publishedAt || null, updatedBy: job.updatedBy || null, createdAt: job.createdAt || new Date().toISOString(), updatedAt: new Date().toISOString() }; if (this.pool) { await this.pool.execute(`INSERT INTO job_posts (id,company_id,title,description,location,employment_type,application_url,work_mode,salary_min,salary_max,salary_currency,required_skills,eligibility,application_deadline,attachments,application_form,audience,review_note,submitted_at,reviewed_by,reviewed_at,status,published_at,created_by,updated_by,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON DUPLICATE KEY UPDATE company_id=VALUES(company_id),title=VALUES(title),description=VALUES(description),location=VALUES(location),employment_type=VALUES(employment_type),application_url=VALUES(application_url),work_mode=VALUES(work_mode),salary_min=VALUES(salary_min),salary_max=VALUES(salary_max),salary_currency=VALUES(salary_currency),required_skills=VALUES(required_skills),eligibility=VALUES(eligibility),application_deadline=VALUES(application_deadline),attachments=VALUES(attachments),application_form=VALUES(application_form),audience=VALUES(audience),review_note=VALUES(review_note),submitted_at=VALUES(submitted_at),reviewed_by=VALUES(reviewed_by),reviewed_at=VALUES(reviewed_at),status=VALUES(status),published_at=VALUES(published_at),created_by=VALUES(created_by),updated_by=VALUES(updated_by),updated_at=VALUES(updated_at)`, [record.id, record.companyId, record.title, record.description, record.location || null, record.employmentType || null, record.applicationUrl || null, record.workMode || null, record.salaryMin, record.salaryMax, record.salaryCurrency || null, JSON.stringify(record.requiredSkills), JSON.stringify(record.eligibility), record.applicationDeadline ? new Date(record.applicationDeadline) : null, JSON.stringify(record.attachments), JSON.stringify(record.applicationForm), JSON.stringify(record.audience), record.reviewNote || null, record.submittedAt ? new Date(record.submittedAt) : null, record.reviewedBy || null, record.reviewedAt ? new Date(record.reviewedAt) : null, record.status, record.publishedAt ? new Date(record.publishedAt) : null, record.createdBy, record.updatedBy, new Date(record.createdAt), new Date(record.updatedAt)]); } else this.jobPosts.set(record.id, record); return this.getJobPost(record.id); }
-  application(row) { if (!row) return null; return { id: row.id, jobPostId: row.job_post_id || row.jobPostId, studentId: row.student_id || row.studentId, profileSnapshot: this.parse(row.profile_snapshot || row.profileSnapshot, {}), answers: this.parse(row.answers, {}), status: row.status, internalNote: row.internal_note || row.internalNote || '', createdAt: new Date(row.created_at || row.createdAt).toISOString(), updatedAt: new Date(row.updated_at || row.updatedAt).toISOString() }; }
-  async listApplications(jobPostId) { if (this.pool) { const params = []; const filter = jobPostId ? ' WHERE job_post_id=?' : ''; if (jobPostId) params.push(jobPostId); const [rows] = await db.withRetry(() => this.pool.execute(`SELECT * FROM applications${filter} ORDER BY created_at DESC`, params), { label: 'listApplications' }); return rows.map(row => this.application(row)); } return [...this.applications.values()].filter(item => !jobPostId || item.jobPostId === jobPostId).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).map(row => this.application(row)); }
-  async getApplication(id) { if (this.pool) { const [rows] = await db.withRetry(() => this.pool.execute('SELECT * FROM applications WHERE id=?', [id]), { label: 'getApplication' }); return this.application(rows[0]); } return this.application(this.applications.get(id)); }
-  async findApplication(jobPostId, studentId) { if (this.pool) { const [rows] = await db.withRetry(() => this.pool.execute('SELECT * FROM applications WHERE job_post_id=? AND student_id=?', [jobPostId, studentId]), { label: 'findApplication' }); return this.application(rows[0]); } return this.application([...this.applications.values()].find(item => item.jobPostId === jobPostId && item.studentId === studentId)); }
-  async saveApplication(application) { const record = { ...application, id: application.id || this.makeId('app'), status: application.status || 'applied', internalNote: application.internalNote || '', createdAt: application.createdAt || new Date().toISOString(), updatedAt: new Date().toISOString() }; if (this.pool) { await this.pool.execute(`INSERT INTO applications (id,job_post_id,student_id,profile_snapshot,answers,status,internal_note,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?) ON DUPLICATE KEY UPDATE profile_snapshot=VALUES(profile_snapshot),answers=VALUES(answers),status=VALUES(status),internal_note=VALUES(internal_note),updated_at=VALUES(updated_at)`, [record.id, record.jobPostId, record.studentId, JSON.stringify(record.profileSnapshot), JSON.stringify(record.answers), record.status, record.internalNote, new Date(record.createdAt), new Date(record.updatedAt)]); } else this.applications.set(record.id, record); return this.application(record); }
+
+  application(row) {
+    if (!row) return null;
+    return {
+      id: row.id,
+      jobPostId: row.job_post_id || row.jobPostId,
+      studentId: row.student_id || row.studentId,
+      resumeId: row.resume_id || row.resumeId || null,
+      selectedResume: this.parse(row.selected_resume || row.selectedResume, null),
+      profileSnapshot: this.parse(row.profile_snapshot || row.profileSnapshot, {}),
+      answers: this.parse(row.answers, {}),
+      status: row.status,
+      internalNote: row.internal_note || row.internalNote || '',
+      createdAt: new Date(row.created_at || row.createdAt).toISOString(),
+      updatedAt: new Date(row.updated_at || row.updatedAt).toISOString()
+    };
+  }
+
+  async listApplications(jobPostId) {
+    if (this.pool) {
+      const params = [];
+      const filter = jobPostId ? ' WHERE job_post_id=?' : '';
+      if (jobPostId) params.push(jobPostId);
+      const [rows] = await db.withRetry(() => this.pool.execute(`SELECT * FROM applications${filter} ORDER BY created_at DESC`, params), { label: 'listApplications' });
+      return rows.map(row => this.application(row));
+    }
+    return [...this.applications.values()]
+      .filter(item => !jobPostId || item.jobPostId === jobPostId)
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+      .map(row => this.application(row));
+  }
+
+  async getApplication(id) {
+    if (this.pool) {
+      const [rows] = await db.withRetry(() => this.pool.execute('SELECT * FROM applications WHERE id=?', [id]), { label: 'getApplication' });
+      return this.application(rows[0]);
+    }
+    return this.application(this.applications.get(id));
+  }
+
+  async findApplication(jobPostId, studentId) {
+    if (this.pool) {
+      const [rows] = await db.withRetry(() => this.pool.execute('SELECT * FROM applications WHERE job_post_id=? AND student_id=?', [jobPostId, studentId]), { label: 'findApplication' });
+      return this.application(rows[0]);
+    }
+    return this.application([...this.applications.values()].find(item => item.jobPostId === jobPostId && item.studentId === studentId));
+  }
+
+  async saveApplication(application) {
+    const record = {
+      ...application,
+      id: application.id || this.makeId('app'),
+      resumeId: application.resumeId || null,
+      selectedResume: application.selectedResume || null,
+      status: application.status || 'applied',
+      internalNote: application.internalNote || '',
+      createdAt: application.createdAt || new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    if (this.pool) {
+      await this.pool.execute(
+        `INSERT INTO applications (id,job_post_id,student_id,resume_id,selected_resume,profile_snapshot,answers,status,internal_note,created_at,updated_at)
+         VALUES (?,?,?,?,?,?,?,?,?,?,?)
+         ON DUPLICATE KEY UPDATE resume_id=VALUES(resume_id),selected_resume=VALUES(selected_resume),profile_snapshot=VALUES(profile_snapshot),answers=VALUES(answers),status=VALUES(status),internal_note=VALUES(internal_note),updated_at=VALUES(updated_at)`,
+        [
+          record.id,
+          record.jobPostId,
+          record.studentId,
+          record.resumeId || null,
+          JSON.stringify(record.selectedResume || null),
+          JSON.stringify(record.profileSnapshot || {}),
+          JSON.stringify(record.answers || {}),
+          record.status,
+          record.internalNote,
+          new Date(record.createdAt),
+          new Date(record.updatedAt)
+        ]
+      );
+    } else {
+      this.applications.set(record.id, record);
+    }
+    return this.application(record);
+  }
+
+  async getPlacementPolicy() {
+    const defaultPolicy = {
+      enabled: true,
+      upgradeMultiplier: 1.5,
+      maxOffersAllowed: 2,
+      brackets: [
+        { id: 'tier_1', name: 'Standard (< 7 LPA)', minLpa: 0, maxLpa: 7.0 },
+        { id: 'tier_2', name: 'Dream (7 - 14 LPA)', minLpa: 7.0001, maxLpa: 14.0 },
+        { id: 'tier_3', name: 'Super Dream (14+ LPA)', minLpa: 14.0001, maxLpa: null }
+      ]
+    };
+    if (this.pool) {
+      const [rows] = await db.withRetry(() => this.pool.execute('SELECT * FROM placement_policy WHERE id=?', ['default']), { label: 'getPlacementPolicy' });
+      if (rows && rows[0]) {
+        return { ...defaultPolicy, ...this.parse(rows[0].config, {}) };
+      }
+    }
+    if (this.placementPolicy) return { ...defaultPolicy, ...this.placementPolicy };
+    return defaultPolicy;
+  }
+
+  async savePlacementPolicy(policyConfig, adminId) {
+    if (this.pool) {
+      await this.pool.execute(
+        `INSERT INTO placement_policy (id, config, updated_by, updated_at) VALUES (?, ?, ?, NOW())
+         ON DUPLICATE KEY UPDATE config=VALUES(config), updated_by=VALUES(updated_by), updated_at=NOW()`,
+        ['default', JSON.stringify(policyConfig), adminId || null]
+      );
+    } else {
+      this.placementPolicy = policyConfig;
+    }
+    return this.getPlacementPolicy();
+  }
 }
 
 module.exports = new AdminContentStore();
