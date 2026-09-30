@@ -11,6 +11,7 @@ router.get('/', c.get);
 router.patch('/personal', c.update('personal'));
 router.patch('/academic', c.update('academic'));
 router.patch('/interests', c.update('interests'));
+router.patch('/social', c.update('social'));
 router.patch('/family-context', c.update('familyContext'));
 router.get('/settings', c.get);
 router.patch('/settings', c.update('profileSettings'));

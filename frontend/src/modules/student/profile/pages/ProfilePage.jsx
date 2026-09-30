@@ -34,11 +34,13 @@ import { InternshipDetailModal } from '../components/InternshipDetailModal';
 import { formatInternshipTimeline, sortInternships } from '../utils/internshipUtils';
 import { ProjectDetailModal } from '../components/ProjectDetailModal';
 import { formatProjectTimeline, sortProjects } from '../utils/projectUtils';
+import { PRESET_PLATFORMS, getSocialPlatform, formatSocialUrl, displaySocialHandle, SocialIcon } from '../utils/socialUtils';
 import '../styles/ProfilePages.css';
 import '../styles/ProfileEligibility.css';
 import '../styles/AcademicStyles.css';
 import '../styles/InternshipStyles.css';
 import '../styles/ProjectStyles.css';
+import '../styles/SocialStyles.css';
 
 const Tags = ({ values, empty }) => values?.length ? <div className="pf-tags">{values.map(value => <span key={value}>{value}</span>)}</div> : <p className="pf-empty">{empty}</p>;
 const displayValue = value => value === undefined || value === '' ? 'Not added yet' : value;
@@ -170,6 +172,50 @@ export function ProfilePage() {
             <span className="pf-dot">·</span>
             <span>{academic.batchYear}</span>
           </p>
+
+          {/* Hero Social Profiles Quick-Links */}
+          {(() => {
+            const hasLinkedin = Boolean(student.social?.linkedin && student.social.linkedin.trim());
+            const extraLinks = Array.isArray(student.social?.links) ? student.social.links.filter(l => l.url && l.url.trim()) : [];
+            const hasAnySocial = hasLinkedin || extraLinks.length > 0;
+
+            return (
+              <div className="pf-hero-social-row">
+                {hasLinkedin && (
+                  <a
+                    href={formatSocialUrl(student.social.linkedin)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="pf-hero-social-pill pf-hero-social-pill--linkedin"
+                    title="LinkedIn Profile"
+                  >
+                    <SocialIcon platform="linkedin" size={14} />
+                    <span>LinkedIn</span>
+                    <ExternalLink size={11} className="pf-pill-external" />
+                  </a>
+                )}
+                {extraLinks.map(link => (
+                  <a
+                    key={link.id || link.url}
+                    href={formatSocialUrl(link.url)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`pf-hero-social-pill pf-hero-social-pill--${link.platform || 'other'}`}
+                    title={link.name || link.platform}
+                  >
+                    <SocialIcon platform={link.platform} size={14} />
+                    <span>{link.name || link.platform}</span>
+                    <ExternalLink size={11} className="pf-pill-external" />
+                  </a>
+                ))}
+                {!hasAnySocial && (
+                  <Link to="/profile/edit#social" className="pf-hero-add-social-btn">
+                    <ExternalLink size={12} /> Add LinkedIn & Coding Profiles
+                  </Link>
+                )}
+              </div>
+            );
+          })()}
         </div>
       </div>
 
@@ -528,6 +574,98 @@ export function ProfilePage() {
           <div><dt>10th percentage</dt><dd>{academic.tenthPercentage !== undefined && academic.tenthPercentage !== '' ? (String(academic.tenthPercentage).endsWith('%') ? academic.tenthPercentage : `${academic.tenthPercentage}%`) : 'Not added yet'}</dd></div>
           <div><dt>12th percentage</dt><dd>{academic.twelfthPercentage !== undefined && academic.twelfthPercentage !== '' ? (String(academic.twelfthPercentage).endsWith('%') ? academic.twelfthPercentage : `${academic.twelfthPercentage}%`) : 'Not added yet'}</dd></div>
         </div>
+      </section>
+
+      {/* Social & Professional Profiles Section */}
+      <section className="pf-profile-wide pf-social-section" id="social">
+        <div className="pf-title-row-enhanced">
+          <div className="pf-title-group">
+            <div className="pf-title-with-icon">
+              <Globe size={18} />
+              <span>Social & coding profiles</span>
+              {((student.social?.linkedin ? 1 : 0) + (Array.isArray(student.social?.links) ? student.social.links.length : 0)) > 0 && (
+                <span className="pf-count-pill">
+                  {(student.social?.linkedin ? 1 : 0) + (Array.isArray(student.social?.links) ? student.social.links.length : 0)}
+                </span>
+              )}
+            </div>
+            <p className="pf-card-subtitle">
+              Verified online presence, algorithmic platforms, repositories, and portfolios
+            </p>
+          </div>
+          <Link to="/profile/edit#social" className="pf-section-link">Manage profiles</Link>
+        </div>
+
+        {(() => {
+          const hasLinkedin = Boolean(student.social?.linkedin && student.social.linkedin.trim());
+          const extraLinks = Array.isArray(student.social?.links) ? student.social.links.filter(l => l.url && l.url.trim()) : [];
+          const hasAny = hasLinkedin || extraLinks.length > 0;
+
+          if (!hasAny) {
+            return (
+              <div className="pf-social-empty">
+                <Globe size={28} style={{ color: '#889e8e' }} />
+                <p>No social or coding profiles linked yet</p>
+                <span>Connect your LinkedIn, GitHub, LeetCode, and personal portfolio to showcase your online presence to recruiters.</span>
+                <Link to="/profile/edit#social" className="pf-btn-subtle" style={{ marginTop: '8px' }}>
+                  Add profiles now
+                </Link>
+              </div>
+            );
+          }
+
+          return (
+            <div className="pf-social-grid">
+              {hasLinkedin && (
+                <a
+                  href={formatSocialUrl(student.social.linkedin)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="pf-social-card"
+                >
+                  <div className="pf-social-card__icon-wrap">
+                    <SocialIcon platform="linkedin" size={22} />
+                  </div>
+                  <div className="pf-social-card__info">
+                    <div className="pf-social-card__title">
+                      LinkedIn
+                    </div>
+                    <span className="pf-social-card__handle">
+                      {displaySocialHandle(student.social.linkedin)}
+                    </span>
+                  </div>
+                  <ExternalLink size={15} className="pf-social-card__action" />
+                </a>
+              )}
+
+              {extraLinks.map(link => {
+                const meta = getSocialPlatform(link.platform);
+                return (
+                  <a
+                    key={link.id || link.url}
+                    href={formatSocialUrl(link.url)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="pf-social-card"
+                  >
+                    <div className="pf-social-card__icon-wrap">
+                      <SocialIcon platform={link.platform} size={22} />
+                    </div>
+                    <div className="pf-social-card__info">
+                      <div className="pf-social-card__title">
+                        {link.name || meta.name}
+                      </div>
+                      <span className="pf-social-card__handle">
+                        {displaySocialHandle(link.url)}
+                      </span>
+                    </div>
+                    <ExternalLink size={15} className="pf-social-card__action" />
+                  </a>
+                );
+              })}
+            </div>
+          );
+        })()}
       </section>
 
       {/* Internships & Experience Section */}

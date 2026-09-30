@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Award, ArrowLeft, FileText, UploadCloud, Trash2, Eye, Plus, Edit2, Briefcase, Building2, Calendar, MapPin, Globe, ExternalLink, FolderGit2, Code2, Star } from 'lucide-react';
+import { Award, ArrowLeft, FileText, UploadCloud, Trash2, Eye, Plus, Edit2, Briefcase, Building2, Calendar, MapPin, Globe, ExternalLink, FolderGit2, Code2, Star, ChevronDown } from 'lucide-react';
 import { useAuth } from '../../../../app/providers/AuthProvider';
 import { profileApi, uploadAcademicDocument } from '../services/profileApi';
 import { Modal } from '../../../../components/ui/Modal';
@@ -13,12 +13,14 @@ import { InternshipModal } from '../components/InternshipModal';
 import { formatInternshipTimeline, sortInternships } from '../utils/internshipUtils';
 import { ProjectModal } from '../components/ProjectModal';
 import { formatProjectTimeline, sortProjects } from '../utils/projectUtils';
+import { PRESET_PLATFORMS, getSocialPlatform, formatSocialUrl, SocialIcon } from '../utils/socialUtils';
 import '../styles/ProfilePages.css';
 import '../styles/ProfileEditEnhancements.css';
 import '../styles/AchievementModal.css';
 import '../styles/AcademicStyles.css';
 import '../styles/InternshipStyles.css';
 import '../styles/ProjectStyles.css';
+import '../styles/SocialStyles.css';
 
 const split = value => value.split(',').map(item => item.trim()).filter(Boolean);
 const cleanDescription = value => String(value || '').replace(/\*\*(.*?)\*\*/g, '$1');
@@ -178,12 +180,50 @@ export function ProfileEditPage() {
   const [editingProjectData, setEditingProjectData] = useState(null);
   const [deletingProjectId, setDeletingProjectId] = useState(null);
 
+  // Social Profiles State
+  const [social, setSocial] = useState(student.social || { linkedin: '', links: [] });
+  const [isAddSocialDropdownOpen, setIsAddSocialDropdownOpen] = useState(false);
+
   useEffect(() => {
     setPersonal(student.personal);
     setAcademic({ degreeProgram: 'B.Tech', graduationYear: 2027, ...student.academic });
     setInterests(student.interests);
     setFamily(student.familyContext || { details: '', consentGiven: false });
+    setSocial(student.social || { linkedin: '', links: [] });
   }, [student]);
+
+  const handleUpdateLinkedin = (url) => {
+    setSocial(prev => ({ ...prev, linkedin: url }));
+  };
+
+  const handleAddSocialLink = (platformId) => {
+    const meta = getSocialPlatform(platformId);
+    const newEntry = {
+      id: `soc_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+      platform: platformId,
+      name: meta.name === 'Other' ? '' : meta.name,
+      url: '',
+    };
+    setSocial(prev => ({
+      ...prev,
+      links: [...(prev.links || []), newEntry]
+    }));
+    setIsAddSocialDropdownOpen(false);
+  };
+
+  const handleUpdateSocialLink = (id, field, value) => {
+    setSocial(prev => ({
+      ...prev,
+      links: (prev.links || []).map(link => link.id === id ? { ...link, [field]: value } : link)
+    }));
+  };
+
+  const handleRemoveSocialLink = (id) => {
+    setSocial(prev => ({
+      ...prev,
+      links: (prev.links || []).filter(link => link.id !== id)
+    }));
+  };
 
   const save = async (section, data) => {
     setError('');
@@ -385,6 +425,7 @@ export function ProfileEditPage() {
     if (!location.hash) return undefined;
     let targetId = decodeURIComponent(location.hash.slice(1));
     if (targetId === 'project') targetId = 'projects';
+    if (targetId === 'social-links' || targetId === 'socials') targetId = 'social';
     const scrollToTarget = () => document.getElementById(targetId)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     const frame = window.requestAnimationFrame(scrollToTarget);
     const retry = window.setTimeout(scrollToTarget, 150);
@@ -427,6 +468,112 @@ export function ProfileEditPage() {
       <label>Date of birth<input type="date" max={new Date().toISOString().slice(0, 10)} value={(personal.dateOfBirth || '').slice(0, 10)} onChange={event => setPersonal({ ...personal, dateOfBirth: event.target.value })} /></label>
       <label>Phone number<input type="tel" placeholder="+91 98765 43210" value={personal.phone || ''} onChange={event => setPersonal({ ...personal, phone: event.target.value })} /></label>
       <label>Institutional email<input value={personal.email} disabled /></label>
+    </EditSection>
+
+    {/* Social & Professional Profiles Section */}
+    <EditSection
+      id="social"
+      title="Social & Professional Profiles"
+      note="Add your LinkedIn and connect your GitHub, LeetCode, Codeforces, and portfolio profiles."
+      onSave={() => save('social', social)}
+      saving={savingSection === 'social'}
+      saveLabel="Save social profiles"
+    >
+      <div className="pf-social-editor">
+        <div className="pf-social-links-list">
+          {/* LinkedIn Mandatory Row */}
+          <div className="pf-social-link-row">
+            <div className="pf-social-link-row__icon">
+              <SocialIcon platform="linkedin" size={18} />
+            </div>
+            <span className="pf-social-link-row__platform">
+              LinkedIn <span className="pf-social-required-star">*</span>
+            </span>
+            <input
+              type="url"
+              className="pf-social-link-row__url-input"
+              placeholder="https://linkedin.com/in/username"
+              value={social.linkedin || ''}
+              onChange={e => handleUpdateLinkedin(e.target.value)}
+            />
+            <div className="pf-social-link-row__action-placeholder" />
+          </div>
+
+          {/* Other Links */}
+          {(social.links || []).map((link, idx) => {
+            const meta = getSocialPlatform(link.platform);
+            const isOther = link.platform === 'other';
+
+            return (
+              <div key={link.id || idx} className="pf-social-link-row">
+                <div className="pf-social-link-row__icon">
+                  <SocialIcon platform={link.platform} size={18} />
+                </div>
+
+                {isOther ? (
+                  <input
+                    type="text"
+                    className="pf-social-link-row__name-input"
+                    placeholder="Platform name (e.g. Behance)"
+                    value={link.name || ''}
+                    onChange={e => handleUpdateSocialLink(link.id, 'name', e.target.value)}
+                  />
+                ) : (
+                  <span className="pf-social-link-row__platform">
+                    {meta.name}
+                  </span>
+                )}
+
+                <input
+                  type="url"
+                  className="pf-social-link-row__url-input"
+                  placeholder={meta.placeholder || 'https://...'}
+                  value={link.url || ''}
+                  onChange={e => handleUpdateSocialLink(link.id, 'url', e.target.value)}
+                />
+
+                <button
+                  type="button"
+                  className="pf-social-link-row__delete-btn"
+                  onClick={() => handleRemoveSocialLink(link.id)}
+                  title="Remove profile"
+                >
+                  <Trash2 size={15} />
+                </button>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Add Platform Dropdown Button */}
+        <div className="pf-add-social-dropdown-wrapper">
+          <button
+            type="button"
+            className="pf-add-social-trigger-btn"
+            onClick={() => setIsAddSocialDropdownOpen(prev => !prev)}
+          >
+            <Plus size={15} /> Add coding or social profile <ChevronDown size={14} />
+          </button>
+
+          {isAddSocialDropdownOpen && (
+            <div className="pf-add-social-menu">
+              {PRESET_PLATFORMS.filter(p => p.id !== 'linkedin').map(platform => (
+                <button
+                  key={platform.id}
+                  type="button"
+                  className="pf-add-social-menu-item"
+                  onClick={() => handleAddSocialLink(platform.id)}
+                >
+                  <span className="pf-add-social-menu-item-icon">
+                    <SocialIcon platform={platform.id} size={16} />
+                  </span>
+                  <span>{platform.name}</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
     </EditSection>
 
     {/* Schooling 10+2 Section */}

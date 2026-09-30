@@ -100,6 +100,7 @@ class RecruiterShareService {
       achievements: (student.achievements || []).map(item => ({ title: item.title, category: item.category, description: item.description, year: item.year })),
       internships: (student.internships || []).map(item => ({ companyName: item.companyName, role: item.role, startDate: item.startDate, endDate: item.endDate, currentlyWorking: item.currentlyWorking, location: item.location, workMode: item.workMode, description: item.description, skills: item.skills || [] })),
       projects: (student.projects || []).map(item => ({ projectName: item.projectName, projectType: item.projectType, startDate: item.startDate, endDate: item.endDate, currentlyWorking: item.currentlyWorking, description: item.description, contributions: item.contributions || [], technologies: item.technologies || [], projectUrl: item.projectUrl, repoUrl: item.repoUrl, featured: item.featured })),
+      social: student.social || { linkedin: '', links: [] },
       resumeUrl,
       emailShared: student.profileSettings?.visibility === 'public',
       email: student.profileSettings?.visibility === 'public' ? student.personal?.email || null : null,

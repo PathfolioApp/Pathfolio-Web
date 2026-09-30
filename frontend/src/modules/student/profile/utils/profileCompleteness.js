@@ -20,6 +20,7 @@ export function profileCompleteness(student) {
     student.interests?.passions?.length,
     student.achievements?.length,
     student.internships?.length,
+    Boolean(student.social?.linkedin && String(student.social.linkedin).trim()),
   ].filter(Boolean).length;
-  return Math.round((score / 19) * 100);
+  return Math.round((score / 20) * 100);
 }

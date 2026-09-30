@@ -143,6 +143,7 @@ const publicStudent = (student) => {
   }
   safe.internships = enrichInternships(safe.internships || []);
   safe.projects = enrichProjects(safe.projects || []);
+  safe.social = safe.social || { linkedin: '', links: [] };
   return { ...safe, onboarding: safe.onboarding || { completed: safe.status === 'onboarding_completed' || safe.status === 'active_onboarded', completedAt: safe.completedAt || safe.createdAt } };
 };
 

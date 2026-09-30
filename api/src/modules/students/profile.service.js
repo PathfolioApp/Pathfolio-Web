@@ -166,6 +166,18 @@ class ProfileService {
         ...(passions !== undefined ? { passions } : {})
       };
     }
+    else if (section === 'social') {
+      const linkedin = values.linkedin !== undefined ? String(values.linkedin || '').trim() : (student.social?.linkedin || '');
+      const links = Array.isArray(values.links)
+        ? values.links.map(l => ({
+            id: l.id || `soc_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+            platform: String(l.platform || 'other').trim().toLowerCase(),
+            name: String(l.name || l.platform || 'Other').trim(),
+            url: String(l.url || '').trim(),
+          })).filter(l => l.url)
+        : (student.social?.links || []);
+      student.social = { linkedin, links };
+    }
     else if (section === 'familyContext') { const details = String(values.details || '').trim(); if (details && !values.consentGiven) throw new Error('Explicit consent is required before saving sensitive context.'); student.familyContext = details ? { details, consentGiven: true } : { details: '', consentGiven: false }; }
     else if (section === 'profileSettings') student.profileSettings = { ...this.defaultSettings(), ...(student.profileSettings || {}), ...values, fieldVisibility: { ...(student.profileSettings?.fieldVisibility || {}), ...(values.fieldVisibility || {}) } };
     await store.saveStudent(student); return this.safe(student);
