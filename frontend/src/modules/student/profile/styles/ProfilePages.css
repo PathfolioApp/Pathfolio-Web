@@ -449,6 +449,12 @@ dd {
   color: #364438;
 }
 
+.pf-required-star {
+  color: #dc2626;
+  font-weight: 700;
+  margin-left: 2px;
+}
+
 .pf-edit-fields input,
 .pf-edit-fields textarea,
 .pf-edit-section select {

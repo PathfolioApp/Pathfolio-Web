@@ -464,9 +464,9 @@ export function ProfileEditPage() {
     </section>
 
     <EditSection title="Personal information" note="Your email and roll number are linked to your institutional identity and can't be changed here." onSave={() => save('personal', personal)} saving={savingSection === 'personal'}>
-      <label>Full name<input value={personal.fullName} onChange={event => setPersonal({ ...personal, fullName: event.target.value })} /></label>
-      <label>Date of birth<input type="date" max={new Date().toISOString().slice(0, 10)} value={(personal.dateOfBirth || '').slice(0, 10)} onChange={event => setPersonal({ ...personal, dateOfBirth: event.target.value })} /></label>
-      <label>Phone number<input type="tel" placeholder="+91 98765 43210" value={personal.phone || ''} onChange={event => setPersonal({ ...personal, phone: event.target.value })} /></label>
+      <label>Full name <span className="pf-required-star">*</span><input value={personal.fullName} onChange={event => setPersonal({ ...personal, fullName: event.target.value })} /></label>
+      <label>Date of birth <span className="pf-required-star">*</span><input type="date" max={new Date().toISOString().slice(0, 10)} value={(personal.dateOfBirth || '').slice(0, 10)} onChange={event => setPersonal({ ...personal, dateOfBirth: event.target.value })} /></label>
+      <label>Phone number <span className="pf-required-star">*</span><input type="tel" placeholder="+91 98765 43210" value={personal.phone || ''} onChange={event => setPersonal({ ...personal, phone: event.target.value })} /></label>
       <label>Institutional email<input value={personal.email} disabled /></label>
     </EditSection>
 
@@ -624,7 +624,7 @@ export function ProfileEditPage() {
               />
             </label>
             <label>
-              10th Percentage (%)
+              10th Percentage (%) <span className="pf-required-star">*</span>
               <input
                 type="number"
                 step="0.01"
@@ -692,7 +692,7 @@ export function ProfileEditPage() {
               />
             </label>
             <label>
-              12th Percentage (%)
+              12th Percentage (%) <span className="pf-required-star">*</span>
               <input
                 type="number"
                 step="0.01"
@@ -917,16 +917,16 @@ export function ProfileEditPage() {
 
     <div id="academic" />
     <EditSection id="eligibility" title="Academic eligibility" note="These fields help TNP determine eligibility for placement opportunities. Leave fields blank until you have verified information." onSave={() => save('academic', academic)} saving={savingSection === 'academic'}>
-      <label>Degree / program<input placeholder="B.Tech" value={academic.degreeProgram || ''} onChange={event => updateAcademic('degreeProgram', event.target.value)} /></label>
-      <label>Graduation year<input type="number" min="2027" placeholder="2027" value={academic.graduationYear || ''} onChange={event => updateAcademic('graduationYear', event.target.value)} /></label>
-      <label>Current semester<input type="number" min="1" max="20" value={academic.currentSemester || ''} onChange={event => updateAcademic('currentSemester', event.target.value)} /></label>
+      <label>Degree / program <span className="pf-required-star">*</span><input placeholder="B.Tech" value={academic.degreeProgram || ''} onChange={event => updateAcademic('degreeProgram', event.target.value)} /></label>
+      <label>Graduation year <span className="pf-required-star">*</span><input type="number" min="2027" placeholder="2027" value={academic.graduationYear || ''} onChange={event => updateAcademic('graduationYear', event.target.value)} /></label>
+      <label>Current semester <span className="pf-required-star">*</span><input type="number" min="1" max="20" value={academic.currentSemester || ''} onChange={event => updateAcademic('currentSemester', event.target.value)} /></label>
       <label>CGPA<input type="number" min="0" max="10" step="0.01" value={academic.cgpa ?? ''} onChange={event => updateAcademic('cgpa', event.target.value)} /></label>
-      <label>Active backlogs<input type="number" min="0" max="100" value={academic.activeBacklogs ?? ''} onChange={event => updateAcademic('activeBacklogs', event.target.value)} /></label>
-      <label>Historical backlogs<input type="number" min="0" max="100" value={academic.historicalBacklogs ?? ''} onChange={event => updateAcademic('historicalBacklogs', event.target.value)} /></label>
-      <label>Gap years<input type="number" min="0" max="20" step="0.5" value={academic.gapYears ?? ''} onChange={event => updateAcademic('gapYears', event.target.value)} /></label>
-      <label>Department<input value={academic.department} onChange={event => updateAcademic('department', event.target.value)} /></label>
-      <label>Batch year<input value={academic.batchYear} onChange={event => updateAcademic('batchYear', event.target.value)} /></label>
-      <label>Roll number<input value={academic.rollNumber} disabled /></label>
+      <label>Active backlogs <span className="pf-required-star">*</span><input type="number" min="0" max="100" value={academic.activeBacklogs ?? ''} onChange={event => updateAcademic('activeBacklogs', event.target.value)} /></label>
+      <label>Historical backlogs <span className="pf-required-star">*</span><input type="number" min="0" max="100" value={academic.historicalBacklogs ?? ''} onChange={event => updateAcademic('historicalBacklogs', event.target.value)} /></label>
+      <label>Gap years <span className="pf-required-star">*</span><input type="number" min="0" max="20" step="0.5" value={academic.gapYears ?? ''} onChange={event => updateAcademic('gapYears', event.target.value)} /></label>
+      <label>Department <span className="pf-required-star">*</span><input value={academic.department} onChange={event => updateAcademic('department', event.target.value)} /></label>
+      <label>Batch year <span className="pf-required-star">*</span><input value={academic.batchYear} onChange={event => updateAcademic('batchYear', event.target.value)} /></label>
+      <label>Roll number <span className="pf-required-star">*</span><input value={academic.rollNumber} disabled /></label>
     </EditSection>
 
     <div id="internships" />
@@ -1347,8 +1347,8 @@ export function ProfileEditPage() {
     </Modal>
 
     <EditSection id="interests" title="Hobbies & passions" note="Use commas to add or remove tags. Custom interests are welcome." onSave={() => save('interests', interests)} saving={savingSection === 'interests'}>
-      <label>Hobbies<input value={interests.hobbies.join(', ')} onChange={event => setInterests({ ...interests, hobbies: split(event.target.value) })} /></label>
-      <label>Passions / interests<input value={interests.passions.join(', ')} onChange={event => setInterests({ ...interests, passions: split(event.target.value) })} /></label>
+      <label>Hobbies <span className="pf-required-star">*</span><input value={interests.hobbies.join(', ')} onChange={event => setInterests({ ...interests, hobbies: split(event.target.value) })} /></label>
+      <label>Passions / interests <span className="pf-required-star">*</span><input value={interests.passions.join(', ')} onChange={event => setInterests({ ...interests, passions: split(event.target.value) })} /></label>
     </EditSection>
 
     <EditSection title="Personal / family context" note="Optional sensitive information. It is saved only with your explicit consent." onSave={() => save('family-context', family)} saving={savingSection === 'family-context'}>
