@@ -52,7 +52,8 @@ class StudentSearchService {
         .map(item => this.textOfInterest(item)).join(' ');
       const achievementText = (student.achievements || []).map(a => `${a.title} ${a.category} ${a.description}`.toLowerCase()).join(' ');
       const internshipText = (student.internships || []).map(i => `${i.companyName} ${i.role} ${(i.skills || []).join(' ')}`.toLowerCase()).join(' ');
-      const haystack = `${interestText} ${achievementText} ${internshipText}`;
+      const projectText = (student.projects || []).map(p => `${p.projectName} ${p.projectType} ${p.description} ${(p.technologies || []).join(' ')}`.toLowerCase()).join(' ');
+      const haystack = `${interestText} ${achievementText} ${internshipText} ${projectText}`;
       const hasAll = filters.skillMode === 'any'
         ? filters.skills.some(skill => haystack.includes(skill.toLowerCase()))
         : filters.skills.every(skill => haystack.includes(skill.toLowerCase()));

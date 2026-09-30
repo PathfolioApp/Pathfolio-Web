@@ -198,6 +198,54 @@ async function run() {
   assert.equal(result.body.student.personal.dateOfBirth, '2005-08-20');
   console.log('PASS personal profile update (DOB)');
 
+  // --- Projects Section CRUD & Validation -----------------------------
+  result = await request('/profile/projects', {
+    method: 'POST',
+    body: JSON.stringify({
+      projectName: 'Pathfolio Engine',
+      projectType: 'Open Source',
+      startDate: '2025-01-10',
+      endDate: '2025-06-20',
+      currentlyWorking: false,
+      description: 'Distributed portfolio platform with microservices.',
+      contributions: ['Designed R2 document vault', 'Engineered resilient session store'],
+      technologies: ['React', 'Node.js', 'PostgreSQL', 'Cloudflare R2'],
+      projectUrl: 'https://pathfolio.dev',
+      repoUrl: 'https://github.com/pathfolio/core',
+      featured: true,
+    })
+  });
+  expectStatus(result.response, 200, 'add project');
+  assert.ok(Array.isArray(result.body.student.projects));
+  const createdProject = result.body.student.projects.find(p => p.projectName === 'Pathfolio Engine');
+  assert.ok(createdProject, 'created project should be present in student.projects');
+  assert.equal(createdProject.featured, true);
+  assert.equal(createdProject.technologies.length, 4);
+  assert.equal(createdProject.contributions.length, 2);
+  console.log('PASS add project');
+
+  // Edit project
+  result = await request(`/profile/projects/${createdProject.id}`, {
+    method: 'PATCH',
+    body: JSON.stringify({
+      projectName: 'Pathfolio Engine Enterprise',
+      featured: false,
+    })
+  });
+  expectStatus(result.response, 200, 'edit project');
+  const updatedProject = result.body.student.projects.find(p => p.id === createdProject.id);
+  assert.equal(updatedProject.projectName, 'Pathfolio Engine Enterprise');
+  assert.equal(updatedProject.featured, false);
+  console.log('PASS edit project');
+
+  // Delete project
+  result = await request(`/profile/projects/${createdProject.id}`, {
+    method: 'DELETE',
+  });
+  expectStatus(result.response, 200, 'delete project');
+  assert.ok(!result.body.student.projects.some(p => p.id === createdProject.id));
+  console.log('PASS delete project');
+
   result = await request('/profile/family-context', {
     method: 'PATCH',
     body: JSON.stringify({ details: 'Private family detail', consentGiven: false })

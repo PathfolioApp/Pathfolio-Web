@@ -10,6 +10,9 @@ exports.deleteAchievement = (req,res) => send(res, () => profile.deleteAchieveme
 exports.addInternship = (req,res) => send(res, () => profile.addInternship(req.student.id, req.body));
 exports.editInternship = (req,res) => send(res, () => profile.editInternship(req.student.id, req.params.id, req.body));
 exports.deleteInternship = (req,res) => send(res, () => profile.deleteInternship(req.student.id, req.params.id));
+exports.addProject = (req,res) => send(res, () => profile.addProject(req.student.id, req.body));
+exports.editProject = (req,res) => send(res, () => profile.editProject(req.student.id, req.params.id, req.body));
+exports.deleteProject = (req,res) => send(res, () => profile.deleteProject(req.student.id, req.params.id));
 exports.changePassword = async (req,res) => { try { await profile.changePassword(req.student.id, req.body.currentPassword, req.body.newPassword); res.json({ success: true, message: 'Password updated securely.' }); } catch (e) { res.status(400).json({ success: false, message: e.message }); } };
 exports.setAvatar = (req,res) => send(res, () => profile.setAvatar(req.student.id, req.body.avatarUrl));
 exports.uploadSignature = (req, res) => {
@@ -17,6 +20,8 @@ exports.uploadSignature = (req, res) => {
   const timestamp = Math.floor(Date.now() / 1000);
   const folder = req.body?.folder === 'internships'
     ? `${config.cloudinary.uploadFolder}/company-logos`
+    : req.body?.folder === 'projects'
+    ? `${config.cloudinary.uploadFolder}/projects`
     : `${config.cloudinary.uploadFolder}/avatars`;
   const signature = cloudinary.utils.api_sign_request({ timestamp, folder }, config.cloudinary.apiSecret);
   res.json({ success: true, cloudName: config.cloudinary.cloudName, apiKey: config.cloudinary.apiKey, timestamp, folder, signature });
@@ -46,6 +51,47 @@ exports.getInternshipCertificateFile = async (req, res) => {
       id
     );
     const safeFilename = String(filename || 'certificate.pdf').replace(/"/g, '');
+    res.setHeader('Content-Type', contentType || 'application/pdf');
+    if (contentLength) res.setHeader('Content-Length', String(contentLength));
+    res.setHeader('Content-Disposition', `${mode === 'download' ? 'attachment' : 'inline'}; filename="${safeFilename}"`);
+    if (typeof body.pipe === 'function') {
+      body.pipe(res);
+    } else if (typeof body.transformToByteArray === 'function') {
+      const bytes = await body.transformToByteArray();
+      res.send(Buffer.from(bytes));
+    } else {
+      const buffer = Buffer.isBuffer(body) ? body : Buffer.from(body);
+      res.send(buffer);
+    }
+  } catch (e) {
+    res.status(e.statusCode || 400).json({ success: false, message: e.message });
+  }
+};
+exports.uploadProjectDocument = async (req, res) => {
+  try {
+    const student = await profile.uploadProjectDocument(req.student.id, req.params.id, req.file);
+    res.json({ success: true, student });
+  } catch (e) {
+    res.status(e.statusCode || 400).json({ success: false, message: e.message });
+  }
+};
+exports.deleteProjectDocument = async (req, res) => {
+  try {
+    const student = await profile.deleteProjectDocument(req.student.id, req.params.id);
+    res.json({ success: true, student });
+  } catch (e) {
+    res.status(e.statusCode || 400).json({ success: false, message: e.message });
+  }
+};
+exports.getProjectDocumentFile = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { mode } = req.query;
+    const { body, contentType, contentLength, filename } = await profile.getProjectDocument(
+      req.student.id,
+      id
+    );
+    const safeFilename = String(filename || 'project_document.pdf').replace(/"/g, '');
     res.setHeader('Content-Type', contentType || 'application/pdf');
     if (contentLength) res.setHeader('Content-Length', String(contentLength));
     res.setHeader('Content-Disposition', `${mode === 'download' ? 'attachment' : 'inline'}; filename="${safeFilename}"`);

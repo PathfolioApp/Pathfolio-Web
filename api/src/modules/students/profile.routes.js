@@ -3,6 +3,7 @@ const auth = require('../../shared/authenticate');
 const c = require('./profile.controller');
 const { academicUpload } = require('./academicUpload');
 const { internshipUpload } = require('./internshipUpload');
+const { projectUpload } = require('./projectUpload');
 
 router.use(auth);
 
@@ -21,6 +22,14 @@ router.delete('/internships/:id', c.deleteInternship);
 router.post('/internships/:id/certificate', internshipUpload, c.uploadInternshipCertificate);
 router.get('/internships/:id/certificate/file', c.getInternshipCertificateFile);
 router.delete('/internships/:id/certificate', c.deleteInternshipCertificate);
+
+// Projects
+router.post('/projects', c.addProject);
+router.patch('/projects/:id', c.editProject);
+router.delete('/projects/:id', c.deleteProject);
+router.post('/projects/:id/document', projectUpload, c.uploadProjectDocument);
+router.get('/projects/:id/document/file', c.getProjectDocumentFile);
+router.delete('/projects/:id/document', c.deleteProjectDocument);
 
 // Achievements
 router.post('/achievements', c.addAchievement);

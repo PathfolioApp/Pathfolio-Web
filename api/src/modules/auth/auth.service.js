@@ -83,6 +83,58 @@ const enrichInternships = (internships) => {
   });
 };
 
+const sortProjects = (projects) => {
+  if (!Array.isArray(projects)) return [];
+  return [...projects].sort((a, b) => {
+    const aFeat = Boolean(a.featured);
+    const bFeat = Boolean(b.featured);
+    if (aFeat && !bFeat) return -1;
+    if (!aFeat && bFeat) return 1;
+
+    if (a.currentlyWorking && !b.currentlyWorking) return -1;
+    if (!a.currentlyWorking && b.currentlyWorking) return 1;
+
+    if (a.currentlyWorking && b.currentlyWorking) {
+      const aStart = a.startDate ? new Date(a.startDate).getTime() : 0;
+      const bStart = b.startDate ? new Date(b.startDate).getTime() : 0;
+      if (aStart !== bStart) return bStart - aStart;
+    } else {
+      const aEnd = a.endDate ? new Date(a.endDate).getTime() : 0;
+      const bEnd = b.endDate ? new Date(b.endDate).getTime() : 0;
+      if (aEnd !== bEnd) return bEnd - aEnd;
+
+      const aStart = a.startDate ? new Date(a.startDate).getTime() : 0;
+      const bStart = b.startDate ? new Date(b.startDate).getTime() : 0;
+      if (aStart !== bStart) return bStart - aStart;
+    }
+
+    const aCreated = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+    const bCreated = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+    if (aCreated && bCreated && aCreated !== bCreated) {
+      return bCreated - aCreated;
+    }
+    return String(a.id || '').localeCompare(String(b.id || ''));
+  });
+};
+
+const enrichProjects = (projects) => {
+  if (!Array.isArray(projects)) return [];
+  const sorted = sortProjects(projects);
+  return sorted.map(item => {
+    if (item.document?.fileId) {
+      return {
+        ...item,
+        document: {
+          ...item.document,
+          fileUrl: `/api/profile/projects/${item.id}/document/file?mode=view`,
+          downloadUrl: `/api/profile/projects/${item.id}/document/file?mode=download`
+        }
+      };
+    }
+    return item;
+  });
+};
+
 const publicStudent = (student) => {
   if (!student) return null;
   const { passwordHash, ...safe } = student;
@@ -90,6 +142,7 @@ const publicStudent = (student) => {
     safe.academic = enrichAcademicDocuments(safe.academic);
   }
   safe.internships = enrichInternships(safe.internships || []);
+  safe.projects = enrichProjects(safe.projects || []);
   return { ...safe, onboarding: safe.onboarding || { completed: safe.status === 'onboarding_completed' || safe.status === 'active_onboarded', completedAt: safe.completedAt || safe.createdAt } };
 };
 

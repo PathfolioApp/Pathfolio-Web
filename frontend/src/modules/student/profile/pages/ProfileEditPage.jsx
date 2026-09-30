@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Award, ArrowLeft, FileText, UploadCloud, Trash2, Eye, Plus, Edit2, Briefcase, Building2, Calendar, MapPin, Globe, ExternalLink } from 'lucide-react';
+import { Award, ArrowLeft, FileText, UploadCloud, Trash2, Eye, Plus, Edit2, Briefcase, Building2, Calendar, MapPin, Globe, ExternalLink, FolderGit2, Code2, Star } from 'lucide-react';
 import { useAuth } from '../../../../app/providers/AuthProvider';
 import { profileApi, uploadAcademicDocument } from '../services/profileApi';
 import { Modal } from '../../../../components/ui/Modal';
@@ -11,11 +11,14 @@ import { AchievementIcon } from '../../../../components/ui/AchievementIcon';
 import { ACHIEVEMENT_CATEGORIES } from '../../../auth/onboarding/types/config';
 import { InternshipModal } from '../components/InternshipModal';
 import { formatInternshipTimeline, sortInternships } from '../utils/internshipUtils';
+import { ProjectModal } from '../components/ProjectModal';
+import { formatProjectTimeline, sortProjects } from '../utils/projectUtils';
 import '../styles/ProfilePages.css';
 import '../styles/ProfileEditEnhancements.css';
 import '../styles/AchievementModal.css';
 import '../styles/AcademicStyles.css';
 import '../styles/InternshipStyles.css';
+import '../styles/ProjectStyles.css';
 
 const split = value => value.split(',').map(item => item.trim()).filter(Boolean);
 const cleanDescription = value => String(value || '').replace(/\*\*(.*?)\*\*/g, '$1');
@@ -169,6 +172,11 @@ export function ProfileEditPage() {
   const [isInternshipModalOpen, setIsInternshipModalOpen] = useState(false);
   const [editingInternshipData, setEditingInternshipData] = useState(null);
   const [deletingInternshipId, setDeletingInternshipId] = useState(null);
+
+  // Project Modal State
+  const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
+  const [editingProjectData, setEditingProjectData] = useState(null);
+  const [deletingProjectId, setDeletingProjectId] = useState(null);
 
   useEffect(() => {
     setPersonal(student.personal);
@@ -343,11 +351,40 @@ export function ProfileEditPage() {
     }
   };
 
+  const handleOpenAddProject = () => {
+    setEditingProjectData(null);
+    setIsProjectModalOpen(true);
+  };
+
+  const handleOpenEditProject = (project) => {
+    setEditingProjectData(project);
+    setIsProjectModalOpen(true);
+  };
+
+  const handleDeleteProject = async (id, projectName) => {
+    if (!window.confirm(`Are you sure you want to remove project "${projectName || 'this project'}"?`)) {
+      return;
+    }
+    setDeletingProjectId(id);
+    setError('');
+    setMessage('');
+    try {
+      await profileApi.deleteProject(id);
+      await refresh();
+      setMessage('Project removed successfully.');
+    } catch (delError) {
+      setError(delError.message || 'Failed to remove project.');
+    } finally {
+      setDeletingProjectId(null);
+    }
+  };
+
   const updateAcademic = (field, value) => setAcademic(previous => ({ ...previous, [field]: value }));
 
   useEffect(() => {
     if (!location.hash) return undefined;
-    const targetId = decodeURIComponent(location.hash.slice(1));
+    let targetId = decodeURIComponent(location.hash.slice(1));
+    if (targetId === 'project') targetId = 'projects';
     const scrollToTarget = () => document.getElementById(targetId)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     const frame = window.requestAnimationFrame(scrollToTarget);
     const retry = window.setTimeout(scrollToTarget, 150);
@@ -897,6 +934,170 @@ export function ProfileEditPage() {
       })()}
     </EditSection>
 
+    <div id="projects" />
+    <EditSection
+      id="projects-section"
+      title="Projects & technical work"
+      note="Showcase your personal, academic, open-source, or hackathon engineering projects."
+      headerAction={
+        <button
+          type="button"
+          className="pf-achievement-add-button"
+          onClick={handleOpenAddProject}
+        >
+          <Plus size={16} /> Add project
+        </button>
+      }
+    >
+      {(() => {
+        const sortedProjects = sortProjects(student.projects);
+        return sortedProjects.length > 0 ? (
+          <div className="pf-project-editor-list">
+            {sortedProjects.map(project => {
+              const timelineStr = formatProjectTimeline(project.startDate, project.endDate, project.currentlyWorking);
+
+              return (
+                <article
+                  className={`pf-project-editor ${project.featured ? 'pf-project-editor--featured' : ''}`}
+                  key={project.id}
+                >
+                  {project.thumbnail ? (
+                    <img
+                      src={project.thumbnail}
+                      alt={project.projectName}
+                      className="pf-project-editor__thumb"
+                    />
+                  ) : (
+                    <div className="pf-project-editor__monogram">
+                      <FolderGit2 size={24} />
+                      <span className="pf-project-editor__monogram-text">Project</span>
+                    </div>
+                  )}
+
+                  <div className="pf-project-editor__body">
+                    <div className="pf-project-editor__header">
+                      <div className="pf-project-editor__title-row">
+                        <strong>{project.projectName}</strong>
+                        {project.featured && (
+                          <span className="pf-project-pill pf-project-pill--featured">
+                            <Star size={11} style={{ fill: '#d97706', color: '#d97706' }} /> Featured
+                          </span>
+                        )}
+                        {project.projectType && (
+                          <span className="pf-project-pill pf-project-pill--type">
+                            {project.projectType}
+                          </span>
+                        )}
+                        {project.currentlyWorking && (
+                          <span className="pf-project-pill pf-project-pill--present">
+                            <span className="pf-pulse-dot" /> Present
+                          </span>
+                        )}
+                      </div>
+                      <div className="pf-project-editor__actions">
+                        <button
+                          type="button"
+                          onClick={() => handleOpenEditProject(project)}
+                          title="Edit project details"
+                        >
+                          <Edit2 size={13} /> Edit
+                        </button>
+                        <button
+                          type="button"
+                          className="pf-btn-danger"
+                          disabled={deletingProjectId === project.id}
+                          onClick={() => handleDeleteProject(project.id, project.projectName)}
+                          title="Remove project"
+                        >
+                          <Trash2 size={13} /> {deletingProjectId === project.id ? '...' : 'Remove'}
+                        </button>
+                      </div>
+                    </div>
+
+                    {timelineStr && (
+                      <div className="pf-project-editor__meta">
+                        <span>
+                          <Calendar size={13} style={{ display: 'inline', verticalAlign: 'text-bottom', marginRight: '5px' }} />
+                          {timelineStr}
+                        </span>
+                      </div>
+                    )}
+
+                    {project.description && (
+                      <p className="pf-project-editor__desc">
+                        {project.description}
+                      </p>
+                    )}
+
+                    {((Array.isArray(project.technologies) && project.technologies.length > 0) || project.projectUrl || project.repoUrl || project.document?.fileUrl) && (
+                      <div className="pf-project-editor__footer">
+                        {Array.isArray(project.technologies) && project.technologies.length > 0 && (
+                          <div className="pf-project-tags">
+                            {project.technologies.map((tech, i) => (
+                              <span key={i} className="pf-project-tag">{tech}</span>
+                            ))}
+                          </div>
+                        )}
+
+                        {(project.projectUrl || project.repoUrl || project.document?.fileUrl) && (
+                          <div className="pf-project-editor__links">
+                            {project.projectUrl && (
+                              <a
+                                href={project.projectUrl.startsWith('http') ? project.projectUrl : `https://${project.projectUrl}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="pf-project-link pf-project-link--sm"
+                              >
+                                <Globe size={11} /> Demo
+                              </a>
+                            )}
+                            {project.repoUrl && (
+                              <a
+                                href={project.repoUrl.startsWith('http') ? project.repoUrl : `https://${project.repoUrl}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="pf-project-link pf-project-link--sm"
+                              >
+                                <Code2 size={11} /> Repository
+                              </a>
+                            )}
+                            {project.document?.fileUrl && (
+                              <a
+                                href={project.document.fileUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="pf-doc-btn pf-doc-btn--sm"
+                              >
+                                <FileText size={11} /> Document attached
+                              </a>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="pf-project-empty-card">
+            <FolderGit2 size={32} style={{ color: '#88998c' }} />
+            <p>No projects added yet</p>
+            <span>Showcase your technical and creative work, hackathon submissions, and applications.</span>
+            <button
+              type="button"
+              className="pf-achievement-add-button"
+              style={{ marginTop: '8px' }}
+              onClick={handleOpenAddProject}
+            >
+              <Plus size={15} /> Add a project
+            </button>
+          </div>
+        );
+      })()}
+    </EditSection>
+
     <EditSection id="achievements" title="Achievements" note="Your certifications, hackathons, projects, and milestones." headerAction={<button type="button" className="pf-achievement-add-button" onClick={() => setIsAddAchievementOpen(true)}><Award size={16} /> Add achievement</button>}>
       <div className="pf-achievement-editor-list">
         {student.achievements.map(achievement =>
@@ -1018,6 +1219,19 @@ export function ProfileEditPage() {
       onSaved={async () => {
         await refresh();
         setMessage(editingInternshipData ? 'Internship updated successfully.' : 'New internship added successfully.');
+      }}
+    />
+
+    <ProjectModal
+      isOpen={isProjectModalOpen}
+      initialData={editingProjectData}
+      onClose={() => {
+        setIsProjectModalOpen(false);
+        setEditingProjectData(null);
+      }}
+      onSaved={async () => {
+        await refresh();
+        setMessage(editingProjectData ? 'Project updated successfully.' : 'New project added successfully.');
       }}
     />
   </div>;

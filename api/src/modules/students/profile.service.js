@@ -75,6 +75,40 @@ const sortInternships = (internships) => {
     return String(a.id || '').localeCompare(String(b.id || ''));
   });
 };
+
+const sortProjects = (projects) => {
+  if (!Array.isArray(projects)) return [];
+  return [...projects].sort((a, b) => {
+    const aFeat = Boolean(a.featured);
+    const bFeat = Boolean(b.featured);
+    if (aFeat && !bFeat) return -1;
+    if (!aFeat && bFeat) return 1;
+
+    if (a.currentlyWorking && !b.currentlyWorking) return -1;
+    if (!a.currentlyWorking && b.currentlyWorking) return 1;
+
+    if (a.currentlyWorking && b.currentlyWorking) {
+      const aStart = a.startDate ? new Date(a.startDate).getTime() : 0;
+      const bStart = b.startDate ? new Date(b.startDate).getTime() : 0;
+      if (aStart !== bStart) return bStart - aStart;
+    } else {
+      const aEnd = a.endDate ? new Date(a.endDate).getTime() : 0;
+      const bEnd = b.endDate ? new Date(b.endDate).getTime() : 0;
+      if (aEnd !== bEnd) return bEnd - aEnd;
+
+      const aStart = a.startDate ? new Date(a.startDate).getTime() : 0;
+      const bStart = b.startDate ? new Date(b.startDate).getTime() : 0;
+      if (aStart !== bStart) return bStart - aStart;
+    }
+
+    const aCreated = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+    const bCreated = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+    if (aCreated && bCreated && aCreated !== bCreated) {
+      return bCreated - aCreated;
+    }
+    return String(a.id || '').localeCompare(String(b.id || ''));
+  });
+};
 class ProfileService {
   async current(id) { return auth.getStudentForSession((await store.createSession(id))); }
   async get(id) { return this.safe(await store.getStudentById(id)); }
@@ -726,6 +760,276 @@ class ProfileService {
       contentType: object.ContentType || cert.contentType || 'application/pdf',
       contentLength: object.ContentLength,
       filename: cert.filename || 'certificate.pdf',
+    };
+  }
+
+  validateProject(data, isUpdate = false) {
+    const projectName = String(data.projectName || '').trim();
+    if (!isUpdate || data.projectName !== undefined) {
+      if (!projectName) {
+        const err = new Error('Project name is required.');
+        err.statusCode = 400;
+        throw err;
+      }
+    }
+
+    const currentlyWorking = Boolean(data.currentlyWorking);
+    const startDate = data.startDate ? String(data.startDate).trim().slice(0, 10) : '';
+    let endDate = data.endDate ? String(data.endDate).trim().slice(0, 10) : '';
+
+    if (currentlyWorking) {
+      endDate = '';
+    }
+
+    const todayStr = new Date().toISOString().split('T')[0];
+    if (startDate && startDate > todayStr) {
+      const err = new Error('Start date cannot be in the future.');
+      err.statusCode = 400;
+      throw err;
+    }
+
+    if (!currentlyWorking && endDate && endDate > todayStr) {
+      const err = new Error('End date cannot be in the future for completed projects.');
+      err.statusCode = 400;
+      throw err;
+    }
+
+    if (startDate && endDate && !currentlyWorking) {
+      if (new Date(startDate) > new Date(endDate)) {
+        const err = new Error('Start date cannot be later than end date.');
+        err.statusCode = 400;
+        throw err;
+      }
+    }
+
+    let contributions = [];
+    if (Array.isArray(data.contributions)) {
+      contributions = data.contributions.map(c => String(c || '').trim()).filter(Boolean);
+    } else if (typeof data.contributions === 'string') {
+      contributions = data.contributions.split('\n').map(c => c.trim()).filter(Boolean);
+    }
+
+    let technologies = [];
+    if (Array.isArray(data.technologies)) {
+      technologies = [...new Set(data.technologies.map(t => String(t || '').trim()).filter(Boolean))];
+    } else if (typeof data.technologies === 'string') {
+      technologies = [...new Set(data.technologies.split(',').map(t => t.trim()).filter(Boolean))];
+    }
+
+    return {
+      projectName,
+      projectType: String(data.projectType || 'Personal').trim(),
+      startDate: startDate || null,
+      endDate: endDate || null,
+      currentlyWorking,
+      description: String(data.description || '').trim(),
+      contributions,
+      technologies,
+      projectUrl: String(data.projectUrl || '').trim(),
+      repoUrl: String(data.repoUrl || '').trim(),
+      thumbnail: String(data.thumbnail || '').trim(),
+      featured: Boolean(data.featured),
+    };
+  }
+
+  async addProject(id, data) {
+    const student = await store.getStudentById(id);
+    if (!student) {
+      const error = new Error('Student not found.');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    const validated = this.validateProject(data, false);
+    const projectId = `proj_${Date.now()}_${crypto.randomBytes(3).toString('hex')}`;
+    const newProject = {
+      id: projectId,
+      ...validated,
+      document: null,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    student.projects = Array.isArray(student.projects) ? [...student.projects] : [];
+    student.projects = sortProjects([...student.projects, newProject]);
+
+    await store.saveStudent(student);
+    return this.get(id);
+  }
+
+  async editProject(id, projectId, data) {
+    const student = await store.getStudentById(id);
+    if (!student) {
+      const error = new Error('Student not found.');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    student.projects = Array.isArray(student.projects) ? [...student.projects] : [];
+    const index = student.projects.findIndex(p => p.id === projectId);
+    if (index < 0) {
+      const error = new Error('Project not found.');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    const current = student.projects[index];
+    const validated = this.validateProject({ ...current, ...data }, true);
+    student.projects[index] = {
+      ...current,
+      ...validated,
+      id: current.id,
+      document: current.document || null,
+      updatedAt: new Date().toISOString(),
+    };
+    student.projects = sortProjects(student.projects);
+
+    await store.saveStudent(student);
+    return this.get(id);
+  }
+
+  async deleteProject(id, projectId) {
+    const student = await store.getStudentById(id);
+    if (!student) {
+      const error = new Error('Student not found.');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    student.projects = Array.isArray(student.projects) ? [...student.projects] : [];
+    const index = student.projects.findIndex(p => p.id === projectId);
+    if (index < 0) {
+      const error = new Error('Project not found.');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    const [removed] = student.projects.splice(index, 1);
+    if (removed?.document?.key) {
+      await r2Service.deleteFile(removed.document.key).catch(() => {});
+    }
+
+    await store.saveStudent(student);
+    return this.get(id);
+  }
+
+  async uploadProjectDocument(id, projectId, file) {
+    if (!file || !file.buffer) {
+      const error = new Error('Please select a document file to upload.');
+      error.statusCode = 400;
+      throw error;
+    }
+
+    const isPdf = file.mimetype === 'application/pdf' || /\.pdf$/i.test(file.originalname || '');
+    if (!isPdf) {
+      const error = new Error('Only PDF documents are allowed for project attachments.');
+      error.statusCode = 400;
+      throw error;
+    }
+    validatePdfBuffer(file.buffer);
+
+    const student = await store.getStudentById(id);
+    if (!student) {
+      const error = new Error('Student not found.');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    student.projects = Array.isArray(student.projects) ? [...student.projects] : [];
+    const index = student.projects.findIndex(p => p.id === projectId);
+    if (index < 0) {
+      const error = new Error('Project not found.');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    const current = student.projects[index];
+    const oldKey = current.document?.key;
+    const sanitizedName = sanitizeDocFilename(file.originalname, `project_${projectId}.pdf`);
+    const fileId = `projdoc_${Date.now()}_${crypto.randomBytes(3).toString('hex')}`;
+    const key = `students/${id}/projects/doc_${projectId}_${Date.now()}.pdf`;
+
+    await r2Service.uploadFile(file.buffer, key, 'application/pdf');
+    if (oldKey) await r2Service.deleteFile(oldKey).catch(() => {});
+
+    student.projects[index] = {
+      ...current,
+      document: {
+        fileId,
+        key,
+        filename: sanitizedName,
+        size: file.size,
+        contentType: file.mimetype || 'application/pdf',
+        uploadedAt: new Date().toISOString(),
+      },
+      updatedAt: new Date().toISOString(),
+    };
+
+    await store.saveStudent(student);
+    return this.get(id);
+  }
+
+  async deleteProjectDocument(id, projectId) {
+    const student = await store.getStudentById(id);
+    if (!student) {
+      const error = new Error('Student not found.');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    student.projects = Array.isArray(student.projects) ? [...student.projects] : [];
+    const index = student.projects.findIndex(p => p.id === projectId);
+    if (index < 0) {
+      const error = new Error('Project not found.');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    const current = student.projects[index];
+    if (current.document?.key) {
+      await r2Service.deleteFile(current.document.key).catch(() => {});
+    }
+
+    student.projects[index] = {
+      ...current,
+      document: null,
+      updatedAt: new Date().toISOString(),
+    };
+
+    await store.saveStudent(student);
+    return this.get(id);
+  }
+
+  async getProjectDocument(id, projectId) {
+    const student = await store.getStudentById(id);
+    if (!student) {
+      const error = new Error('Student not found.');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    const projects = Array.isArray(student.projects) ? student.projects : [];
+    const project = projects.find(p => p.id === projectId);
+    const doc = project?.document;
+
+    if (!doc || !doc.key) {
+      const error = new Error('Project document not found.');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    const object = await r2Service.getFile(doc.key);
+    if (!object.Body) {
+      const error = new Error('Project document file is unavailable in storage.');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    return {
+      body: object.Body,
+      contentType: object.ContentType || doc.contentType || 'application/pdf',
+      contentLength: object.ContentLength,
+      filename: doc.filename || 'project_document.pdf',
     };
   }
 }

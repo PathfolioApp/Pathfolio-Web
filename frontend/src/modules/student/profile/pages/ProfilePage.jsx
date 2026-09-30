@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Edit3,
@@ -11,6 +11,8 @@ import {
   CheckCircle2,
   ChevronDown,
   ChevronUp,
+  ChevronLeft,
+  ChevronRight,
   Compass,
   Sparkles,
   Briefcase,
@@ -18,6 +20,10 @@ import {
   MapPin,
   Globe,
   Calendar,
+  FolderGit2,
+  Code2,
+  Star,
+  ExternalLink,
 } from 'lucide-react';
 import { useAuth } from '../../../../app/providers/AuthProvider';
 import { profileCompleteness } from '../utils/profileCompleteness';
@@ -26,10 +32,13 @@ import { PdfIcon } from '../../../../components/ui/PdfIcon';
 import { AchievementIcon } from '../../../../components/ui/AchievementIcon';
 import { InternshipDetailModal } from '../components/InternshipDetailModal';
 import { formatInternshipTimeline, sortInternships } from '../utils/internshipUtils';
+import { ProjectDetailModal } from '../components/ProjectDetailModal';
+import { formatProjectTimeline, sortProjects } from '../utils/projectUtils';
 import '../styles/ProfilePages.css';
 import '../styles/ProfileEligibility.css';
 import '../styles/AcademicStyles.css';
 import '../styles/InternshipStyles.css';
+import '../styles/ProjectStyles.css';
 
 const Tags = ({ values, empty }) => values?.length ? <div className="pf-tags">{values.map(value => <span key={value}>{value}</span>)}</div> : <p className="pf-empty">{empty}</p>;
 const displayValue = value => value === undefined || value === '' ? 'Not added yet' : value;
@@ -68,6 +77,53 @@ export function ProfilePage() {
   const internships = sortInternships(student.internships);
   const visibleInternships = showAllInternships ? internships : internships.slice(0, 3);
   const hasMoreInternships = internships.length > 3;
+
+  const [selectedProjectDetail, setSelectedProjectDetail] = useState(null);
+  const projects = sortProjects(student.projects);
+  const projectTrackRef = useRef(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+  const [activeProjectIndex, setActiveProjectIndex] = useState(0);
+
+  const checkProjectScroll = () => {
+    const el = projectTrackRef.current;
+    if (!el) return;
+    const { scrollLeft, scrollWidth, clientWidth } = el;
+    setCanScrollLeft(scrollLeft > 6);
+    setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 6);
+
+    if (clientWidth > 0 && el.firstElementChild) {
+      const cardWidth = el.firstElementChild.offsetWidth + 22;
+      const idx = Math.min(
+        Math.round(scrollLeft / cardWidth),
+        Math.max(0, projects.length - 1)
+      );
+      setActiveProjectIndex(Math.max(0, idx));
+    }
+  };
+
+  useEffect(() => {
+    checkProjectScroll();
+    const el = projectTrackRef.current;
+    if (!el) return;
+
+    el.addEventListener('scroll', checkProjectScroll, { passive: true });
+    window.addEventListener('resize', checkProjectScroll);
+    return () => {
+      el.removeEventListener('scroll', checkProjectScroll);
+      window.removeEventListener('resize', checkProjectScroll);
+    };
+  }, [projects.length]);
+
+  const handleScrollProjects = (direction) => {
+    const el = projectTrackRef.current;
+    if (!el) return;
+    const cardWidth = el.firstElementChild ? el.firstElementChild.offsetWidth + 22 : 440;
+    el.scrollBy({
+      left: direction === 'left' ? -cardWidth : cardWidth,
+      behavior: 'smooth',
+    });
+  };
 
   useEffect(() => {
     resumeApi.list()
@@ -642,6 +698,232 @@ export function ProfilePage() {
         )}
       </section>
 
+      {/* Projects Section - Horizontal Snap Carousel */}
+      <section className="pf-profile-wide pf-project-section">
+        <div className="pf-title-row-enhanced">
+          <div className="pf-title-group">
+            <div className="pf-title-with-icon">
+              <FolderGit2 size={18} />
+              <span>Projects</span>
+              {projects.length > 0 && (
+                <span className="pf-count-pill">{projects.length}</span>
+              )}
+            </div>
+            <p className="pf-card-subtitle">
+              Personal, academic, open-source, and hackathon technical projects
+            </p>
+          </div>
+
+          <div className="pf-project-header-actions">
+            {projects.length > 2 && (
+              <div className="pf-carousel-nav-arrows">
+                <button
+                  type="button"
+                  className="pf-carousel-nav-btn"
+                  onClick={() => handleScrollProjects('left')}
+                  disabled={!canScrollLeft}
+                  title="Previous projects"
+                  aria-label="Previous projects"
+                >
+                  <ChevronLeft size={16} />
+                </button>
+                <button
+                  type="button"
+                  className="pf-carousel-nav-btn"
+                  onClick={() => handleScrollProjects('right')}
+                  disabled={!canScrollRight}
+                  title="Next projects"
+                  aria-label="Next projects"
+                >
+                  <ChevronRight size={16} />
+                </button>
+              </div>
+            )}
+            <Link to="/profile/edit#projects" className="pf-section-link">Manage projects</Link>
+          </div>
+        </div>
+
+        {projects.length ? (
+          <div className="pf-project-carousel-wrapper">
+            <div
+              ref={projectTrackRef}
+              className={`pf-project-carousel-track ${projects.length <= 2 ? 'pf-project-carousel-track--few' : ''}`}
+            >
+              {projects.map(project => {
+                const timelineStr = formatProjectTimeline(project.startDate, project.endDate, project.currentlyWorking);
+
+                return (
+                  <article
+                    key={project.id}
+                    className={`pf-project-card pf-project-card--carousel ${project.featured ? 'pf-project-card--featured' : ''}`}
+                  >
+                    {/* Media Column (260px prominent thumbnail) */}
+                    <div className="pf-project-card__media">
+                      {project.thumbnail ? (
+                        <img
+                          src={project.thumbnail}
+                          alt={project.projectName}
+                          className="pf-project-thumbnail"
+                        />
+                      ) : (
+                        <div className="pf-project-monogram">
+                          <FolderGit2 size={36} />
+                          <span>{project.projectType || 'Project'}</span>
+                        </div>
+                      )}
+                      {project.featured && (
+                        <span className="pf-project-media-badge">
+                          <Star size={11} style={{ fill: '#d97706', color: '#d97706' }} /> Featured
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Content Column */}
+                    <div className="pf-project-card__content">
+                      <div className="pf-project-card__header">
+                        <div className="pf-project-card__titles">
+                          <div className="pf-project-name-row">
+                            <h3 className="pf-project-name">{project.projectName}</h3>
+                            {project.featured && (
+                              <span className="pf-project-pill pf-project-pill--featured">
+                                <Star size={11} style={{ fill: '#d97706', color: '#d97706' }} /> Featured
+                              </span>
+                            )}
+                          </div>
+                          <div className="pf-project-card__badges">
+                            {project.projectType && (
+                              <span className="pf-project-pill pf-project-pill--type">
+                                {project.projectType}
+                              </span>
+                            )}
+                            {project.currentlyWorking && (
+                              <span className="pf-project-pill pf-project-pill--present">
+                                <span className="pf-pulse-dot" /> Present
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="pf-project-links-group">
+                          {project.projectUrl && (
+                            <a
+                              href={project.projectUrl.startsWith('http') ? project.projectUrl : `https://${project.projectUrl}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="pf-project-link"
+                            >
+                              <Globe size={12} /> Live Demo <ExternalLink size={10} />
+                            </a>
+                          )}
+                          {project.repoUrl && (
+                            <a
+                              href={project.repoUrl.startsWith('http') ? project.repoUrl : `https://${project.repoUrl}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="pf-project-link"
+                            >
+                              <Code2 size={12} /> Code <ExternalLink size={10} />
+                            </a>
+                          )}
+                        </div>
+                      </div>
+
+                      {timelineStr && (
+                        <div className="pf-project-meta-row">
+                          <div className="pf-project-meta-item">
+                            <Calendar size={14} />
+                            <span>{timelineStr}</span>
+                          </div>
+                        </div>
+                      )}
+
+                      {project.description && (
+                        <p className="pf-project-desc">{project.description}</p>
+                      )}
+
+                      {Array.isArray(project.contributions) && project.contributions.length > 0 && (
+                        <ul className="pf-project-bullets">
+                          {project.contributions.slice(0, 2).map((item, i) => (
+                            <li key={i}>{item}</li>
+                          ))}
+                          {project.contributions.length > 2 && (
+                            <li style={{ listStyle: 'none', color: '#687e6f', fontSize: '0.82rem', fontStyle: 'italic', marginTop: '2px' }}>
+                              +{project.contributions.length - 2} more contributions documented
+                            </li>
+                          )}
+                        </ul>
+                      )}
+
+                      {Array.isArray(project.technologies) && project.technologies.length > 0 && (
+                        <div className="pf-project-tags">
+                          {project.technologies.map((tech, i) => (
+                            <span key={i} className="pf-project-tag">{tech}</span>
+                          ))}
+                        </div>
+                      )}
+
+                      <div className="pf-project-card__footer">
+                        <div>
+                          {project.document?.fileUrl && (
+                            <a
+                              href={project.document.fileUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="pf-doc-btn"
+                            >
+                              <Eye size={13} /> View Document (PDF)
+                            </a>
+                          )}
+                        </div>
+                        <button
+                          type="button"
+                          className="pf-details-btn"
+                          onClick={() => setSelectedProjectDetail(project)}
+                        >
+                          <Eye size={13} /> View full details
+                        </button>
+                      </div>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+
+            {/* Carousel Pagination & Indicator */}
+            {projects.length > 2 && (
+              <div className="pf-carousel-pagination">
+                <div className="pf-carousel-dots">
+                  {projects.map((_, i) => (
+                    <button
+                      key={i}
+                      type="button"
+                      className={`pf-carousel-dot ${i === activeProjectIndex ? 'pf-carousel-dot--active' : ''}`}
+                      onClick={() => {
+                        const el = projectTrackRef.current;
+                        if (!el) return;
+                        const cardWidth = el.firstElementChild ? el.firstElementChild.offsetWidth + 22 : 440;
+                        el.scrollTo({ left: i * cardWidth, behavior: 'smooth' });
+                      }}
+                      aria-label={`Go to project ${i + 1}`}
+                    />
+                  ))}
+                </div>
+                <span className="pf-carousel-counter">
+                  {projects.length} projects · Swipe or use arrows to view more
+                </span>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', background: '#f4f7f4', border: '1px dashed #cfdacf', borderRadius: '10px', marginTop: '12px' }}>
+            <p className="pf-empty" style={{ margin: 0 }}>No projects added yet.</p>
+            <Link to="/profile/edit#projects" className="pf-btn-subtle">
+              Add your first project
+            </Link>
+          </div>
+        )}
+      </section>
+
       {/* Achievements Section */}
       <section className="pf-profile-wide">
         <div className="pf-title-row-enhanced">
@@ -738,6 +1020,12 @@ export function ProfilePage() {
         isOpen={Boolean(selectedInternshipDetail)}
         onClose={() => setSelectedInternshipDetail(null)}
         internship={selectedInternshipDetail}
+      />
+
+      <ProjectDetailModal
+        isOpen={Boolean(selectedProjectDetail)}
+        onClose={() => setSelectedProjectDetail(null)}
+        project={selectedProjectDetail}
       />
     </div>
   </div>;
