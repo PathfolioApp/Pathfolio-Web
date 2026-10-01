@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Route, Routes, useLocation } from 'react-router-dom';
+import { Route, Routes, useLocation, Navigate } from 'react-router-dom';
 import { useAuth } from '../providers/AuthProvider';
 import { RequireAuth, RequireRole, GuestRoute, OnboardingRoute, OnboardingCompleteRoute } from './guards';
 
@@ -46,7 +46,9 @@ export function AppRoutes() {
   const { loading } = useAuth();
 
   return (
-    <Routes>
+    <>
+      <ScrollToTop />
+      <Routes>
       {/* Public */}
       <Route path="/" element={<LandingPage />} />
       <Route path="/privacy" element={<PrivacyPolicyPage />} />
@@ -74,13 +76,20 @@ export function AppRoutes() {
         <Route path="/resume" element={<ResumePage />} />
       </Route>
 
-      {/* Recruiter portal (role: recruiter or admin) */}
-      <Route path="/recruiter" element={<RequireRole role="recruiter"><RecruiterLayout><RecruiterPage /></RecruiterLayout></RequireRole>} />
+        {/* Recruiter portal (role: recruiter or admin) */}
+        <Route path="/recruiter" element={<RequireRole role="recruiter"><RecruiterLayout /></RequireRole>}>
+          <Route index element={<Navigate to="/recruiter/overview" replace />} />
+          <Route path=":tab" element={<RecruiterPage />} />
+        </Route>
 
-      {/* Admin portal (role: admin only) */}
-      <Route path="/admin" element={<RequireRole role="admin"><AdminLayout><AdminPage /></AdminLayout></RequireRole>} />
+        {/* Admin portal (role: admin only) */}
+        <Route path="/admin" element={<RequireRole role="admin"><AdminLayout /></RequireRole>}>
+          <Route index element={<Navigate to="/admin/overview" replace />} />
+          <Route path=":tab" element={<AdminPage />} />
+        </Route>
 
-      <Route path="*" element={loading ? null : <NotFoundPage />} />
-    </Routes>
+        <Route path="*" element={loading ? null : <NotFoundPage />} />
+      </Routes>
+    </>
   );
 }

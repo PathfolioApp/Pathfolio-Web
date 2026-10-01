@@ -1,4 +1,4 @@
-.pf-recruiter-page { min-height: 100vh; max-width: 1200px; margin: 0 auto; padding: 0 24px 48px; background: var(--bg-page); color: var(--text-primary); }
+.pf-recruiter-page { width: 100%; max-width: 1200px; margin: 0 auto; padding: 0 24px 48px; background: var(--bg-page); color: var(--text-primary); }
 .pf-recruiter-results, .pf-recruiter-error { max-width: 1200px; margin-left: auto; margin-right: auto; }
 .pf-candidate-contact { display: inline-flex; align-items: center; gap: 6px; border: 0; padding: 8px 14px; background: var(--color-primary); color: var(--text-on-primary); cursor: pointer; font: inherit; font-size: .84rem; font-weight: 600; text-decoration: none; border-radius: var(--radius-sm); }
 

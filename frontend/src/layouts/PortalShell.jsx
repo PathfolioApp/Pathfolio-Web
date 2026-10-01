@@ -35,18 +35,8 @@ export function PortalShell({ navItems = [], portalLinks, showBackButton = true,
   const location = useLocation();
   const [notice, setNotice] = useState('');
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
-  // Track the hash section so sidebar items (e.g. /admin#jobs) stay in sync
-  // with back/forward navigation and deep links.
-  const [activeHash, setActiveHash] = useState(window.location.hash.slice(1));
-
-  useEffect(() => {
-    const onHashChange = () => setActiveHash(window.location.hash.slice(1));
-    window.addEventListener('hashchange', onHashChange);
-    return () => window.removeEventListener('hashchange', onHashChange);
-  }, []);
-
-  // Close the mobile drawer when the route or section changes.
-  useEffect(() => { setMobileNavOpen(false); }, [location.pathname, activeHash]);
+  // Close the mobile drawer when the route changes.
+  useEffect(() => { setMobileNavOpen(false); }, [location.pathname]);
 
   if (!student) return null;
 
@@ -54,33 +44,29 @@ export function PortalShell({ navItems = [], portalLinks, showBackButton = true,
   const initials = name.split(' ').map(x => x[0]).join('').slice(0, 2).toUpperCase();
   const avatarUrl = student.personal?.avatarUrl || '';
 
-  const navigateFromNav = (path, hash) => {
+  const navigateFromNav = (path) => {
     setMobileNavOpen(false);
     navigate(path);
-    if (hash) {
-      window.location.hash = hash;
-      setActiveHash(hash);
-    } else if (window.location.hash) {
-      window.history.replaceState(null, '', window.location.pathname + window.location.search);
-      setActiveHash('');
-      window.dispatchEvent(new Event('hashchange'));
-    }
   };
 
   const sidebarNav = (onItemClick) => (
     <nav aria-label="Portal navigation">
-      {navItems.map(([Icon, label, path, hash]) => {
-        // Highlight only the exact current section: a hash item matches its
-        // hash (or 'overview' when no hash is active); a plain item matches
-        // only when no hash is active and pathname matches.
-        const isActive = hash
-          ? (activeHash === hash || (!activeHash && hash === 'overview'))
-          : (location.pathname === path && !activeHash);
+      {navItems.map((item) => {
+        if (item.section) {
+          return (
+            <div key={item.section} className="pf-nav-group-header">
+              {item.section}
+            </div>
+          );
+        }
+        const [Icon, label, path] = item;
+        // Highlight active section based on path matching.
+        const isActive = location.pathname === path || (path.endsWith('/overview') && (location.pathname === '/admin' || location.pathname === '/recruiter'));
         return (
           <button
             key={label}
             className={isActive ? 'active' : ''}
-            onClick={() => onItemClick(path, hash)}
+            onClick={() => onItemClick(path)}
             aria-current={isActive ? 'page' : undefined}
           >
             <Icon size={18} />

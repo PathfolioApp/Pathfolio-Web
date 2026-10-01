@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useParams, useNavigate } from 'react-router-dom';
 import { BriefcaseBusiness, Users, Plus } from 'lucide-react';
 import { recruiterApi } from './recruiterApi';
 import { PageHeader } from '../../components/ui/PageHeader';
@@ -18,11 +18,10 @@ const SECTION_META = { overview: 'Overview', jobs: 'My job posts', candidates: '
  */
 export function RecruiterPage() {
   const location = useLocation();
-  const sectionFromUrl = () => {
-    const raw = (window.location.hash || location.hash || '').replace(/^#/, '');
-    return Object.keys(SECTION_META).includes(raw) ? raw : 'overview';
-  };
-  const [tab, setTab] = useState(sectionFromUrl);
+  const navigate = useNavigate();
+  const { tab: tabParam } = useParams();
+
+  const tab = Object.keys(SECTION_META).includes(tabParam) ? tabParam : 'overview';
   const [jobs, setJobs] = useState([]);
   const [jobsLoading, setJobsLoading] = useState(false);
   const [overview, setOverview] = useState(null);
@@ -46,13 +45,15 @@ export function RecruiterPage() {
 
   useEffect(() => { loadOverview(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
-    setTab(sectionFromUrl());
-  }, [location.hash]);
-  useEffect(() => {
-    const onHashChange = () => setTab(sectionFromUrl());
-    window.addEventListener('hashchange', onHashChange);
-    return () => window.removeEventListener('hashchange', onHashChange);
-  }, []);
+    if (location.hash) {
+      const rawHash = location.hash.replace(/^#/, '');
+      if (Object.keys(SECTION_META).includes(rawHash)) {
+        navigate(`/recruiter/${rawHash}`, { replace: true });
+      } else {
+        navigate('/recruiter/overview', { replace: true });
+      }
+    }
+  }, [location.hash, navigate]);
   useEffect(() => { if (tab === 'jobs') { loadJobs(); loadOverview(); } }, [tab, loadJobs, loadOverview]);
   useEffect(() => { if (tab === 'jobs' && companies.length === 0) recruiterApi.companies().then(data => setCompanies(data.companies)).catch(() => setCompanies([])); }, [tab, companies.length]);
 
@@ -104,8 +105,8 @@ export function RecruiterPage() {
             { label: 'New this week', value: overview.last7Days, hint: 'Applications received' }
           ]} />
           <div className="pf-recruiter-quick-links">
-            <button onClick={() => { window.location.hash = 'jobs'; }}><BriefcaseBusiness size={16} /><span>Create or manage job posts</span></button>
-            <button onClick={() => { window.location.hash = 'candidates'; }}><Users size={16} /><span>View shared candidates</span></button>
+            <button onClick={() => navigate('/recruiter/jobs')}><BriefcaseBusiness size={16} /><span>Create or manage job posts</span></button>
+            <button onClick={() => navigate('/recruiter/candidates')}><Users size={16} /><span>View shared candidates</span></button>
           </div>
         </>
       )}

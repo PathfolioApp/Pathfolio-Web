@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useParams, useNavigate } from 'react-router-dom';
 import { BriefcaseBusiness, Building2, FileSearch, LayoutDashboard, UserPlus, Users, Search, Share2, History, Plus, Upload, ShieldCheck } from 'lucide-react';
 import { useAuth } from '../../app/providers/AuthProvider';
 import { PageHeader } from '../../components/ui/PageHeader';
@@ -29,7 +29,7 @@ const SECTION_META = {
   overview: { icon: LayoutDashboard, label: 'Overview' },
   jobs: { icon: BriefcaseBusiness, label: 'Job posts' },
   students: { icon: Search, label: 'Student search' },
-  shares: { icon: Share2, label: 'Shares' },
+  shares: { icon: Share2, label: 'Candidate shares' },
   companies: { icon: Building2, label: 'Companies' },
   applications: { icon: Users, label: 'Applications' },
   policy: { icon: ShieldCheck, label: 'Placement policy' },
@@ -48,11 +48,11 @@ const TAB_IDS = Object.keys(SECTION_META);
 export function AdminPage() {
   const { student } = useAuth();
   const location = useLocation();
-  const sectionFromUrl = () => {
-    const raw = (window.location.hash || location.hash || '').replace(/^#/, '');
-    return TAB_IDS.includes(raw) ? raw : 'overview';
-  };
-  const [tab, setTab] = useState(sectionFromUrl);
+  const navigate = useNavigate();
+  const { tab: tabParam } = useParams();
+
+  // Use the parameter from the URL, default to overview if it doesn't match
+  const tab = TAB_IDS.includes(tabParam) ? tabParam : 'overview';
   const [overview, setOverview] = useState(null);
   const [companies, setCompanies] = useState([]);
   const [jobs, setJobs] = useState([]);
@@ -102,13 +102,15 @@ export function AdminPage() {
   }, [tab]);
   useEffect(() => { if (tab === 'users') loadUsers(); }, [tab]);
   useEffect(() => {
-    setTab(sectionFromUrl());
-  }, [location.hash]);
-  useEffect(() => {
-    const onHashChange = () => setTab(sectionFromUrl());
-    window.addEventListener('hashchange', onHashChange);
-    return () => window.removeEventListener('hashchange', onHashChange);
-  }, []);
+    if (location.hash) {
+      const rawHash = location.hash.replace(/^#/, '');
+      if (TAB_IDS.includes(rawHash)) {
+        navigate(`/admin/${rawHash}`, { replace: true });
+      } else {
+        navigate('/admin/overview', { replace: true });
+      }
+    }
+  }, [location.hash, navigate]);
   useEffect(() => { loadOverview(); }, []);
   useEffect(() => { if (tab === 'overview' || tab === 'applications') loadOverview(); }, [tab]);
 
@@ -244,12 +246,12 @@ export function AdminPage() {
             { label: 'Companies', value: overview.companies?.length ?? 0, hint: `${overview.recentSignups} new users this week` }
           ]} />
           <div className="pf-admin-quick-links">
-            <button onClick={() => { window.location.hash = 'jobs'; }}><BriefcaseBusiness size={17} /><span>Review & publish job posts</span></button>
-            <button onClick={() => { window.location.hash = 'students'; }}><Search size={17} /><span>Search & share students</span></button>
-            <button onClick={() => { window.location.hash = 'applications'; }}><Users size={17} /><span>Review applications</span></button>
-            <button onClick={() => { window.location.hash = 'policy'; }}><ShieldCheck size={17} /><span>Placement upgrade policy</span></button>
-            <button onClick={() => { window.location.hash = 'users'; }}><UserPlus size={17} /><span>Add or manage users</span></button>
-            <button onClick={() => { window.location.hash = 'jd'; }}><FileSearch size={17} /><span>Analyse a job description</span></button>
+            <button onClick={() => navigate('/admin/jobs')}><BriefcaseBusiness size={17} /><span>Review & publish job posts</span></button>
+            <button onClick={() => navigate('/admin/students')}><Search size={17} /><span>Search & share students</span></button>
+            <button onClick={() => navigate('/admin/applications')}><Users size={17} /><span>Review applications</span></button>
+            <button onClick={() => navigate('/admin/policy')}><ShieldCheck size={17} /><span>Placement upgrade policy</span></button>
+            <button onClick={() => navigate('/admin/users')}><UserPlus size={17} /><span>Add or manage users</span></button>
+            <button onClick={() => navigate('/admin/jd')}><FileSearch size={17} /><span>Analyse a job description</span></button>
           </div>
         </>
       )}

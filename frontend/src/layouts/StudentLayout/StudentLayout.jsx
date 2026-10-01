@@ -34,10 +34,6 @@ function PortalSwitcher({ student }) {
 
   const go = path => {
     navigate(path);
-    if (window.location.hash) {
-      window.history.replaceState(null, '', window.location.pathname + window.location.search);
-      window.dispatchEvent(new Event('hashchange'));
-    }
   };
 
   const showSwitcher = student?.isRecruiter || student?.isAdmin;
@@ -47,17 +43,19 @@ function PortalSwitcher({ student }) {
   return showSwitcher ? (
     <div className="pf-portal-links" aria-label="Portal access">
       <span>Portals</span>
-      <button onClick={() => go('/dashboard')} className={!inRecruiter && !inAdmin ? 'active' : ''}>
-        <GraduationCap size={16} /> Student
-      </button>
-      <button onClick={() => go('/recruiter')} className={inRecruiter ? 'active' : ''}>
-        <Building2 size={16} /> Recruiter
-      </button>
-      {student?.isAdmin && (
-        <button onClick={() => go('/admin')} className={inAdmin ? 'active' : ''}>
-          <ShieldCheck size={16} /> Admin
+      <div className="pf-portal-links__nav">
+        <button type="button" onClick={() => go('/dashboard')} className={!inRecruiter && !inAdmin ? 'active' : ''}>
+          <GraduationCap size={13} /> Student
         </button>
-      )}
+        <button type="button" onClick={() => go('/recruiter')} className={inRecruiter ? 'active' : ''}>
+          <Building2 size={13} /> Recruiter
+        </button>
+        {student?.isAdmin && (
+          <button type="button" onClick={() => go('/admin')} className={inAdmin ? 'active' : ''}>
+            <ShieldCheck size={13} /> Admin
+          </button>
+        )}
+      </div>
     </div>
   ) : null;
 }
