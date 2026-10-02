@@ -2,7 +2,8 @@ const MAX_RESUME_SIZE = 10 * 1024 * 1024;
 const MAX_FILENAME_LENGTH = 255;
 const MAX_TAGS = 20;
 const MAX_TAG_LENGTH = 30;
-const RESUME_CATEGORIES = ['Software', 'Data', 'Core', 'Design', 'General'];
+const MAX_CATEGORY_LENGTH = 48;
+const RESUME_CATEGORIES = ['Software Engineering', 'Backend Engineering', 'Cloud / DevOps', 'Data / AI', 'Core Engineering', 'Design / Product', 'General'];
 
 function badRequest(message) {
   const error = new Error(message);
@@ -82,8 +83,12 @@ function validatePdfBuffer(buffer) {
 }
 
 function normalizeCategory(category) {
-  const value = String(category || 'General').trim();
-  return RESUME_CATEGORIES.includes(value) ? value : 'General';
+  const value = String(category || 'General')
+    .replace(/[<>]/g, '')
+    .replace(/[\u0000-\u001F\u007F]/g, '')
+    .trim()
+    .slice(0, MAX_CATEGORY_LENGTH);
+  return value || 'General';
 }
 
 module.exports = {
@@ -94,6 +99,7 @@ module.exports = {
   validateDriveUrl,
   validatePdfBuffer,
   normalizeCategory,
+  MAX_CATEGORY_LENGTH,
   RESUME_CATEGORIES,
   badRequest,
 };

@@ -23,6 +23,8 @@ import { SettingsPage } from '../../modules/student/settings/pages/SettingsPage'
 import { SecurityPage, PrivacyPage } from '../../modules/student/settings/pages/SecurityPage';
 import { PlacementPage } from '../../modules/student/placements/PlacementPage';
 import { ResumePage } from '../../modules/student/resume/ResumePage';
+import { ResumeDetailsPage } from '../../modules/student/resume/ResumeDetailsPage';
+import { ResumeStudioPage } from '../../modules/student/resume/ResumeStudioPage';
 
 import { RecruiterLayout } from '../../layouts/RecruiterLayout/RecruiterLayout';
 import { AdminLayout } from '../../layouts/AdminLayout/AdminLayout';
@@ -74,6 +76,10 @@ export function AppRoutes() {
         <Route path="/settings/privacy" element={<PrivacyPage />} />
         <Route path="/placement" element={<PlacementPage />} />
         <Route path="/resume" element={<ResumePage />} />
+        <Route path="/resumes" element={<ResumePage />} />
+        <Route path="/resume/studio" element={<ResumeStudioPage />} />
+        <Route path="/resume/:resumeId" element={<ResumeDetailsPage />} />
+        <Route path="/resume/:resumeId/studio" element={<ResumeStudioPage />} />
       </Route>
 
         {/* Recruiter portal (role: recruiter or admin) */}

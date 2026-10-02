@@ -1,586 +1,182 @@
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { resumeApi, uploadResume } from './resumeApi';
+import React, { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
-  FileText,
-  UploadCloud,
-  Star,
-  Trash2,
-  Download,
-  Eye,
-  Loader,
-  ArrowLeft,
-  X,
-  Edit2,
-  Check,
-  Tag,
-  Plus,
-  ChevronDown,
-  CheckCircle2,
-  AlertCircle,
+  Archive, BarChart3, Check, CheckCircle2, ChevronDown, Download, Edit3, FileText, Filter, MoreHorizontal,
+  Plus, Search, Settings2, Star, Trash2, UploadCloud, X, Zap,
 } from 'lucide-react';
+import { resumeApi, uploadResume } from './resumeApi';
 import { Button } from '../../../components/ui/Button';
-import { PdfIcon } from '../../../components/ui/PdfIcon';
-import { ResumeBuilder } from './ResumeBuilder';
 import './ResumePage.css';
+import './ResumePageEnhancements.css';
 
-const SUGGESTED_ROLES = [
-  'SDE',
-  'Frontend',
-  'Backend',
-  'Full Stack',
-  'Data Analyst',
-  'Data Scientist',
-  'DevOps / Cloud',
-  'Machine Learning',
-  'Product Manager',
-  'UI/UX',
-  'Cybersecurity',
-  'Core Engineering',
-];
-const RESUME_CATEGORIES = ['Software', 'Data', 'Core', 'Design', 'General'];
+const FALLBACK_CATEGORIES = ['Software Engineering', 'Backend Engineering', 'Cloud / DevOps', 'Data / AI', 'Core Engineering', 'Design / Product', 'General'];
 
-const PORTAL_LABELS = {
-  naukri: 'Naukri Resume Parser',
-  greenhouse: 'Greenhouse',
-  lever: 'Lever',
-  workday: 'Workday',
-};
-
-function ResumeAnalysisPanel({ analysis, onAnalyze, analyzing }) {
-  const [open, setOpen] = useState(false);
-  if (!analysis) return null;
-  if (!analysis.extracted) {
-    return <div className="pf-resume-analysis pf-analysis-stale"><p>This resume has an older analysis format.</p><button type="button" onClick={onAnalyze} disabled={analyzing}>{analyzing ? 'Analyzing resume...' : 'Run full analysis'}</button></div>;
-  }
-  const extracted = analysis.extracted || {};
-  const fields = [
-    ['Summary', extracted.summary],
-    ['Education', extracted.education],
-    ['Experience', extracted.experience],
-    ['Projects', extracted.projects],
-    ['Skills', extracted.skills],
-  ].filter(([, value]) => Array.isArray(value) ? value.length : value);
-
-  return (
-    <div className="pf-resume-analysis">
-      <div className="pf-analysis-heading">
-        <div><span className="pf-analysis-kicker">ATS pass analysis</span><p>Will the screening bots read you right?</p></div>
-        <strong>{analysis.score}%<small>pass rate</small></strong>
-      </div>
-      <div className="pf-analysis-progress"><span style={{ width: `${analysis.score}%` }} /></div>
-      <div className="pf-analysis-label">Tested against the parsers recruiters use</div>
-      <div className="pf-analysis-portals">
-        {Object.entries(analysis.portalReadiness || {}).map(([portal, passed]) => (
-          <div key={portal}><span className={passed ? 'is-good' : 'is-review'}>{passed ? <CheckCircle2 size={14} /> : <AlertCircle size={14} />}{PORTAL_LABELS[portal] || portal}</span><b className={passed ? 'is-good' : 'is-review'}>{passed ? 'Parses clean' : 'Review format'}</b></div>
-        ))}
-      </div>
-      <button type="button" className="pf-analysis-toggle" onClick={() => setOpen(!open)}>{open ? 'Hide extracted fields' : 'Show extracted fields'}<ChevronDown size={15} className={open ? 'is-open' : ''} /></button>
-      {open && <div className="pf-analysis-fields">
-        <div className="pf-analysis-contact"><b>Contact</b><span>{extracted.contact?.email || 'Email not detected'}</span><span>{extracted.contact?.phone || 'Phone not detected'}</span></div>
-        {fields.map(([label, value]) => <div className="pf-analysis-field" key={label}><b>{label}</b><p>{Array.isArray(value) ? value.join(' • ') : value}</p></div>)}
-      </div>}
-    </div>
-  );
+function analysisStatus(resume) {
+  if (!resume.analysis) return { label: 'Not analysed', tone: 'muted' };
+  if ((resume.analysis.score || 0) >= 75) return { label: 'Analysis complete', tone: 'good' };
+  return { label: 'Needs review', tone: 'warn' };
 }
 
 export function ResumePage() {
+  const navigate = useNavigate();
   const [resumes, setResumes] = useState([]);
+  const [categories, setCategories] = useState(FALLBACK_CATEGORIES);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [uploadCategory, setUploadCategory] = useState('General');
-  const [categoryFilter, setCategoryFilter] = useState('All');
-  const [analyzingId, setAnalyzingId] = useState(null);
+  const [search, setSearch] = useState('');
+  const [category, setCategory] = useState('All');
+  const [role, setRole] = useState('All');
+  const [primaryOnly, setPrimaryOnly] = useState(false);
+  const [sort, setSort] = useState('updated');
+  const [openMenu, setOpenMenu] = useState(null);
+  const [categoryName, setCategoryName] = useState('');
+  const [categoryError, setCategoryError] = useState('');
+  const [savingCategory, setSavingCategory] = useState(false);
   const [error, setError] = useState('');
-  const [previewResume, setPreviewResume] = useState(null);
-  const [editingId, setEditingId] = useState(null);
-  const [editName, setEditName] = useState('');
 
-  // Tag Modal State
-  const [tagModalResume, setTagModalResume] = useState(null);
-  const [activeTags, setActiveTags] = useState([]);
-  const [customTagInput, setCustomTagInput] = useState('');
-  const [savingTags, setSavingTags] = useState(false);
-
-  useEffect(() => {
-    fetchResumes();
-  }, []);
-
-  const fetchResumes = async () => {
+  const load = async () => {
     try {
       setLoading(true);
-      const data = await resumeApi.list();
-      setResumes(data);
+      const [resumeData, categoryData] = await Promise.all([resumeApi.list(), resumeApi.categories()]);
+      setResumes(Array.isArray(resumeData) ? resumeData : []);
+      setCategories(Array.isArray(categoryData) && categoryData.length ? categoryData : FALLBACK_CATEGORIES);
     } catch (err) {
-      setError('Failed to load resumes.');
+      setError(err.message || 'Unable to load your resumes.');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleFileUpload = async (e) => {
-    const files = Array.from(e.target.files || []);
+  useEffect(() => { load(); }, []);
+
+  const roles = useMemo(() => ['All', ...new Set(resumes.flatMap(resume => resume.tags || []))], [resumes]);
+  const visibleResumes = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    return resumes
+      .filter(resume => !query || resume.filename.toLowerCase().includes(query) || (resume.tags || []).some(tag => tag.toLowerCase().includes(query)))
+      .filter(resume => category === 'All' || (resume.category || 'General') === category)
+      .filter(resume => role === 'All' || (resume.tags || []).includes(role))
+      .filter(resume => !primaryOnly || resume.isDefault)
+      .sort((a, b) => {
+        if (sort === 'name') return a.filename.localeCompare(b.filename);
+        if (sort === 'uploaded') return new Date(b.uploadedAt) - new Date(a.uploadedAt);
+        return new Date(b.updatedAt || b.uploadedAt) - new Date(a.updatedAt || a.uploadedAt);
+      });
+  }, [resumes, search, category, role, primaryOnly, sort]);
+  const libraryStats = useMemo(() => ({
+    analyzed: resumes.filter(resume => resume.analysis).length,
+    primary: resumes.filter(resume => resume.isDefault).length,
+    average: resumes.length ? Math.round(resumes.filter(resume => resume.analysis).reduce((total, resume) => total + Number(resume.analysis.score || 0), 0) / Math.max(1, resumes.filter(resume => resume.analysis).length)) : 0,
+  }), [resumes]);
+
+  const handleUpload = async event => {
+    const files = Array.from(event.target.files || []);
     if (!files.length) return;
     const invalid = files.find(file => file.type !== 'application/pdf' || file.size > 10 * 1024 * 1024);
-    if (invalid) return setError(`${invalid.name}: only PDF files under 10MB are supported.`);
-
+    if (invalid) {
+      setError(`${invalid.name}: upload a PDF under 10 MB.`);
+      event.target.value = '';
+      return;
+    }
     try {
       setUploading(true);
       setError('');
       for (const file of files) await uploadResume(file, [], uploadCategory);
-      await fetchResumes();
+      await load();
     } catch (err) {
-      setError(err.message || 'Failed to upload resume.');
+      setError(err.message || 'Unable to upload resume.');
     } finally {
       setUploading(false);
-      e.target.value = '';
+      event.target.value = '';
     }
   };
 
-  const handleCategoryChange = async (resumeId, category) => {
+  const setPrimary = async resume => {
+    if (resume.isDefault || !window.confirm(`Make ${resume.filename} your Primary Resume?`)) return;
     try {
-      await resumeApi.updateCategory(resumeId, category);
-      await fetchResumes();
-    } catch (err) {
-      setError(err.message || 'Failed to update category.');
-    }
+      await resumeApi.setDefault(resume.id);
+      await load();
+    } catch (err) { setError(err.message || 'Unable to change your primary resume.'); }
   };
 
-  const handleAnalyze = async (resumeId) => {
+  const deleteResume = async resume => {
+    const replacement = resume.isDefault ? resumes.find(item => item.id !== resume.id) : null;
+    if (!window.confirm(`Delete ${resume.filename}? The original uploaded file will be removed.`)) return;
     try {
-      setAnalyzingId(resumeId);
-      await resumeApi.analyze(resumeId);
-      await fetchResumes();
-    } catch (err) {
-      setError(err.message || 'Failed to analyze resume.');
-    } finally {
-      setAnalyzingId(null);
-    }
+      await resumeApi.remove(resume.id);
+      if (replacement && window.confirm(`Set ${replacement.filename} as your new Primary Resume?`)) await resumeApi.setDefault(replacement.id);
+      await load();
+    } catch (err) { setError(err.message || 'Unable to delete resume.'); }
   };
 
-  const handleSetDefault = async (id) => {
+  const createCategory = async event => {
+    event.preventDefault();
+    if (!categoryName.trim()) return;
     try {
-      await resumeApi.setDefault(id);
-      await fetchResumes();
-    } catch (err) {
-      setError('Failed to update default status.');
-    }
+      setSavingCategory(true);
+      setCategoryError('');
+      await resumeApi.createCategory(categoryName.trim());
+      setCategoryName('');
+      await load();
+    } catch (err) { setCategoryError(err.message || 'Unable to create category.'); }
+    finally { setSavingCategory(false); }
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this resume?')) return;
-    try {
-      await resumeApi.remove(id);
-      if (previewResume?.id === id) setPreviewResume(null);
-      if (tagModalResume?.id === id) setTagModalResume(null);
-      await fetchResumes();
-    } catch (err) {
-      setError('Failed to delete resume.');
-    }
+  const renameCategory = async name => {
+    const nextName = window.prompt('Rename category', name);
+    if (!nextName || nextName.trim() === name) return;
+    try { await resumeApi.renameCategory(name, nextName.trim()); await load(); }
+    catch (err) { setError(err.message || 'Unable to rename category.'); }
   };
 
-  const startRename = (resume) => {
-    setEditingId(resume.id);
-    setEditName(resume.filename);
-  };
-
-  const saveRename = async (id) => {
-    if (!editName.trim()) return;
-    try {
-      await resumeApi.rename(id, editName.trim());
-      setEditingId(null);
-      await fetchResumes();
-    } catch (err) {
-      setError(err.message || 'Failed to rename resume.');
-    }
-  };
-
-  // Tag Management
-  const openTagModal = (resume) => {
-    setTagModalResume(resume);
-    setActiveTags(Array.isArray(resume.tags) ? [...resume.tags] : []);
-    setCustomTagInput('');
-  };
-
-  const handleAddTag = (tagToAdd) => {
-    const clean = String(tagToAdd || '').trim();
-    if (!clean) return;
-    if (activeTags.some((t) => t.toLowerCase() === clean.toLowerCase())) return;
-    if (activeTags.length >= 8) {
-      return setError('You can add up to 8 role tags per resume.');
-    }
-    setActiveTags([...activeTags, clean]);
-    setCustomTagInput('');
-  };
-
-  const handleRemoveTag = (tagToRemove) => {
-    setActiveTags(activeTags.filter((t) => t !== tagToRemove));
-  };
-
-  const handleQuickRemoveTagOnCard = async (resumeId, tagToRemove) => {
-    const target = resumes.find((r) => r.id === resumeId);
-    if (!target) return;
-    const updated = (target.tags || []).filter((t) => t !== tagToRemove);
-    try {
-      await resumeApi.updateTags(resumeId, updated);
-      await fetchResumes();
-    } catch (err) {
-      setError('Failed to update tags.');
-    }
-  };
-
-  const handleSaveTags = async () => {
-    if (!tagModalResume) return;
-    try {
-      setSavingTags(true);
-      await resumeApi.updateTags(tagModalResume.id, activeTags);
-      setTagModalResume(null);
-      await fetchResumes();
-    } catch (err) {
-      setError(err.message || 'Failed to save tags.');
-    } finally {
-      setSavingTags(false);
-    }
+  const removeCategory = async name => {
+    if (!window.confirm(`Remove ${name}? Resumes will move to General.`)) return;
+    try { await resumeApi.deleteCategory(name); await load(); }
+    catch (err) { setError(err.message || 'Unable to remove category.'); }
   };
 
   return (
-    <div className="pf-resume-page">
-      <div className="pf-resume-header">
-        <div>
-          <Link to="/profile" className="pf-back-link">
-            <ArrowLeft size={16} /> Back to Profile
-          </Link>
-          <h1>Your Resumes</h1>
-          <p>Upload and manage role-tailored PDF resumes for placements and applications.</p>
+    <div className="pf-resume-library">
+      <header className="pf-library-header">
+        <div><span className="pf-library-eyebrow">Career workspace</span><h1>My Resumes</h1><p>Manage, analyse, and tailor resumes for every role you apply to.</p></div>
+        <div className="pf-library-header-actions">
+          <select value={uploadCategory} onChange={event => setUploadCategory(event.target.value)} aria-label="Upload category">{categories.map(item => <option key={item}>{item}</option>)}</select>
+          <Button variant="secondary" onClick={() => navigate('/resume/studio')}><Zap size={15} /> Build Resume</Button>
+          <label className="pf-library-upload"><UploadCloud size={16} /> {uploading ? 'Uploading...' : 'Upload Resume'}<input type="file" accept="application/pdf" multiple onChange={handleUpload} disabled={uploading} hidden /></label>
         </div>
-        <div className="pf-resume-actions">
-          <select className="pf-resume-category-select" value={uploadCategory} onChange={e => setUploadCategory(e.target.value)} aria-label="Upload category">
-            {RESUME_CATEGORIES.map(category => <option key={category} value={category}>{category} resume</option>)}
-          </select>
-          <label className="pf-upload-btn">
-            {uploading ? <Loader className="spin" size={16} /> : <UploadCloud size={16} />}
-            <span>Upload PDF</span>
-            <input
-              type="file"
-              accept="application/pdf"
-              multiple
-              onChange={handleFileUpload}
-              disabled={uploading}
-              hidden
-            />
-          </label>
-        </div>
-      </div>
+      </header>
 
-      {error && <div className="pf-resume-error">{error}</div>}
+      {error && <div className="pf-library-alert" role="alert">{error}<button type="button" onClick={() => setError('')}><X size={15} /></button></div>}
 
-      <div className="pf-resume-filter-row">
-        <div><strong>{resumes.length}</strong> saved resumes</div>
-        <div className="pf-resume-filters">{['All', ...RESUME_CATEGORIES].map(category => <button type="button" key={category} className={categoryFilter === category ? 'is-active' : ''} onClick={() => setCategoryFilter(category)}>{category}</button>)}</div>
-      </div>
+      <section className="pf-library-snapshot" aria-label="Resume library summary">
+        <div><span><FileText size={15} /> Library</span><strong>{resumes.length}</strong><small>saved resume{resumes.length === 1 ? '' : 's'}</small></div>
+        <div><span><CheckCircle2 size={15} /> Coverage</span><strong>{libraryStats.analyzed}/{resumes.length || 0}</strong><small>analysed</small></div>
+        <div><span><Star size={15} /> Primary</span><strong>{libraryStats.primary}</strong><small>default resume</small></div>
+        <div><span><BarChart3 size={15} /> Average score</span><strong>{libraryStats.analyzed ? `${libraryStats.average}%` : '—'}</strong><small>{libraryStats.analyzed ? 'local ATS estimate' : 'run analysis to compare'}</small></div>
+      </section>
 
-      <div className="pf-resume-list">
-        {loading ? (
-          <div className="pf-resume-loading">
-            <Loader className="spin" size={24} /> Loading resumes...
-          </div>
-        ) : resumes.length === 0 ? (
-          <div className="pf-resume-empty">
-            <PdfIcon size={48} className="pf-resume-pdf-icon" />
-            <h3>No resumes uploaded yet</h3>
-            <p>Upload your PDF resumes (e.g. SDE, Data Analyst, Core) to get started.</p>
-            <label className="pf-upload-btn" style={{ marginTop: '1.25rem' }}>
-              {uploading ? <Loader className="spin" size={16} /> : <UploadCloud size={16} />}
-              <span>Upload your first PDF</span>
-              <input
-                type="file"
-                accept="application/pdf"
-                onChange={handleFileUpload}
-                disabled={uploading}
-                hidden
-              />
-            </label>
-          </div>
-        ) : (
-          resumes.filter(resume => categoryFilter === 'All' || (resume.category || 'General') === categoryFilter).map((resume) => {
-            const isEditing = editingId === resume.id;
-            return (
-              <div
-                key={resume.id}
-                className={`pf-resume-card ${resume.isDefault ? 'is-default' : ''}`}
-              >
-                <div className="pf-resume-card-icon">
-                  <PdfIcon size={26} className="pf-resume-pdf-icon" />
-                </div>
-                <div className="pf-resume-card-content">
-                  <div className="pf-resume-title-row">
-                    {isEditing ? (
-                      <div className="pf-rename-row">
-                        <input
-                          type="text"
-                          value={editName}
-                          onChange={(e) => setEditName(e.target.value)}
-                          className="pf-rename-input"
-                          autoFocus
-                        />
-                        <button
-                          onClick={() => saveRename(resume.id)}
-                          className="pf-icon-btn pf-save-btn"
-                          title="Save"
-                        >
-                          <Check size={16} />
-                        </button>
-                        <button
-                          onClick={() => setEditingId(null)}
-                          className="pf-icon-btn"
-                          title="Cancel"
-                        >
-                          <X size={16} />
-                        </button>
-                      </div>
-                    ) : (
-                      <>
-                        <h3>{resume.filename}</h3>
-                        {resume.isDefault && (
-                          <span className="pf-badge">
-                            <Star size={12} fill="currentColor" /> Default
-                          </span>
-                        )}
-                        <button
-                          onClick={() => startRename(resume)}
-                          className="pf-inline-rename-btn"
-                          title="Rename file"
-                        >
-                          <Edit2 size={13} />
-                        </button>
-                      </>
-                    )}
-                  </div>
+      <section className="pf-library-toolbar" aria-label="Resume filters">
+        <div className="pf-library-count"><strong>{resumes.length}</strong><span>resume{resumes.length === 1 ? '' : 's'}</span></div>
+        <label className="pf-library-search"><Search size={16} /><input value={search} onChange={event => setSearch(event.target.value)} placeholder="Search filename or role" aria-label="Search resumes" /></label>
+        <select value={category} onChange={event => setCategory(event.target.value)} aria-label="Filter by category"><option value="All">All categories</option>{categories.map(item => <option key={item}>{item}</option>)}</select>
+        <select value={role} onChange={event => setRole(event.target.value)} aria-label="Filter by role"><option value="All">All roles</option>{roles.slice(1).map(item => <option key={item}>{item}</option>)}</select>
+        <button type="button" className={`pf-filter-toggle ${primaryOnly ? 'is-active' : ''}`} onClick={() => setPrimaryOnly(value => !value)}><Star size={14} fill={primaryOnly ? 'currentColor' : 'none'} /> Primary only</button>
+        <label className="pf-library-sort">Sort <select value={sort} onChange={event => setSort(event.target.value)} aria-label="Sort resumes"><option value="updated">Last modified</option><option value="uploaded">Upload date</option><option value="name">Name</option></select></label>
+      </section>
 
-                  {/* Role Tags Section */}
-                  <div className="pf-resume-tags-row">
-                    {resume.tags && resume.tags.length > 0 ? (
-                      resume.tags.map((tag) => (
-                        <span key={tag} className="pf-role-tag">
-                          {tag}
-                          <button
-                            type="button"
-                            onClick={() => handleQuickRemoveTagOnCard(resume.id, tag)}
-                            title={`Remove ${tag} tag`}
-                            aria-label={`Remove ${tag}`}
-                          >
-                            <X size={11} />
-                          </button>
-                        </span>
-                      ))
-                    ) : (
-                      <span className="pf-role-tags-empty">No role tags assigned</span>
-                    )}
-                    <button
-                      type="button"
-                      className="pf-add-tag-trigger"
-                      onClick={() => openTagModal(resume)}
-                      title="Manage role tags"
-                    >
-                      <Tag size={12} /> {resume.tags?.length ? 'Edit tags' : '+ Add Role Tag'}
-                    </button>
-                  </div>
+      <details className="pf-category-manager"><summary><Settings2 size={15} /> Manage categories <ChevronDown size={15} /></summary><div className="pf-category-manager-body"><form onSubmit={createCategory}><input value={categoryName} onChange={event => setCategoryName(event.target.value)} placeholder="New custom category" maxLength={48} /><button type="submit" disabled={savingCategory}><Plus size={14} /> Add</button></form>{categoryError && <small>{categoryError}</small>}<div className="pf-category-list">{categories.filter(item => !FALLBACK_CATEGORIES.includes(item)).map(item => <span key={item}>{item}<button type="button" onClick={() => renameCategory(item)} title={`Rename ${item}`}><Edit3 size={12} /></button><button type="button" onClick={() => removeCategory(item)} title={`Remove ${item}`}><Trash2 size={12} /></button></span>)}</div></div></details>
 
-                  <p className="pf-resume-meta">
-                    PDF Document • Uploaded {new Date(resume.uploadedAt).toLocaleDateString()}
-                  </p>
-                  <div className="pf-resume-insights">
-                    <select value={resume.category || 'General'} onChange={e => handleCategoryChange(resume.id, e.target.value)} aria-label={`Category for ${resume.filename}`}>
-                      {RESUME_CATEGORIES.map(category => <option key={category}>{category}</option>)}
-                    </select>
-                    {resume.analysis && <span className={resume.analysis.score >= 75 ? 'is-good' : 'is-review'}>{resume.analysis.score}% parse-ready</span>}
-                    <ResumeAnalysisPanel analysis={resume.analysis} onAnalyze={() => handleAnalyze(resume.id)} analyzing={analyzingId === resume.id} />
-                  </div>
-                </div>
-                <div className="pf-resume-card-actions">
-                  <button
-                    onClick={() => setPreviewResume(resume)}
-                    className="pf-preview-btn"
-                    title="Preview PDF"
-                  >
-                    <Eye size={18} />
-                  </button>
-                  {resume.downloadUrl && (
-                    <a
-                      href={resume.downloadUrl}
-                      download={resume.filename}
-                      title="Download PDF"
-                    >
-                      <Download size={18} />
-                    </a>
-                  )}
-                  <button
-                    onClick={() => openTagModal(resume)}
-                    title="Manage role tags"
-                  >
-                    <Tag size={18} />
-                  </button>
-                  {!resume.isDefault && (
-                    <button
-                      onClick={() => handleSetDefault(resume.id)}
-                      title="Set as default"
-                    >
-                      <Star size={18} />
-                    </button>
-                  )}
-                  <button
-                    onClick={() => handleDelete(resume.id)}
-                    className="pf-danger"
-                    title="Delete resume"
-                  >
-                    <Trash2 size={18} />
-                  </button>
-                </div>
-              </div>
-            );
-          })
-        )}
-      </div>
-
-      {/* Role Tags Modal */}
-      {tagModalResume && (
-        <div className="pf-preview-modal-backdrop" onClick={() => setTagModalResume(null)}>
-          <div className="pf-tag-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="pf-tag-modal-header">
-              <div>
-                <h3>Role Tags for Resume</h3>
-                <p className="pf-tag-modal-subtitle">{tagModalResume.filename}</p>
-              </div>
-              <button
-                className="pf-close-btn"
-                onClick={() => setTagModalResume(null)}
-                title="Close"
-              >
-                <X size={20} />
-              </button>
-            </div>
-
-            <div className="pf-tag-modal-body">
-              <label className="pf-tag-section-label">Active Role Tags</label>
-              <div className="pf-tag-chips-wrap">
-                {activeTags.length === 0 ? (
-                  <p className="pf-tag-empty-msg">No tags added yet. Select from suggestions below or type a custom tag.</p>
-                ) : (
-                  activeTags.map((tag) => (
-                    <span key={tag} className="pf-role-tag pf-role-tag--large">
-                      {tag}
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveTag(tag)}
-                        title={`Remove ${tag}`}
-                      >
-                        <X size={13} />
-                      </button>
-                    </span>
-                  ))
-                )}
-              </div>
-
-              <label className="pf-tag-section-label">Suggested Roles</label>
-              <div className="pf-suggested-tags">
-                {SUGGESTED_ROLES.map((role) => {
-                  const isSelected = activeTags.some(
-                    (t) => t.toLowerCase() === role.toLowerCase()
-                  );
-                  return (
-                    <button
-                      key={role}
-                      type="button"
-                      className={`pf-suggested-chip ${isSelected ? 'is-selected' : ''}`}
-                      onClick={() => (isSelected ? handleRemoveTag(role) : handleAddTag(role))}
-                    >
-                      {isSelected ? <Check size={13} /> : <Plus size={13} />}
-                      {role}
-                    </button>
-                  );
-                })}
-              </div>
-
-              <label className="pf-tag-section-label">Add Custom Role Tag</label>
-              <form
-                className="pf-custom-tag-form"
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  handleAddTag(customTagInput);
-                }}
-              >
-                <input
-                  type="text"
-                  placeholder="e.g. Quantitative Analyst, iOS Developer..."
-                  value={customTagInput}
-                  onChange={(e) => setCustomTagInput(e.target.value)}
-                  maxLength={30}
-                />
-                <Button type="submit" variant="secondary" disabled={!customTagInput.trim()}>
-                  Add
-                </Button>
-              </form>
-            </div>
-
-            <div className="pf-tag-modal-footer">
-              <Button variant="secondary" onClick={() => setTagModalResume(null)}>
-                Cancel
-              </Button>
-              <Button onClick={handleSaveTags} disabled={savingTags}>
-                {savingTags ? 'Saving…' : 'Save Tags'}
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* PDF Preview Modal */}
-      {previewResume && (
-        <div className="pf-preview-modal-backdrop" onClick={() => setPreviewResume(null)}>
-          <div className="pf-preview-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="pf-preview-modal-header">
-              <div className="pf-preview-modal-title">
-                <PdfIcon size={20} className="pf-resume-pdf-icon" />
-                <span>{previewResume.filename}</span>
-              </div>
-              <div className="pf-preview-modal-actions">
-                <a
-                  href={previewResume.fileUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="pf-modal-btn"
-                  title="Open in new tab"
-                >
-                  New Tab
-                </a>
-                <a
-                  href={previewResume.downloadUrl}
-                  download={previewResume.filename}
-                  className="pf-modal-btn"
-                  title="Download"
-                >
-                  <Download size={16} /> Download
-                </a>
-                <button
-                  className="pf-close-btn"
-                  onClick={() => setPreviewResume(null)}
-                  title="Close preview"
-                >
-                  <X size={20} />
-                </button>
-              </div>
-            </div>
-            <div className="pf-preview-modal-body">
-              <iframe
-                src={`${previewResume.fileUrl}#toolbar=1`}
-                title={previewResume.filename}
-                className="pf-pdf-iframe"
-              />
-            </div>
-          </div>
-        </div>
-      )}
-      <ResumeBuilder />
+      <main className="pf-resume-library-list">
+        {loading ? <div className="pf-library-empty"><Archive size={25} /><p>Loading your resume library...</p></div> : visibleResumes.length === 0 ? <div className="pf-library-empty"><FileText size={28} /><h2>{resumes.length ? 'No resumes match these filters' : 'Your library is ready'}</h2><p>{resumes.length ? 'Try another category, role, or search term.' : 'Upload a PDF or start with a polished resume template.'}</p></div> : visibleResumes.map(resume => {
+          const status = analysisStatus(resume);
+          return <article className="pf-resume-row" key={resume.id}>
+            <div className="pf-resume-row-file"><span className="pf-resume-row-icon"><FileText size={22} /></span><div><h2>{resume.filename}</h2><div className="pf-resume-row-sub"><span className={`pf-resume-kind ${resume.isDefault ? 'is-primary' : ''}`}>{resume.isDefault ? <><Star size={12} fill="currentColor" /> Primary Resume</> : 'Secondary resume'}</span><span>{resume.category || 'General'}</span><span>Updated {new Date(resume.updatedAt || resume.uploadedAt).toLocaleDateString()}</span></div><div className="pf-resume-row-tags">{(resume.tags || []).slice(0, 4).map(tag => <span key={tag}>{tag}</span>)}{(resume.tags || []).length > 4 && <span>+{resume.tags.length - 4}</span>}</div></div></div>
+            <div className="pf-resume-row-analysis"><span className={`pf-analysis-status is-${status.tone}`}>{status.tone === 'good' ? <Check size={13} /> : status.tone === 'warn' ? <Filter size={13} /> : <Archive size={13} />}{status.label}</span>{resume.analysis?.score !== undefined && <strong>{resume.analysis.score}%</strong>}</div>
+            <div className="pf-resume-row-actions"><button type="button" onClick={() => navigate(`/resume/${resume.id}`)}>View Resume</button><button type="button" onClick={() => navigate(`/resume/${resume.id}/studio`)}>Edit in Studio</button><button type="button" className="pf-row-more" onClick={() => setOpenMenu(openMenu === resume.id ? null : resume.id)} aria-label={`More actions for ${resume.filename}`}><MoreHorizontal size={18} /></button>{openMenu === resume.id && <div className="pf-row-menu"><button type="button" onClick={() => navigate(`/resume/${resume.id}?tab=analysis`)}>View Analysis</button><a href={resume.downloadUrl} download={resume.filename}><Download size={14} /> Download</a>{!resume.isDefault && <button type="button" onClick={() => setPrimary(resume)}>Set as primary</button>}<button type="button" onClick={() => deleteResume(resume)} className="is-danger"><Trash2 size={14} /> Delete</button></div>}</div>
+          </article>;
+        })}
+      </main>
     </div>
   );
 }

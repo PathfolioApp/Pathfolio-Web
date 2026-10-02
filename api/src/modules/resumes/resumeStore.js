@@ -5,6 +5,7 @@ const crypto = require('crypto');
 class ResumeStore {
   constructor() {
     this.resumes = new Map();
+    this.categories = new Map();
     this.nextId = 1;
     this.pool = null;
   }
@@ -23,8 +24,10 @@ class ResumeStore {
           drive_link TEXT,
           is_r2 BOOLEAN NOT NULL DEFAULT FALSE,
           tags JSON NOT NULL,
-          category VARCHAR(32) NOT NULL DEFAULT 'General',
+          category VARCHAR(48) NOT NULL DEFAULT 'General',
           analysis JSON NULL,
+          extracted_data JSON NULL,
+          updated_at DATETIME NULL,
           is_default BOOLEAN NOT NULL DEFAULT FALSE,
           uploaded_at DATETIME NOT NULL,
           FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE
@@ -33,9 +36,28 @@ class ResumeStore {
       await c.query("ALTER TABLE resumes ADD COLUMN category VARCHAR(32) NOT NULL DEFAULT 'General'").catch(error => {
         if (error.code !== 'ER_DUP_FIELDNAME') throw error;
       });
+      await c.query('ALTER TABLE resumes MODIFY COLUMN category VARCHAR(48) NOT NULL DEFAULT \'General\'').catch(error => {
+        if (!['ER_NO_SUCH_TABLE', 'ER_BAD_FIELD_ERROR'].includes(error.code)) throw error;
+      });
       await c.query('ALTER TABLE resumes ADD COLUMN analysis JSON NULL').catch(error => {
         if (error.code !== 'ER_DUP_FIELDNAME') throw error;
       });
+      await c.query('ALTER TABLE resumes ADD COLUMN extracted_data JSON NULL').catch(error => {
+        if (error.code !== 'ER_DUP_FIELDNAME') throw error;
+      });
+      await c.query('ALTER TABLE resumes ADD COLUMN updated_at DATETIME NULL').catch(error => {
+        if (error.code !== 'ER_DUP_FIELDNAME') throw error;
+      });
+      await c.query(`
+        CREATE TABLE IF NOT EXISTS resume_categories (
+          id BIGINT AUTO_INCREMENT PRIMARY KEY,
+          student_id VARCHAR(64) NOT NULL,
+          name VARCHAR(48) NOT NULL,
+          created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          UNIQUE KEY unique_student_category (student_id, name),
+          FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE
+        )
+      `);
     } finally {
       c.release();
     }
@@ -54,8 +76,10 @@ class ResumeStore {
       tags: parse(row.tags),
       category: row.category || 'General',
       analysis: parse(row.analysis),
+      extractedData: parse(row.extracted_data),
       isDefault: Boolean(row.is_default),
-      uploadedAt: new Date(row.uploaded_at).toISOString()
+      uploadedAt: new Date(row.uploaded_at).toISOString(),
+      updatedAt: row.updated_at ? new Date(row.updated_at).toISOString() : new Date(row.uploaded_at).toISOString()
     };
   }
 
@@ -86,18 +110,18 @@ class ResumeStore {
     return null;
   }
 
-  async create(studentId, { filename, filepath, driveLink, isCloud, tags, category, analysis, isDefault }) {
+  async create(studentId, { filename, filepath, driveLink, isCloud, tags, category, analysis, extractedData, isDefault }) {
     const uploadedAt = new Date().toISOString();
     if (this.pool) {
       const [result] = await this.pool.execute(
-        `INSERT INTO resumes (student_id, filename, filepath, drive_link, is_r2, tags, category, analysis, is_default, uploaded_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
-        [studentId, filename, filepath || '', driveLink || null, isCloud, JSON.stringify(tags || []), category || 'General', analysis ? JSON.stringify(analysis) : null, isDefault]
+        `INSERT INTO resumes (student_id, filename, filepath, drive_link, is_r2, tags, category, analysis, extracted_data, is_default, uploaded_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
+        [studentId, filename, filepath || '', driveLink || null, isCloud, JSON.stringify(tags || []), category || 'General', analysis ? JSON.stringify(analysis) : null, extractedData ? JSON.stringify(extractedData) : null, isDefault]
       );
       return await this.findOwnedResume(studentId, result.insertId);
     }
     const id = this.nextId++;
-    const record = { id, studentId, filename, filepath: filepath || '', driveLink: driveLink || null, isCloud: Boolean(isCloud), tags: tags || [], category: category || 'General', analysis: analysis || null, isDefault: Boolean(isDefault), uploadedAt };
+    const record = { id, studentId, filename, filepath: filepath || '', driveLink: driveLink || null, isCloud: Boolean(isCloud), tags: tags || [], category: category || 'General', analysis: analysis || null, extractedData: extractedData || null, isDefault: Boolean(isDefault), uploadedAt, updatedAt: uploadedAt };
     this.resumes.set(id, record);
     return record;
   }
@@ -112,7 +136,7 @@ class ResumeStore {
 
   async updateLink(studentId, resumeId, driveLink) {
     if (this.pool) {
-      await this.pool.execute('UPDATE resumes SET drive_link = ? WHERE id = ? AND student_id = ?', [driveLink || null, resumeId, studentId]);
+      await this.pool.execute('UPDATE resumes SET drive_link = ?, updated_at = NOW() WHERE id = ? AND student_id = ?', [driveLink || null, resumeId, studentId]);
       return await this.findOwnedResume(studentId, resumeId);
     }
     const r = this.resumes.get(Number(resumeId));
@@ -124,7 +148,7 @@ class ResumeStore {
 
   async updateTags(studentId, resumeId, tags) {
     if (this.pool) {
-      await this.pool.execute('UPDATE resumes SET tags = ? WHERE id = ? AND student_id = ?', [JSON.stringify(tags || []), resumeId, studentId]);
+      await this.pool.execute('UPDATE resumes SET tags = ?, updated_at = NOW() WHERE id = ? AND student_id = ?', [JSON.stringify(tags || []), resumeId, studentId]);
       return await this.findOwnedResume(studentId, resumeId);
     }
     const r = this.resumes.get(Number(resumeId));
@@ -136,7 +160,7 @@ class ResumeStore {
 
   async updateCategory(studentId, resumeId, category) {
     if (this.pool) {
-      await this.pool.execute('UPDATE resumes SET category = ? WHERE id = ? AND student_id = ?', [category, resumeId, studentId]);
+      await this.pool.execute('UPDATE resumes SET category = ?, updated_at = NOW() WHERE id = ? AND student_id = ?', [category, resumeId, studentId]);
       return await this.findOwnedResume(studentId, resumeId);
     }
     const r = this.resumes.get(Number(resumeId));
@@ -146,17 +170,53 @@ class ResumeStore {
 
   async updateAnalysis(studentId, resumeId, analysis) {
     if (this.pool) {
-      await this.pool.execute('UPDATE resumes SET analysis = ? WHERE id = ? AND student_id = ?', [JSON.stringify(analysis), resumeId, studentId]);
+      await this.pool.execute('UPDATE resumes SET analysis = ?, extracted_data = ?, updated_at = NOW() WHERE id = ? AND student_id = ?', [JSON.stringify(analysis), JSON.stringify(analysis?.structured || null), resumeId, studentId]);
       return await this.findOwnedResume(studentId, resumeId);
     }
     const r = this.resumes.get(Number(resumeId));
-    if (r && r.studentId === studentId) r.analysis = analysis;
+    if (r && r.studentId === studentId) {
+      r.analysis = analysis;
+      r.extractedData = analysis?.structured || null;
+      r.updatedAt = new Date().toISOString();
+    }
+    return r;
+  }
+
+  async replaceFile(studentId, resumeId, { filename, filepath, analysis, extractedData }) {
+    if (this.pool) {
+      await this.pool.execute(
+        'UPDATE resumes SET filename = ?, filepath = ?, analysis = ?, extracted_data = ?, updated_at = NOW() WHERE id = ? AND student_id = ?',
+        [filename, filepath, JSON.stringify(analysis || null), JSON.stringify(extractedData || null), resumeId, studentId]
+      );
+      return await this.findOwnedResume(studentId, resumeId);
+    }
+    const r = this.resumes.get(Number(resumeId));
+    if (r && r.studentId === studentId) {
+      r.filename = filename;
+      r.filepath = filepath;
+      r.analysis = analysis || null;
+      r.extractedData = extractedData || null;
+      r.updatedAt = new Date().toISOString();
+    }
+    return r;
+  }
+
+  async updateExtractedData(studentId, resumeId, extractedData) {
+    if (this.pool) {
+      await this.pool.execute('UPDATE resumes SET extracted_data = ?, updated_at = NOW() WHERE id = ? AND student_id = ?', [JSON.stringify(extractedData || null), resumeId, studentId]);
+      return await this.findOwnedResume(studentId, resumeId);
+    }
+    const r = this.resumes.get(Number(resumeId));
+    if (r && r.studentId === studentId) {
+      r.extractedData = extractedData || null;
+      r.updatedAt = new Date().toISOString();
+    }
     return r;
   }
 
   async rename(studentId, resumeId, filename) {
     if (this.pool) {
-      await this.pool.execute('UPDATE resumes SET filename = ? WHERE id = ? AND student_id = ?', [filename, resumeId, studentId]);
+      await this.pool.execute('UPDATE resumes SET filename = ?, updated_at = NOW() WHERE id = ? AND student_id = ?', [filename, resumeId, studentId]);
       return await this.findOwnedResume(studentId, resumeId);
     }
     const r = this.resumes.get(Number(resumeId));
@@ -212,6 +272,53 @@ class ResumeStore {
       return true;
     }
     return false;
+  }
+
+  async listCategories(studentId) {
+    const builtIns = ['Software Engineering', 'Backend Engineering', 'Cloud / DevOps', 'Data / AI', 'Core Engineering', 'Design / Product', 'General'];
+    if (this.pool) {
+      const [rows] = await this.pool.execute('SELECT name FROM resume_categories WHERE student_id = ? ORDER BY name', [studentId]);
+      return [...builtIns, ...rows.map(row => row.name).filter(name => !builtIns.includes(name))];
+    }
+    return [...new Set([...(this.categories.get(studentId) || []), ...builtIns])];
+  }
+
+  async createCategory(studentId, name) {
+    if (this.pool) await this.pool.execute('INSERT IGNORE INTO resume_categories (student_id, name) VALUES (?, ?)', [studentId, name]);
+    else this.categories.set(studentId, [...new Set([...(this.categories.get(studentId) || []), name])]);
+    return name;
+  }
+
+  async renameCategory(studentId, previousName, nextName) {
+    if (this.pool) {
+      const c = await this.pool.getConnection();
+      try {
+        await c.beginTransaction();
+        await c.execute('UPDATE resumes SET category = ?, updated_at = NOW() WHERE student_id = ? AND category = ?', [nextName, studentId, previousName]);
+        await c.execute('UPDATE resume_categories SET name = ? WHERE student_id = ? AND name = ?', [nextName, studentId, previousName]);
+        await c.commit();
+      } catch (error) { await c.rollback(); throw error; } finally { c.release(); }
+    } else {
+      const names = (this.categories.get(studentId) || []).map(name => name === previousName ? nextName : name);
+      this.categories.set(studentId, [...new Set(names)]);
+      for (const resume of this.resumes.values()) if (resume.studentId === studentId && resume.category === previousName) resume.category = nextName;
+    }
+    return nextName;
+  }
+
+  async deleteCategory(studentId, name) {
+    if (this.pool) {
+      const c = await this.pool.getConnection();
+      try {
+        await c.beginTransaction();
+        await c.execute("UPDATE resumes SET category = 'General', updated_at = NOW() WHERE student_id = ? AND category = ?", [studentId, name]);
+        await c.execute('DELETE FROM resume_categories WHERE student_id = ? AND name = ?', [studentId, name]);
+        await c.commit();
+      } catch (error) { await c.rollback(); throw error; } finally { c.release(); }
+    } else {
+      this.categories.set(studentId, (this.categories.get(studentId) || []).filter(category => category !== name));
+      for (const resume of this.resumes.values()) if (resume.studentId === studentId && resume.category === name) resume.category = 'General';
+    }
   }
 }
 

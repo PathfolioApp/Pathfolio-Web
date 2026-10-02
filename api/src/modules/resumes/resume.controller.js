@@ -8,6 +8,7 @@ const {
   validateFilenameForRename,
   normalizeTags,
   normalizeCategory,
+  RESUME_CATEGORIES,
   badRequest,
   MAX_RESUME_SIZE,
 } = require('./resumeValidation');
@@ -91,8 +92,10 @@ const resumeController = {
         tags,
         category,
         analysis,
+        extractedData: analysis.structured,
         isDefault,
       });
+      if (isDefault) await resumeStore.setDefault(req.student.id, resume.id);
 
       res.status(201).json({
         ...resume,
@@ -146,6 +149,28 @@ const resumeController = {
     }
   },
 
+  async replace(req, res, next) {
+    let uploadedKey = null;
+    try {
+      const resume = await resumeStore.findOwnedResume(req.student.id, req.params.resumeId);
+      if (!resume) throw notFound();
+      const file = req.file;
+      if (!file) throw badRequest('Replacement PDF is required');
+      validatePdfBuffer(file.buffer);
+      const filename = sanitizeFilename(file.originalname);
+      const key = `resumes/${crypto.randomUUID()}_${filename}`;
+      await r2Service.uploadFile(file.buffer, key, 'application/pdf');
+      uploadedKey = key;
+      const analysis = await analysePdf(file.buffer);
+      const updated = await resumeStore.replaceFile(req.student.id, resume.id, { filename, filepath: key, analysis, extractedData: analysis.structured });
+      if (resume.filepath) await r2Service.deleteFile(resume.filepath).catch(() => {});
+      res.json({ ...updated, fileUrl: `/api/resumes/${updated.id}/file?mode=view`, downloadUrl: `/api/resumes/${updated.id}/file?mode=download` });
+    } catch (error) {
+      if (uploadedKey) await r2Service.deleteFile(uploadedKey).catch(() => {});
+      next(error);
+    }
+  },
+
   async updateTags(req, res, next) {
     try {
       const { resumeId } = req.params;
@@ -183,6 +208,62 @@ const resumeController = {
       if (!resume) throw notFound();
       const updated = await resumeStore.updateCategory(req.student.id, resumeId, normalizeCategory(req.body?.category));
       res.json(updated);
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  async listCategories(req, res, next) {
+    try {
+      res.json(await resumeStore.listCategories(req.student.id));
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  async createCategory(req, res, next) {
+    try {
+      const name = normalizeCategory(req.body?.name);
+      if (!name || RESUME_CATEGORIES.includes(name)) throw badRequest('A custom category name is required');
+      await resumeStore.createCategory(req.student.id, name);
+      res.status(201).json({ name });
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  async renameCategory(req, res, next) {
+    try {
+      const previousName = normalizeCategory(req.params.name);
+      const nextName = normalizeCategory(req.body?.name);
+      if (RESUME_CATEGORIES.includes(previousName)) throw badRequest('Built-in categories cannot be renamed');
+      if (!nextName || nextName === 'General') throw badRequest('A valid new category name is required');
+      const categories = await resumeStore.listCategories(req.student.id);
+      if (!categories.includes(previousName)) throw notFound('Category not found');
+      res.json({ name: await resumeStore.renameCategory(req.student.id, previousName, nextName) });
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  async deleteCategory(req, res, next) {
+    try {
+      const name = normalizeCategory(req.params.name);
+      if (RESUME_CATEGORIES.includes(name)) throw badRequest('Built-in categories cannot be removed');
+      await resumeStore.deleteCategory(req.student.id, name);
+      res.json({ detail: 'Category removed; affected resumes moved to General' });
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  async updateExtractedData(req, res, next) {
+    try {
+      const resume = await resumeStore.findOwnedResume(req.student.id, req.params.resumeId);
+      if (!resume) throw notFound();
+      const data = req.body?.extractedData;
+      if (!data || typeof data !== 'object' || Array.isArray(data)) throw badRequest('Structured resume data is required');
+      res.json(await resumeStore.updateExtractedData(req.student.id, req.params.resumeId, data));
     } catch (error) {
       next(error);
     }

@@ -1,0 +1,1 @@
+.pf-detail-record-fields{display:grid;grid-template-columns:minmax(0,1fr) minmax(150px,.6fr);gap:8px}.pf-detail-record-fields input{min-width:0}.pf-detail-record-dates{display:block;margin:-3px 0 5px;color:var(--text-muted);font-size:.72rem;font-weight:600}@media(max-width:560px){.pf-detail-record-fields{grid-template-columns:1fr}}
