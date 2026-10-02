@@ -1,6 +1,6 @@
 import React from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, User, BookOpen, Briefcase, Settings, GraduationCap, Building2, ShieldCheck } from 'lucide-react';
+import { LayoutDashboard, User, BookOpen, Briefcase, FileText, Settings, GraduationCap, Building2, ShieldCheck } from 'lucide-react';
 import { PortalShell } from '../PortalShell';
 import { useAuth } from '../../app/providers/AuthProvider';
 
@@ -18,6 +18,7 @@ export function StudentLayout() {
     [User, 'My Profile', '/profile'],
     [BookOpen, 'Story', '/story'],
     [Briefcase, 'Placement Portal', '/placement'],
+    [FileText, 'Resumes', '/resume'],
     [Settings, 'Settings', '/settings']
   ];
 

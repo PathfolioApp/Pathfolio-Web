@@ -23,11 +23,19 @@ class ResumeStore {
           drive_link TEXT,
           is_r2 BOOLEAN NOT NULL DEFAULT FALSE,
           tags JSON NOT NULL,
+          category VARCHAR(32) NOT NULL DEFAULT 'General',
+          analysis JSON NULL,
           is_default BOOLEAN NOT NULL DEFAULT FALSE,
           uploaded_at DATETIME NOT NULL,
           FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE
         )
       `);
+      await c.query("ALTER TABLE resumes ADD COLUMN category VARCHAR(32) NOT NULL DEFAULT 'General'").catch(error => {
+        if (error.code !== 'ER_DUP_FIELDNAME') throw error;
+      });
+      await c.query('ALTER TABLE resumes ADD COLUMN analysis JSON NULL').catch(error => {
+        if (error.code !== 'ER_DUP_FIELDNAME') throw error;
+      });
     } finally {
       c.release();
     }
@@ -44,6 +52,8 @@ class ResumeStore {
       driveLink: row.drive_link,
       isCloud: Boolean(row.is_r2),
       tags: parse(row.tags),
+      category: row.category || 'General',
+      analysis: parse(row.analysis),
       isDefault: Boolean(row.is_default),
       uploadedAt: new Date(row.uploaded_at).toISOString()
     };
@@ -76,18 +86,18 @@ class ResumeStore {
     return null;
   }
 
-  async create(studentId, { filename, filepath, driveLink, isCloud, tags, isDefault }) {
+  async create(studentId, { filename, filepath, driveLink, isCloud, tags, category, analysis, isDefault }) {
     const uploadedAt = new Date().toISOString();
     if (this.pool) {
       const [result] = await this.pool.execute(
-        `INSERT INTO resumes (student_id, filename, filepath, drive_link, is_r2, tags, is_default, uploaded_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, NOW())`,
-        [studentId, filename, filepath || '', driveLink || null, isCloud, JSON.stringify(tags || []), isDefault]
+        `INSERT INTO resumes (student_id, filename, filepath, drive_link, is_r2, tags, category, analysis, is_default, uploaded_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+        [studentId, filename, filepath || '', driveLink || null, isCloud, JSON.stringify(tags || []), category || 'General', analysis ? JSON.stringify(analysis) : null, isDefault]
       );
       return await this.findOwnedResume(studentId, result.insertId);
     }
     const id = this.nextId++;
-    const record = { id, studentId, filename, filepath: filepath || '', driveLink: driveLink || null, isCloud: Boolean(isCloud), tags: tags || [], isDefault: Boolean(isDefault), uploadedAt };
+    const record = { id, studentId, filename, filepath: filepath || '', driveLink: driveLink || null, isCloud: Boolean(isCloud), tags: tags || [], category: category || 'General', analysis: analysis || null, isDefault: Boolean(isDefault), uploadedAt };
     this.resumes.set(id, record);
     return record;
   }
@@ -121,6 +131,26 @@ class ResumeStore {
     if (r && r.studentId === studentId) {
       r.tags = tags || [];
     }
+    return r;
+  }
+
+  async updateCategory(studentId, resumeId, category) {
+    if (this.pool) {
+      await this.pool.execute('UPDATE resumes SET category = ? WHERE id = ? AND student_id = ?', [category, resumeId, studentId]);
+      return await this.findOwnedResume(studentId, resumeId);
+    }
+    const r = this.resumes.get(Number(resumeId));
+    if (r && r.studentId === studentId) r.category = category;
+    return r;
+  }
+
+  async updateAnalysis(studentId, resumeId, analysis) {
+    if (this.pool) {
+      await this.pool.execute('UPDATE resumes SET analysis = ? WHERE id = ? AND student_id = ?', [JSON.stringify(analysis), resumeId, studentId]);
+      return await this.findOwnedResume(studentId, resumeId);
+    }
+    const r = this.resumes.get(Number(resumeId));
+    if (r && r.studentId === studentId) r.analysis = analysis;
     return r;
   }
 

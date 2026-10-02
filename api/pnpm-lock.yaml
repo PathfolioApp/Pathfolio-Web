@@ -35,6 +35,9 @@ importers:
       pathfolio-app-workspace:
         specifier: file:..
         version: file:..
+      pdf-parse:
+        specifier: ^1.1.4
+        version: 1.1.4
     devDependencies:
       morgan:
         specifier: ^1.10.0
@@ -385,6 +388,9 @@ packages:
     resolution: {integrity: sha512-+EUsqGPLsM+j/zdChZjsnX51g4XrHFOIXwfnCVPGlQk/k5giakcKsuxCObBRu6DSm9opw/O6slWbJdghQM4bBg==}
     engines: {node: '>= 0.6'}
 
+  node-ensure@0.0.0:
+    resolution: {integrity: sha512-DRI60hzo2oKN1ma0ckc6nQWlHU69RH6xN0sjQTjMpChPfTYvKZdcQFfdYK2RWbJcKyUizSIy/l8OTGxMAM1QDw==}
+
   nodemailer@10.0.12:
     resolution: {integrity: sha512-PQ46oNbNMuH/Sno7B5IWIU9etytwrO0xdTFvWXpIQFRXhBAXtzD48243AS+BCbQQTPD8y3fqUrgLn0tSo77gvg==}
     engines: {node: '>=20.0.0'}
@@ -414,6 +420,10 @@ packages:
 
   pathfolio-app-workspace@file:..:
     resolution: {directory: .., type: directory}
+
+  pdf-parse@1.1.4:
+    resolution: {integrity: sha512-XRIRcLgk6ZnUbsHsYXExMw+krrPE81hJ6FQPLdBNhhBefqIQKXu/WeTgNBGSwPrfU0v+UCEwn7AoAUOsVKHFvQ==}
+    engines: {node: '>=6.8.1'}
 
   proxy-addr@2.0.8:
     resolution: {integrity: sha512-5nnx0yGyVUcY6t9RnWcARWtwT9F1D8O9rt08htPvnd49W1IgZtmLkhu9WfMzQj1cFxjHIO6connUNVW5k7AVyQ==}
@@ -975,6 +985,8 @@ snapshots:
 
   negotiator@0.6.3: {}
 
+  node-ensure@0.0.0: {}
+
   nodemailer@10.0.12: {}
 
   object-assign@4.1.1: {}
@@ -992,6 +1004,10 @@ snapshots:
   path-to-regexp@0.1.13: {}
 
   pathfolio-app-workspace@file:..: {}
+
+  pdf-parse@1.1.4:
+    dependencies:
+      node-ensure: 0.0.0
 
   proxy-addr@2.0.8:
     dependencies:

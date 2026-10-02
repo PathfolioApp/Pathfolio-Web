@@ -6,7 +6,7 @@
   "type": "commonjs",
   "scripts": {
     "start": "node src/server.js",
-    "dev": "node --watch src/server.js",
+    "dev": "node --watch --watch-path=src --watch-preserve-output src/server.js",
     "test:smoke": "node scripts/smoke-test.js",
     "test:resilience": "node scripts/test-db-reset-resilience.js",
     "verify:async": "node scripts/verify-async-safety.js",
@@ -23,7 +23,8 @@
     "multer": "^2.4.0",
     "mysql2": "^3.24.3",
     "nodemailer": "^10.0.12",
-    "pathfolio-app-workspace": "file:.."
+    "pathfolio-app-workspace": "file:..",
+    "pdf-parse": "^1.1.4"
   },
   "devDependencies": {
     "morgan": "^1.10.0"

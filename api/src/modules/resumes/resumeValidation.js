@@ -2,6 +2,7 @@ const MAX_RESUME_SIZE = 10 * 1024 * 1024;
 const MAX_FILENAME_LENGTH = 255;
 const MAX_TAGS = 20;
 const MAX_TAG_LENGTH = 30;
+const RESUME_CATEGORIES = ['Software', 'Data', 'Core', 'Design', 'General'];
 
 function badRequest(message) {
   const error = new Error(message);
@@ -80,6 +81,11 @@ function validatePdfBuffer(buffer) {
   }
 }
 
+function normalizeCategory(category) {
+  const value = String(category || 'General').trim();
+  return RESUME_CATEGORIES.includes(value) ? value : 'General';
+}
+
 module.exports = {
   MAX_RESUME_SIZE,
   normalizeTags,
@@ -87,5 +93,7 @@ module.exports = {
   validateFilenameForRename,
   validateDriveUrl,
   validatePdfBuffer,
+  normalizeCategory,
+  RESUME_CATEGORIES,
   badRequest,
 };

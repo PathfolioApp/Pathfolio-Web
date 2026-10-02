@@ -15,9 +15,13 @@ import {
   Check,
   Tag,
   Plus,
+  ChevronDown,
+  CheckCircle2,
+  AlertCircle,
 } from 'lucide-react';
 import { Button } from '../../../components/ui/Button';
 import { PdfIcon } from '../../../components/ui/PdfIcon';
+import { ResumeBuilder } from './ResumeBuilder';
 import './ResumePage.css';
 
 const SUGGESTED_ROLES = [
@@ -34,11 +38,59 @@ const SUGGESTED_ROLES = [
   'Cybersecurity',
   'Core Engineering',
 ];
+const RESUME_CATEGORIES = ['Software', 'Data', 'Core', 'Design', 'General'];
+
+const PORTAL_LABELS = {
+  naukri: 'Naukri Resume Parser',
+  greenhouse: 'Greenhouse',
+  lever: 'Lever',
+  workday: 'Workday',
+};
+
+function ResumeAnalysisPanel({ analysis, onAnalyze, analyzing }) {
+  const [open, setOpen] = useState(false);
+  if (!analysis) return null;
+  if (!analysis.extracted) {
+    return <div className="pf-resume-analysis pf-analysis-stale"><p>This resume has an older analysis format.</p><button type="button" onClick={onAnalyze} disabled={analyzing}>{analyzing ? 'Analyzing resume...' : 'Run full analysis'}</button></div>;
+  }
+  const extracted = analysis.extracted || {};
+  const fields = [
+    ['Summary', extracted.summary],
+    ['Education', extracted.education],
+    ['Experience', extracted.experience],
+    ['Projects', extracted.projects],
+    ['Skills', extracted.skills],
+  ].filter(([, value]) => Array.isArray(value) ? value.length : value);
+
+  return (
+    <div className="pf-resume-analysis">
+      <div className="pf-analysis-heading">
+        <div><span className="pf-analysis-kicker">ATS pass analysis</span><p>Will the screening bots read you right?</p></div>
+        <strong>{analysis.score}%<small>pass rate</small></strong>
+      </div>
+      <div className="pf-analysis-progress"><span style={{ width: `${analysis.score}%` }} /></div>
+      <div className="pf-analysis-label">Tested against the parsers recruiters use</div>
+      <div className="pf-analysis-portals">
+        {Object.entries(analysis.portalReadiness || {}).map(([portal, passed]) => (
+          <div key={portal}><span className={passed ? 'is-good' : 'is-review'}>{passed ? <CheckCircle2 size={14} /> : <AlertCircle size={14} />}{PORTAL_LABELS[portal] || portal}</span><b className={passed ? 'is-good' : 'is-review'}>{passed ? 'Parses clean' : 'Review format'}</b></div>
+        ))}
+      </div>
+      <button type="button" className="pf-analysis-toggle" onClick={() => setOpen(!open)}>{open ? 'Hide extracted fields' : 'Show extracted fields'}<ChevronDown size={15} className={open ? 'is-open' : ''} /></button>
+      {open && <div className="pf-analysis-fields">
+        <div className="pf-analysis-contact"><b>Contact</b><span>{extracted.contact?.email || 'Email not detected'}</span><span>{extracted.contact?.phone || 'Phone not detected'}</span></div>
+        {fields.map(([label, value]) => <div className="pf-analysis-field" key={label}><b>{label}</b><p>{Array.isArray(value) ? value.join(' • ') : value}</p></div>)}
+      </div>}
+    </div>
+  );
+}
 
 export function ResumePage() {
   const [resumes, setResumes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
+  const [uploadCategory, setUploadCategory] = useState('General');
+  const [categoryFilter, setCategoryFilter] = useState('All');
+  const [analyzingId, setAnalyzingId] = useState(null);
   const [error, setError] = useState('');
   const [previewResume, setPreviewResume] = useState(null);
   const [editingId, setEditingId] = useState(null);
@@ -67,25 +119,42 @@ export function ResumePage() {
   };
 
   const handleFileUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    if (file.type !== 'application/pdf') {
-      return setError('Only PDF files are supported.');
-    }
-    if (file.size > 10 * 1024 * 1024) {
-      return setError('File size must be under 10MB.');
-    }
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+    const invalid = files.find(file => file.type !== 'application/pdf' || file.size > 10 * 1024 * 1024);
+    if (invalid) return setError(`${invalid.name}: only PDF files under 10MB are supported.`);
 
     try {
       setUploading(true);
       setError('');
-      await uploadResume(file);
+      for (const file of files) await uploadResume(file, [], uploadCategory);
       await fetchResumes();
     } catch (err) {
       setError(err.message || 'Failed to upload resume.');
     } finally {
       setUploading(false);
       e.target.value = '';
+    }
+  };
+
+  const handleCategoryChange = async (resumeId, category) => {
+    try {
+      await resumeApi.updateCategory(resumeId, category);
+      await fetchResumes();
+    } catch (err) {
+      setError(err.message || 'Failed to update category.');
+    }
+  };
+
+  const handleAnalyze = async (resumeId) => {
+    try {
+      setAnalyzingId(resumeId);
+      await resumeApi.analyze(resumeId);
+      await fetchResumes();
+    } catch (err) {
+      setError(err.message || 'Failed to analyze resume.');
+    } finally {
+      setAnalyzingId(null);
     }
   };
 
@@ -185,12 +254,16 @@ export function ResumePage() {
           <p>Upload and manage role-tailored PDF resumes for placements and applications.</p>
         </div>
         <div className="pf-resume-actions">
+          <select className="pf-resume-category-select" value={uploadCategory} onChange={e => setUploadCategory(e.target.value)} aria-label="Upload category">
+            {RESUME_CATEGORIES.map(category => <option key={category} value={category}>{category} resume</option>)}
+          </select>
           <label className="pf-upload-btn">
             {uploading ? <Loader className="spin" size={16} /> : <UploadCloud size={16} />}
             <span>Upload PDF</span>
             <input
               type="file"
               accept="application/pdf"
+              multiple
               onChange={handleFileUpload}
               disabled={uploading}
               hidden
@@ -200,6 +273,11 @@ export function ResumePage() {
       </div>
 
       {error && <div className="pf-resume-error">{error}</div>}
+
+      <div className="pf-resume-filter-row">
+        <div><strong>{resumes.length}</strong> saved resumes</div>
+        <div className="pf-resume-filters">{['All', ...RESUME_CATEGORIES].map(category => <button type="button" key={category} className={categoryFilter === category ? 'is-active' : ''} onClick={() => setCategoryFilter(category)}>{category}</button>)}</div>
+      </div>
 
       <div className="pf-resume-list">
         {loading ? (
@@ -224,7 +302,7 @@ export function ResumePage() {
             </label>
           </div>
         ) : (
-          resumes.map((resume) => {
+          resumes.filter(resume => categoryFilter === 'All' || (resume.category || 'General') === categoryFilter).map((resume) => {
             const isEditing = editingId === resume.id;
             return (
               <div
@@ -311,6 +389,13 @@ export function ResumePage() {
                   <p className="pf-resume-meta">
                     PDF Document • Uploaded {new Date(resume.uploadedAt).toLocaleDateString()}
                   </p>
+                  <div className="pf-resume-insights">
+                    <select value={resume.category || 'General'} onChange={e => handleCategoryChange(resume.id, e.target.value)} aria-label={`Category for ${resume.filename}`}>
+                      {RESUME_CATEGORIES.map(category => <option key={category}>{category}</option>)}
+                    </select>
+                    {resume.analysis && <span className={resume.analysis.score >= 75 ? 'is-good' : 'is-review'}>{resume.analysis.score}% parse-ready</span>}
+                    <ResumeAnalysisPanel analysis={resume.analysis} onAnalyze={() => handleAnalyze(resume.id)} analyzing={analyzingId === resume.id} />
+                  </div>
                 </div>
                 <div className="pf-resume-card-actions">
                   <button
@@ -495,6 +580,7 @@ export function ResumePage() {
           </div>
         </div>
       )}
+      <ResumeBuilder />
     </div>
   );
 }

@@ -56,6 +56,77 @@
   flex-shrink: 0;
 }
 
+  .pf-resume-category-select {
+    border: 1px solid #d8d2c4;
+    border-radius: 8px;
+    background: #fff;
+    color: #264e36;
+    padding: 9px 28px 9px 10px;
+    font-size: .82rem;
+    cursor: pointer;
+  }
+
+  .pf-resume-filter-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    margin: 0 0 14px;
+    color: #68766b;
+    font-size: .84rem;
+  }
+
+  .pf-resume-filter-row strong { color: #264e36; }
+  .pf-resume-filters { display: flex; flex-wrap: wrap; gap: 6px; }
+  .pf-resume-filters button {
+    border: 1px solid #d8d2c4;
+    background: #fff;
+    color: #5f6b65;
+    border-radius: 999px;
+    padding: 5px 10px;
+    cursor: pointer;
+    font-size: .76rem;
+  }
+  .pf-resume-filters button.is-active { background: #eaf2ec; border-color: #bbd2c1; color: #264e36; font-weight: 600; }
+
+  .pf-resume-insights { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; margin-top: 8px; font-size: .72rem; color: #68766b; }
+  .pf-resume-insights select { border: 1px solid #d8d2c4; border-radius: 5px; background: #fff; color: #4e6052; padding: 3px 6px; font-size: .72rem; }
+  .pf-resume-insights > span { padding: 3px 7px; border-radius: 999px; background: #f3efe7; }
+  .pf-resume-insights .is-good { color: #286f45; background: #eaf7ed; }
+  .pf-resume-insights .is-review { color: #995b00; background: #fcf4e9; }
+  .pf-portal-checks { display: flex; flex-wrap: wrap; gap: 5px; width: 100%; }
+  .pf-portal-checks span { font-size: .69rem; }
+
+  .pf-resume-analysis { margin-top: 14px; padding: 14px 16px; border: 1px solid #dce4dc; border-radius: 10px; background: #fbfcfb; max-width: 720px; }
+  .pf-analysis-heading { display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; }
+  .pf-analysis-kicker, .pf-analysis-label { color: #58708c; font-size: .68rem; letter-spacing: .08em; text-transform: uppercase; font-weight: 700; }
+  .pf-analysis-heading p { color: #264e36; font-size: .75rem; margin: 4px 0 0; }
+  .pf-analysis-heading strong { color: #16804b; font-size: 1.2rem; line-height: 1; text-align: right; }
+  .pf-analysis-heading strong small { display: block; color: #819080; font-size: .62rem; font-weight: 500; margin-top: 3px; }
+  .pf-analysis-progress { height: 5px; background: #e4eaf0; border-radius: 99px; overflow: hidden; margin: 14px 0 18px; }
+  .pf-analysis-progress span { display: block; height: 100%; background: #1477ef; border-radius: inherit; }
+  .pf-analysis-label { font-weight: 500; letter-spacing: .04em; margin-bottom: 8px; }
+  .pf-analysis-portals { display: grid; gap: 7px; border-top: 1px solid #e1e7e1; padding-top: 10px; }
+  .pf-analysis-portals > div { display: flex; justify-content: space-between; gap: 12px; align-items: center; font-size: .78rem; }
+  .pf-analysis-portals span { display: inline-flex; align-items: center; gap: 7px; color: #1f3127; }
+  .pf-analysis-portals b { border-radius: 99px; padding: 4px 9px; font-size: .67rem; font-weight: 600; }
+  .pf-analysis-portals .is-good { color: #167448; background: #e1f3e9; }
+  .pf-analysis-portals .is-review { color: #995b00; background: #fcf0db; }
+  .pf-analysis-toggle { display: inline-flex; align-items: center; gap: 5px; margin-top: 12px; padding: 0; border: 0; background: none; color: #264e36; font-size: .74rem; font-weight: 600; cursor: pointer; }
+  .pf-analysis-toggle svg { transition: transform .15s ease; }
+  .pf-analysis-toggle svg.is-open { transform: rotate(180deg); }
+  .pf-analysis-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; border-top: 1px solid #e1e7e1; margin-top: 10px; padding-top: 10px; }
+  .pf-analysis-contact, .pf-analysis-field { display: grid; gap: 3px; background: #f3f6f3; border-radius: 7px; padding: 8px; min-width: 0; }
+  .pf-analysis-contact b, .pf-analysis-field b { color: #58708c; font-size: .66rem; text-transform: uppercase; letter-spacing: .05em; }
+  .pf-analysis-contact span, .pf-analysis-field p { color: #405248; font-size: .74rem; line-height: 1.35; margin: 0; overflow-wrap: anywhere; }
+  .pf-analysis-stale { display: flex; align-items: center; justify-content: space-between; gap: 12px; color: #68766b; font-size: .75rem; }
+  .pf-analysis-stale p { margin: 0; }
+  .pf-analysis-stale button { border: 1px solid #bbd2c1; border-radius: 7px; background: #eaf2ec; color: #264e36; padding: 7px 10px; font-size: .74rem; font-weight: 600; cursor: pointer; }
+  .pf-analysis-stale button:disabled { opacity: .6; cursor: wait; }
+  @media (max-width: 620px) { .pf-analysis-fields { grid-template-columns: 1fr; } }
+  .pf-resume-filter-row { align-items: flex-start; flex-direction: column; }
+  .pf-resume-category-select { width: 100%; }
+
 .pf-upload-btn {
   display: inline-flex;
   align-items: center;

@@ -1,11 +1,13 @@
 const crypto = require('crypto');
 const resumeStore = require('./resumeStore');
 const r2Service = require('./r2.service');
+const { analysePdf } = require('./resumeAnalysis');
 const {
   validatePdfBuffer,
   sanitizeFilename,
   validateFilenameForRename,
   normalizeTags,
+  normalizeCategory,
   badRequest,
   MAX_RESUME_SIZE,
 } = require('./resumeValidation');
@@ -20,6 +22,18 @@ function serviceError(message, statusCode = 400) {
   const error = new Error(message);
   error.statusCode = statusCode;
   return error;
+}
+
+async function bodyToBuffer(body) {
+  if (Buffer.isBuffer(body)) return body;
+  if (typeof body.transformToByteArray === 'function') return Buffer.from(await body.transformToByteArray());
+  if (typeof body.arrayBuffer === 'function') return Buffer.from(await body.arrayBuffer());
+  if (typeof body.on === 'function') {
+    const chunks = [];
+    for await (const chunk of body) chunks.push(chunk);
+    return Buffer.concat(chunks);
+  }
+  return Buffer.from(body);
 }
 
 const resumeController = {
@@ -66,6 +80,8 @@ const resumeController = {
 
       const count = await resumeStore.count(req.student.id);
       const isDefault = count === 0;
+      const category = normalizeCategory(req.body?.category);
+      const analysis = await analysePdf(file.buffer);
 
       const resume = await resumeStore.create(req.student.id, {
         filename,
@@ -73,6 +89,8 @@ const resumeController = {
         driveLink: null,
         isCloud: true,
         tags,
+        category,
+        analysis,
         isDefault,
       });
 
@@ -152,6 +170,33 @@ const resumeController = {
 
       const normalized = validateFilenameForRename(filename, resume.filename);
       const updated = await resumeStore.rename(req.student.id, resumeId, normalized);
+      res.json(updated);
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  async updateCategory(req, res, next) {
+    try {
+      const { resumeId } = req.params;
+      const resume = await resumeStore.findOwnedResume(req.student.id, resumeId);
+      if (!resume) throw notFound();
+      const updated = await resumeStore.updateCategory(req.student.id, resumeId, normalizeCategory(req.body?.category));
+      res.json(updated);
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  async analyze(req, res, next) {
+    try {
+      const resume = await resumeStore.findOwnedResume(req.student.id, req.params.resumeId);
+      if (!resume) throw notFound();
+      if (!resume.filepath) throw badRequest('This resume does not have an uploaded file');
+      const object = await r2Service.getFile(resume.filepath);
+      if (!object.Body) throw serviceError('Resume file is unavailable', 404);
+      const analysis = await analysePdf(await bodyToBuffer(object.Body));
+      const updated = await resumeStore.updateAnalysis(req.student.id, req.params.resumeId, analysis);
       res.json(updated);
     } catch (error) {
       next(error);

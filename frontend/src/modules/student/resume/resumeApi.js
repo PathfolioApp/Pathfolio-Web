@@ -15,18 +15,22 @@ export const resumeApi = {
     request(`/api/resumes/${id}/tags`, { method: 'PATCH', body: JSON.stringify({ tags }) }),
   rename: (id, filename) =>
     request(`/api/resumes/${id}/filename`, { method: 'PATCH', body: JSON.stringify({ filename }) }),
+  updateCategory: (id, category) =>
+    request(`/api/resumes/${id}/category`, { method: 'PATCH', body: JSON.stringify({ category }) }),
+  analyze: id => request(`/api/resumes/${id}/analyze`, { method: 'POST' }),
   setDefault: (id) =>
     request(`/api/resumes/${id}/default`, { method: 'PUT' }),
   remove: (id) =>
     request(`/api/resumes/${id}`, { method: 'DELETE' }),
 };
 
-export async function uploadResume(file, tags = []) {
+export async function uploadResume(file, tags = [], category = 'General') {
   const formData = new FormData();
   formData.append('file', file);
   if (tags && tags.length > 0) {
     formData.append('tags', JSON.stringify(tags));
   }
+  formData.append('category', category);
 
   const res = await fetch('/api/resumes/upload', {
     method: 'POST',

@@ -4,18 +4,18 @@
   "private": true,
   "description": "PathfolioApp - Student Lifecycle & Career Portal (SLCP) - Landing Page & Onboarding Release",
   "scripts": {
-    "dev": "concurrently --kill-others --names \"api,web\" --prefix-colors \"bgCyan.bold,bgMagenta.bold\" \"npm run dev:api\" \"npm run dev:frontend\"",
-    "dev:frontend": "npm run dev --prefix frontend",
-    "dev:api": "npm run dev --prefix api",
-    "install:all": "npm install && npm install --prefix api && npm install --prefix frontend",
-    "build": "npm run build --prefix frontend",
-    "build:frontend": "npm run build --prefix frontend",
-    "start": "concurrently --kill-others --names \"api,web\" --prefix-colors \"bgCyan.bold,bgMagenta.bold\" \"npm run start:api\" \"npm run start:frontend\"",
-    "start:api": "npm start --prefix api",
-    "start:frontend": "npm run preview --prefix frontend",
-    "prod": "npm run install:all && npm run build && concurrently --kill-others \"npm run start:api\" \"npm run start:frontend\"",
-    "start:prod": "npm run install:all && npm run build && concurrently --kill-others \"npm run start:api\" \"npm run start:frontend\"",
-    "preview": "npm run preview --prefix frontend"
+    "dev": "concurrently --kill-others --names \"api,web\" --prefix-colors \"bgCyan.bold,bgMagenta.bold\" \"pnpm run dev:api\" \"pnpm run dev:frontend\"",
+    "dev:frontend": "pnpm --dir frontend run dev",
+    "dev:api": "pnpm --dir api run dev",
+    "install:all": "pnpm install && pnpm --dir api install && pnpm --dir frontend install",
+    "build": "pnpm --dir frontend run build",
+    "build:frontend": "pnpm --dir frontend run build",
+    "start": "concurrently --kill-others --names \"api,web\" --prefix-colors \"bgCyan.bold,bgMagenta.bold\" \"pnpm run start:api\" \"pnpm run start:frontend\"",
+    "start:api": "pnpm --dir api start",
+    "start:frontend": "pnpm --dir frontend run preview",
+    "prod": "pnpm run install:all && pnpm run build && concurrently --kill-others \"pnpm run start:api\" \"pnpm run start:frontend\"",
+    "start:prod": "pnpm run install:all && pnpm run build && concurrently --kill-others \"pnpm run start:api\" \"pnpm run start:frontend\"",
+    "preview": "pnpm --dir frontend run preview"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"
