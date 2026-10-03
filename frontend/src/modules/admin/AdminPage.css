@@ -219,9 +219,80 @@
 .pf-admin-jd-score-badge::before { content: ''; position: absolute; inset: 6px; border-radius: 50%; background: var(--bg-surface); }
 .pf-admin-jd-score-badge strong { position: relative; font-size: 1rem; color: var(--color-primary); }
 .pf-admin-jd-score-badge span { position: relative; font-size: .58rem; letter-spacing: .06em; text-transform: uppercase; color: var(--text-faint); }
-.pf-admin-jd-candidate-reasons { display: flex; flex-wrap: wrap; gap: 8px 16px; margin: 12px 0 0; }
-.pf-admin-jd-candidate-reasons span { display: inline-flex; align-items: center; gap: 4px; color: var(--text-secondary); font-size: .78rem; }
-.pf-admin-jd-candidate-reasons svg { color: var(--color-primary); }
+/* Clean Top Summary Bullets */
+.pf-admin-jd-summary-bullets {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 18px;
+  margin: 12px 0 0;
+}
+.pf-admin-jd-summary-bullet {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-secondary);
+  font-size: .8rem;
+  font-weight: 500;
+}
+.pf-admin-jd-summary-bullet svg {
+  color: var(--color-success);
+  flex-shrink: 0;
+}
+
+/* Match Breakdown Scorecard */
+.pf-admin-jd-breakdown {
+  margin: 14px 0 8px;
+  background: var(--bg-subtle, #f9f7f2);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  max-width: 440px;
+}
+.pf-admin-jd-breakdown-title {
+  font-size: .66rem;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  margin-bottom: 8px;
+  padding-bottom: 5px;
+  border-bottom: 1px solid var(--border-soft);
+}
+.pf-admin-jd-breakdown-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.pf-admin-jd-breakdown-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  font-size: .78rem;
+}
+.pf-admin-jd-breakdown-label {
+  color: var(--text-secondary);
+}
+.pf-admin-jd-breakdown-value {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.pf-admin-jd-breakdown-value--strong {
+  color: var(--color-success);
+}
+.pf-admin-jd-breakdown-value--moderate {
+  color: #1e40af;
+}
+.pf-admin-jd-breakdown-value--limited {
+  color: var(--text-muted);
+}
+.pf-admin-jd-breakdown-value--warning {
+  color: var(--color-error);
+}
+.pf-admin-jd-breakdown-value--muted {
+  color: var(--text-faint);
+}
 .pf-admin-jd-candidate-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border-soft); }
 .pf-admin-jd-flag, .pf-admin-jd-ok, .pf-admin-jd-private { display: inline-flex; align-items: center; gap: 6px; font-size: .76rem; }
 .pf-admin-jd-flag { color: var(--color-warning); }

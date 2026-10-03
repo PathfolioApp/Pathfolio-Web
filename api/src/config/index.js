@@ -42,5 +42,6 @@ module.exports = {
     password: process.env.SMTP_PASSWORD,
     from: process.env.SMTP_FROM || process.env.SMTP_USER,
     configured: Boolean(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASSWORD)
-  }
+  },
+  geminiApiKey: process.env.GEMINI_API_KEY?.trim() || null
 };

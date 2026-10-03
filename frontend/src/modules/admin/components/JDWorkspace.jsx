@@ -25,6 +25,100 @@ What we look for:
 - Minimum CGPA of 7.0 with no active backlogs.
 - Bachelor of Technology or equivalent engineering degree.`;
 
+function getMatchSummary(candidate, totalRequired) {
+  const matched = candidate.matchedSkills?.length || 0;
+  const total = totalRequired || matched || 1;
+  const projectCount = (candidate.projects || []).length;
+  const internshipCount = (candidate.internships || []).length;
+  const score = candidate.score || 0;
+
+  // 1. Required skills bullet
+  const skillsBullet = `${matched}/${total} required skills`;
+
+  // 2. Technical alignment bullet
+  let alignmentBullet = 'Limited technical alignment';
+  if (score >= 75) {
+    alignmentBullet = 'Strong technical alignment';
+  } else if (score >= 45) {
+    alignmentBullet = 'Moderate technical alignment';
+  }
+
+  // 3. Relevant experience bullet
+  let experienceBullet = 'No recorded project or internship evidence';
+  if (projectCount >= 2 && internshipCount >= 1) {
+    experienceBullet = 'Relevant experience and projects';
+  } else if (projectCount > 0 && internshipCount > 0) {
+    experienceBullet = 'Relevant experience and projects';
+  } else if (projectCount > 0 || internshipCount > 0) {
+    experienceBullet = 'Some relevant experience';
+  }
+
+  return [skillsBullet, alignmentBullet, experienceBullet];
+}
+
+function getMatchBreakdown(candidate, totalRequired) {
+  const matched = candidate.matchedSkills?.length || 0;
+  const total = totalRequired || matched || 1;
+  const projectCount = (candidate.projects || []).length;
+  const internshipCount = (candidate.internships || []).length;
+  const totalEvidence = projectCount + internshipCount;
+  const flagsCount = (candidate.eligibilityFlags || []).length;
+
+  // Technical evidence: Strong (>=4), Moderate (2-3), Limited (1), None (0)
+  let technicalEvidence = 'None';
+  let technicalEvidenceTone = 'muted';
+  if (totalEvidence >= 4) {
+    technicalEvidence = 'Strong';
+    technicalEvidenceTone = 'strong';
+  } else if (totalEvidence >= 2) {
+    technicalEvidence = 'Moderate';
+    technicalEvidenceTone = 'moderate';
+  } else if (totalEvidence >= 1) {
+    technicalEvidence = 'Limited';
+    technicalEvidenceTone = 'limited';
+  }
+
+  // Project relevance: Strong (>=2 projects & matched skills), Partial (>=1 project), None
+  let projectRelevance = 'None';
+  let projectRelevanceTone = 'muted';
+  if (projectCount >= 2 && matched >= 3) {
+    projectRelevance = 'Strong';
+    projectRelevanceTone = 'strong';
+  } else if (projectCount > 0 && matched > 0) {
+    projectRelevance = 'Partial';
+    projectRelevanceTone = 'moderate';
+  } else if (projectCount > 0) {
+    projectRelevance = 'Limited';
+    projectRelevanceTone = 'limited';
+  }
+
+  // Experience relevance: Strong (internships with matched skills), Moderate (internship), Limited (projects only), None
+  let experienceRelevance = 'None';
+  let experienceRelevanceTone = 'muted';
+  if (internshipCount >= 1 && matched >= 3) {
+    experienceRelevance = 'Strong';
+    experienceRelevanceTone = 'strong';
+  } else if (internshipCount >= 1) {
+    experienceRelevance = 'Moderate';
+    experienceRelevanceTone = 'moderate';
+  } else if (projectCount >= 2) {
+    experienceRelevance = 'Limited';
+    experienceRelevanceTone = 'limited';
+  }
+
+  // Eligibility: Met vs Review flags
+  const eligibility = flagsCount === 0 ? 'Met' : 'Review flags';
+  const eligibilityTone = flagsCount === 0 ? 'strong' : 'warning';
+
+  return [
+    { label: 'Required skills', value: `${matched} / ${total}`, tone: matched >= (total * 0.7) ? 'strong' : matched >= (total * 0.3) ? 'moderate' : 'limited' },
+    { label: 'Technical evidence', value: technicalEvidence, tone: technicalEvidenceTone },
+    { label: 'Project relevance', value: projectRelevance, tone: projectRelevanceTone },
+    { label: 'Experience relevance', value: experienceRelevance, tone: experienceRelevanceTone },
+    { label: 'Eligibility', value: eligibility, tone: eligibilityTone }
+  ];
+}
+
 export function JDWorkspace() {
   const [jobTitle, setJobTitle] = useState('');
   const [jobDescription, setJobDescription] = useState('');
@@ -276,6 +370,10 @@ export function JDWorkspace() {
                   const githubLink = candidate.social?.links?.find(l => l.platform === 'github' || l.name?.toLowerCase().includes('github'))?.url;
                   const linkedinLink = candidate.social?.linkedin;
 
+                  const totalRequired = result?.analysis?.skills?.length || 0;
+                  const summaryBullets = getMatchSummary(candidate, totalRequired);
+                  const breakdownItems = getMatchBreakdown(candidate, totalRequired);
+
                   return (
                     <article
                       className={`pf-admin-jd-candidate ${isSelected ? 'pf-admin-jd-candidate--selected' : ''}`}
@@ -335,11 +433,28 @@ export function JDWorkspace() {
                         </div>
                       </div>
 
-                      {/* Reasons & Highlights */}
-                      <div className="pf-admin-jd-candidate-reasons">
-                        {candidate.reasons.map(reason => (
-                          <span key={reason}><CheckCircle2 size={14} />{reason}</span>
+                      {/* Clean Top Summary */}
+                      <div className="pf-admin-jd-summary-bullets">
+                        {summaryBullets.map((bullet, idx) => (
+                          <span key={idx} className="pf-admin-jd-summary-bullet">
+                            <CheckCircle2 size={13} /> {bullet}
+                          </span>
                         ))}
+                      </div>
+
+                      {/* Match Breakdown Section */}
+                      <div className="pf-admin-jd-breakdown">
+                        <div className="pf-admin-jd-breakdown-title">Match breakdown</div>
+                        <div className="pf-admin-jd-breakdown-grid">
+                          {breakdownItems.map(item => (
+                            <div key={item.label} className="pf-admin-jd-breakdown-row">
+                              <span className="pf-admin-jd-breakdown-label">{item.label}</span>
+                              <span className={`pf-admin-jd-breakdown-value pf-admin-jd-breakdown-value--${item.tone}`}>
+                                {item.value}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
                       </div>
 
                       {/* Matched skills */}

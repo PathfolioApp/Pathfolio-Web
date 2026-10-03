@@ -1,5 +1,7 @@
 const studentStore = require('../students/studentStore');
 const { GENERIC_TERMS, createMatcher } = require('../../shared/textMatch');
+const embeddingStore = require('./embeddingStore');
+const { cosineSimilarity } = require('./embedding.service');
 
 /**
  * Skill taxonomy. Each entry maps a canonical skill to the aliases that may
@@ -350,7 +352,7 @@ function studentSkillText(student) {
   return tags.filter(Boolean).join(' \n ');
 }
 
-function scoreStudent(student, analysis) {
+async function scoreStudent(student, analysis, jdEmbedding) {
   const text = studentSkillText(student);
   const lower = text.toLowerCase();
 
@@ -412,10 +414,37 @@ function scoreStudent(student, analysis) {
   const departmentAligned = analysis.departments.some(dept => (student.academic?.department || '').toLowerCase().includes(dept.split(' ')[0].toLowerCase()));
   if (analysis.departments.length && departmentAligned) total += 6;
 
-  const score = clamp(Math.round(total), 0, 100);
+  const deterministicScore = clamp(Math.round(total), 0, 100);
+
+  let finalScore = deterministicScore;
+  let semanticScore = 0;
+
+  if (jdEmbedding) {
+    try {
+      const studentEmbedding = await embeddingStore.getStudentEmbedding(text);
+      if (studentEmbedding) {
+        const sim = cosineSimilarity(jdEmbedding, studentEmbedding);
+        
+        // Normalize the raw cosine similarity:
+        // In Gemini 768-dim embeddings, unrelated text baselines at ~0.55.
+        // Conceptually related profiles (e.g., Python/Django vs Java/Spring) reach ~0.65.
+        // Verbatim matches reach ~0.68 - 0.77.
+        const normalizedSim = (sim - 0.55) / (0.66 - 0.55);
+        semanticScore = clamp(Math.round(normalizedSim * 100), 0, 100);
+        
+        // Hybrid logic: 35% Deterministic (explicit skills, projects, internships, eligibility) + 65% Semantic conceptual alignment
+        finalScore = clamp(Math.round(0.35 * deterministicScore + 0.65 * semanticScore), 0, 100);
+      }
+    } catch (err) {
+      require('../../shared/logger').api.error('[JDAnalyzer] Error in semantic scoring:', err.message);
+    }
+  }
+
+  const score = finalScore;
 
   const reasons = [];
   if (matchedSkills.length) reasons.push(`Matches ${matchedSkills.length}/${analysis.skills.length} required skills`);
+  if (semanticScore > 65) reasons.push(`Strong conceptual alignment (${semanticScore}% semantic match)`);
   if (matchedDomains.length) reasons.push(`Aligned to ${matchedDomains.join(', ')}`);
   if (projectCount || internshipCount) {
     const parts = [];
@@ -434,39 +463,48 @@ function scoreStudent(student, analysis) {
     matchedKeywords: matchedKeywords.slice(0, 6),
     matchedDomains,
     reasons,
-    eligibilityFlags
+    eligibilityFlags,
+    semanticScore,
+    deterministicScore
   };
 }
 
 class JDAnalyzerService {
-  async analyze({ jobDescription = '', jobTitle = '', limit = 30 } = {}) {
+  async analyze({ jobDescription = '', jobTitle = '', limit = 1000 } = {}) {
     const analysis = analyzeDescription({ jobDescription, jobTitle });
     analysis.summary = buildSummary(analysis);
 
+    let jdEmbedding = null;
+    try {
+      jdEmbedding = await embeddingStore.getJdEmbedding(analysis.rawText);
+    } catch (err) {
+      require('../../shared/logger').api.warn('[JDAnalyzer] Failed to get JD embedding. Falling back to deterministic scoring.', err.message);
+    }
+
     const students = (await studentStore.listStudents())
-      .filter(student => !student.isAdmin && student.status !== 'suspended' && student.onboarding?.completed !== false);
+      .filter(student => student.status !== 'suspended' && student.onboarding?.completed !== false);
 
-    const candidates = students
-      .map(student => {
-        const result = scoreStudent(student, analysis);
-        return {
-          id: student.id,
-          rollNumber: student.rollNumber || student.academic?.rollNumber || '',
-          name: student.personal?.fullName || 'Unnamed student',
-          email: student.profileSettings?.visibility === 'public' ? student.personal?.email || null : null,
-          academic: student.academic || {},
-          interests: student.interests || {},
-          achievements: student.achievements || [],
-          projects: student.projects || [],
-          internships: student.internships || [],
-          social: student.social || { linkedin: '', links: [] },
-          profileVisibility: student.profileSettings?.visibility || 'private',
-          ...result
-        };
-      })
-      .sort((left, right) => right.score - left.score || left.name.localeCompare(right.name));
+    const scoredStudents = await Promise.all(students.map(async student => {
+      const result = await scoreStudent(student, analysis, jdEmbedding);
+      return {
+        id: student.id,
+        rollNumber: student.rollNumber || student.academic?.rollNumber || '',
+        name: student.personal?.fullName || 'Unnamed student',
+        email: student.profileSettings?.visibility === 'public' ? student.personal?.email || null : null,
+        academic: student.academic || {},
+        interests: student.interests || {},
+        achievements: student.achievements || [],
+        projects: student.projects || [],
+        internships: student.internships || [],
+        social: student.social || { linkedin: '', links: [] },
+        profileVisibility: student.profileSettings?.visibility || 'private',
+        ...result
+      };
+    }));
 
-    const top = candidates.slice(0, clamp(Number(limit) || 30, 1, 100));
+    const candidates = scoredStudents.sort((left, right) => right.score - left.score || left.name.localeCompare(right.name));
+
+    const top = candidates.slice(0, clamp(Number(limit) || 1000, 1, 1000));
 
     return {
       analysis,
