@@ -37,6 +37,72 @@ async function bodyToBuffer(body) {
   return Buffer.from(body);
 }
 
+function renderStudioHtml(data) {
+  const escape = str => String(str || '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const personal = data.personal || {};
+  const summary = data.summary?.text || '';
+  const skills = Array.isArray(data.skills?.raw) ? data.skills.raw : [];
+  const entries = (items = [], title) => {
+    if (!items.length) return '';
+    return `<section><h2>${escape(title)}</h2>${items.map(item => `
+      <div class="entry">
+        <b>${escape(item.title || item.role || item.company || item.name || '')}</b>
+        <span>${escape([item.company || item.institution, item.dates, item.location].filter(Boolean).join(' · '))}</span>
+        ${item.description ? `<p>${escape(item.description)}</p>` : ''}
+        ${item.bullets?.length ? `<ul>${item.bullets.map(b => `<li>${escape(b)}</li>`).join('')}</ul>` : ''}
+      </div>`).join('')}
+    </section>`;
+  };
+
+  return `<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>${escape(personal.fullName || 'Student')} - Resume</title>
+  <style>
+    @page { size: A4 portrait; margin: 10mm 12mm; }
+    *, *::before, *::after { box-sizing: border-box; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+    html, body { width: 100%; max-width: 100%; margin: 0; padding: 0; background: #fff !important; color: #1d2921; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; font-size: 8.8pt; line-height: 1.34; }
+    .resume { width: 100% !important; max-width: 100% !important; margin: 0 !important; padding: 0 !important; box-shadow: none !important; border: 0 !important; }
+    header { text-align: center; border-bottom: 1.5pt solid #264e36; padding-bottom: 5pt; margin-bottom: 8pt; }
+    header h1 { margin: 0 0 2pt; font-size: 19pt; color: #1d2921; line-height: 1.15; }
+    header p { margin: 1.5pt 0; color: #4a594f; font-size: 8.4pt; word-break: break-word; }
+    header a { color: #264e36; text-decoration: none; }
+    header strong { color: #264e36; display: block; margin-top: 2pt; font-size: 8.8pt; }
+    section { margin-top: 7.5pt; break-inside: auto; }
+    h2 { font-size: 9pt; text-transform: uppercase; letter-spacing: 0.8px; color: #264e36; border-bottom: 0.75pt solid #cbd6c8; padding-bottom: 1.5pt; margin: 0 0 3.5pt; break-after: avoid; }
+    .entry { margin-bottom: 4.5pt; break-inside: avoid; page-break-inside: avoid; }
+    .entry b { display: block; font-size: 8.8pt; color: #1d2921; line-height: 1.25; }
+    .entry span { font-size: 8pt; color: #55665a; display: block; margin-bottom: 1pt; }
+    .entry p { margin: 1.5pt 0; font-size: 8.4pt; }
+    ul { margin: 1.5pt 0 3pt 13pt; padding: 0; }
+    li { font-size: 8.4pt; margin-bottom: 1pt; line-height: 1.32; }
+    @media print {
+      body { margin: 0 !important; padding: 0 !important; background: #fff !important; }
+      .resume { width: 100% !important; max-width: 100% !important; box-shadow: none !important; border: 0 !important; margin: 0 !important; padding: 0 !important; }
+    }
+  </style>
+</head>
+<body>
+  <main class="resume">
+    <header>
+      <h1>${escape(personal.fullName || 'Student')}</h1>
+      <p>${escape([personal.email, personal.phone, ...(personal.links || [])].filter(Boolean).join(' | '))}</p>
+      ${personal.headline ? `<strong>${escape(personal.headline)}</strong>` : ''}
+    </header>
+    ${summary ? `<section><h2>Summary</h2><p>${escape(summary)}</p></section>` : ''}
+    ${skills.length ? `<section><h2>Skills</h2><p>${escape(skills.join(' | '))}</p></section>` : ''}
+    ${entries(data.experience, 'Experience')}
+    ${entries(data.projects, 'Projects')}
+    ${entries(data.education, 'Education')}
+    ${entries(data.certifications, 'Certifications')}
+    ${entries(data.achievements, 'Achievements')}
+    ${entries(data.leadership, 'Leadership')}
+  </main>
+</body>
+</html>`;
+}
+
 const resumeController = {
   async list(req, res, next) {
     try {
@@ -112,11 +178,55 @@ const resumeController = {
     }
   },
 
+  async createStudioResume(req, res, next) {
+    try {
+      const { filename, category, extractedData, tags } = req.body || {};
+      if (!extractedData || typeof extractedData !== 'object' || Array.isArray(extractedData)) {
+        throw badRequest('Structured resume data is required');
+      }
+      const rawName = String(filename || '').trim() || `${extractedData.personal?.fullName || 'Student'}_Resume.pdf`;
+      const safeFilename = sanitizeFilename(rawName.endsWith('.pdf') ? rawName : `${rawName}.pdf`);
+      const normalizedCategory = normalizeCategory(category || 'General');
+      const normalizedTags = normalizeTags(tags || ['Studio', 'Profile']);
+      const count = await resumeStore.count(req.student.id);
+      const isDefault = count === 0;
+
+      const resume = await resumeStore.create(req.student.id, {
+        filename: safeFilename,
+        filepath: '',
+        driveLink: null,
+        isCloud: false,
+        tags: normalizedTags,
+        category: normalizedCategory,
+        analysis: null,
+        extractedData,
+        isDefault,
+      });
+
+      if (isDefault) await resumeStore.setDefault(req.student.id, resume.id);
+
+      res.status(201).json({
+        ...resume,
+        fileUrl: `/api/resumes/${resume.id}/file?mode=view`,
+        downloadUrl: `/api/resumes/${resume.id}/file?mode=download`,
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
+
   async getFile(req, res, next) {
     try {
       const resume = await resumeStore.findOwnedResume(req.student.id, req.params.resumeId);
       if (!resume) throw notFound();
       if (!resume.filepath) {
+        if (resume.extractedData) {
+          const safeFilename = String(resume.filename || 'resume').replace(/"/g, '').replace(/\.pdf$/i, '');
+          const html = renderStudioHtml(resume.extractedData);
+          res.setHeader('Content-Type', 'text/html; charset=utf-8');
+          res.setHeader('Content-Disposition', `inline; filename="${safeFilename}.html"`);
+          return res.send(html);
+        }
         throw badRequest('This resume does not have an uploaded file');
       }
 

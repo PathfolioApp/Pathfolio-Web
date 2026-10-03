@@ -1,1 +1,32 @@
-.pf-studio-record-fields{display:grid;grid-template-columns:minmax(0,1fr) minmax(140px,.55fr);gap:9px}.pf-studio-record-edit label{display:grid;gap:5px;color:var(--text-muted);font-size:.68rem;font-weight:700;letter-spacing:.02em}.pf-studio-record-edit label+label{margin-top:9px}.pf-studio-record-edit input,.pf-studio-record-edit textarea{margin-top:0}.pf-studio-field-hint{color:var(--text-muted);font-weight:400}@media(max-width:820px){.pf-studio-record-fields{grid-template-columns:1fr}}
+/* ==========================================================================
+   Studio Record & Form Field Layouts
+   ========================================================================== */
+
+.pf-studio-record-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.pf-studio-record-edit label,
+.pf-studio-categories-card label,
+.pf-studio-field label {
+  display: grid;
+  gap: 5px;
+  color: #27402d;
+  font-size: 0.74rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.pf-studio-field-hint {
+  color: #637566;
+  font-size: 0.7rem;
+  font-weight: 400;
+}
+
+@media (max-width: 820px) {
+  .pf-studio-record-fields {
+    grid-template-columns: 1fr;
+  }
+}

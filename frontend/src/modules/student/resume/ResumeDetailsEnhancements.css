@@ -1,2 +1,116 @@
-.pf-analysis-metric-grid{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;border:0!important;padding:0!important}.pf-analysis-metric-grid>div{display:grid;gap:3px;min-height:68px;padding:10px;border:1px solid var(--border-soft);border-radius:8px;background:#fbfcfa}.pf-analysis-metric-grid strong{font-size:1.25rem;line-height:1;color:var(--color-primary)}.pf-analysis-metric-grid span{color:var(--text-muted);font-size:.68rem;line-height:1.2}@media(max-width:700px){.pf-analysis-metric-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
-.pf-detail-tag-list{display:flex;flex-wrap:wrap;gap:5px}.pf-detail-tag-list span{display:inline-flex;align-items:center;gap:4px;border-radius:99px;background:#f1f5f1;color:#42614b;padding:4px 7px;font-size:.68rem}.pf-detail-tag-list button{border:0;background:none;color:inherit;padding:0;cursor:pointer}.pf-detail-tag-form{display:flex;gap:5px;margin-top:5px}.pf-detail-tag-form input{min-width:0;flex:1;border:1px solid var(--border-medium);border-radius:5px;padding:6px;font:inherit;font-size:.7rem}.pf-detail-tag-form button{border:1px solid var(--border-accent);border-radius:6px;background:var(--bg-tag-active);color:var(--color-primary);padding:6px 8px;font-size:.7rem;cursor:pointer}
+/* ResumeDetailsEnhancements.css - Aligned with Profile Editorial Design */
+
+.pf-analysis-metric-grid {
+  display: grid !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  border: 0 !important;
+  padding: 0 !important;
+  margin-top: 14px;
+}
+
+.pf-analysis-metric-grid > div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-height: 72px;
+  padding: 12px 14px;
+  border: 1px solid #e1e7e0;
+  border-radius: 10px;
+  background: #f8faf8;
+}
+
+.pf-analysis-metric-grid strong {
+  font-family: var(--font-serif);
+  font-size: 1.4rem;
+  line-height: 1.1;
+  color: #142e20;
+}
+
+.pf-analysis-metric-grid span {
+  color: #69786a;
+  font-size: 0.72rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+@media (max-width: 700px) {
+  .pf-analysis-metric-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Tag list in overview card */
+.pf-detail-tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 6px 0;
+}
+
+.pf-detail-tag-list span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border-radius: 999px;
+  background: #edf2ed;
+  color: #274530;
+  border: 1px solid #dce4dc;
+  padding: 3px 9px;
+  font-size: 0.72rem;
+  font-weight: 500;
+}
+
+.pf-detail-tag-list button {
+  border: 0;
+  background: none;
+  color: #7b8e7e;
+  padding: 0;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+
+.pf-detail-tag-list button:hover {
+  color: #142e20;
+}
+
+.pf-detail-tag-form {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.pf-detail-tag-form input {
+  min-width: 0;
+  flex: 1;
+  border: 1px solid #dce4dc;
+  border-radius: 7px;
+  padding: 7px 10px;
+  font-size: 0.78rem;
+  outline: none;
+  background: #fbfdfb;
+}
+
+.pf-detail-tag-form input:focus {
+  background: #ffffff;
+  border-color: #173824;
+}
+
+.pf-detail-tag-form button {
+  border: 1px solid #b7ddc4;
+  border-radius: 7px;
+  background: #edf7f1;
+  color: #1a5731;
+  padding: 7px 12px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.pf-detail-tag-form button:hover {
+  background: #dcf2e4;
+  border-color: #9cd1ad;
+}

@@ -322,7 +322,7 @@ export function ProfilePage() {
               <div className="pf-resume-pdf-box">
                 <PdfIcon size={25} className="pf-resume-pdf-icon" />
               </div>
-              <div className="pf-resume-details">
+              <div className="pf-resume-inner-info">
                 <strong className="pf-resume-filename">
                   {defaultResume.filename}
                 </strong>

@@ -1,1 +1,87 @@
-.pf-detail-empty{display:grid;gap:8px;justify-items:start;border:1px solid var(--border-subtle);border-radius:10px;background:#fff;padding:28px}.pf-detail-empty h3{margin:0;color:var(--text-primary);font-family:var(--font-serif);font-size:1.2rem}.pf-detail-empty p{max-width:560px;margin:0;color:var(--text-secondary);line-height:1.5}.pf-detail-empty button{border:0;border-radius:7px;background:var(--color-primary);color:#fff;padding:9px 13px;font:inherit;font-size:.78rem;font-weight:650;cursor:pointer}.pf-detail-skill-groups{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.pf-detail-skill-groups>div{border:1px solid var(--border-soft);border-radius:8px;background:#fbfcfa;padding:11px}.pf-detail-skill-groups strong{display:block;color:var(--color-primary);font-size:.72rem;text-transform:capitalize}.pf-detail-skill-groups p{margin:6px 0 0;color:var(--text-secondary);font-size:.78rem;line-height:1.45}.pf-detail-field-hint{color:var(--text-muted);font-size:.68rem;font-weight:400}@media(max-width:560px){.pf-detail-skill-groups{grid-template-columns:1fr}}
+/* ResumeDetailsUX.css - Aligned with Profile Editorial Design */
+
+.pf-detail-empty {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-start;
+  border: 1px dashed #cfdacf;
+  border-radius: 14px;
+  background: #f8faf8;
+  padding: 36px 28px;
+}
+
+.pf-detail-empty h3 {
+  margin: 0;
+  color: #142e20;
+  font-family: var(--font-serif);
+  font-size: 1.35rem;
+  font-weight: 500;
+}
+
+.pf-detail-empty p {
+  max-width: 560px;
+  margin: 0;
+  color: #556658;
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.pf-detail-empty button {
+  border: 0;
+  border-radius: 8px;
+  background: #173824;
+  color: #ffffff;
+  padding: 9px 16px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 6px;
+  transition: background 0.15s ease;
+}
+
+.pf-detail-empty button:hover {
+  background: #0f2718;
+}
+
+.pf-detail-skill-groups {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.pf-detail-skill-groups > div {
+  border: 1px solid #e1e7e0;
+  border-radius: 10px;
+  background: #f8faf8;
+  padding: 13px 15px;
+}
+
+.pf-detail-skill-groups strong {
+  display: block;
+  color: #1e5e34;
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.pf-detail-skill-groups p {
+  margin: 6px 0 0;
+  color: #354e3a;
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.pf-detail-field-hint {
+  color: #7b8e7e;
+  font-size: 0.72rem;
+  font-weight: 400;
+  margin-left: 6px;
+}
+
+@media (max-width: 560px) {
+  .pf-detail-skill-groups {
+    grid-template-columns: 1fr;
+  }
+}

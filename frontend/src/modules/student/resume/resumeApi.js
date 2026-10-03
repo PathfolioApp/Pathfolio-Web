@@ -22,6 +22,8 @@ export const resumeApi = {
   updateCategory: (id, category) =>
     request(`/api/resumes/${id}/category`, { method: 'PATCH', body: JSON.stringify({ category }) }),
   analyze: id => request(`/api/resumes/${id}/analyze`, { method: 'POST' }),
+  createStudioResume: data =>
+    request('/api/resumes/studio', { method: 'POST', body: JSON.stringify(data) }),
   updateExtracted: (id, extractedData) =>
     request(`/api/resumes/${id}/extracted`, { method: 'PATCH', body: JSON.stringify({ extractedData }) }),
   setDefault: (id) =>

@@ -3,10 +3,13 @@ import { AlertCircle, ArrowLeft, CheckCircle2, Download, Edit3, ExternalLink, Fi
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { replaceResume, resumeApi } from './resumeApi';
 import { Button } from '../../../components/ui/Button';
+import { PdfIcon } from '../../../components/ui/PdfIcon';
+import { Preview, normalizeExtractedData } from './ResumeStudioPage';
 import './ResumeDetailsPage.css';
 import './ResumeDetailsEnhancements.css';
 import './ResumeDetailsFields.css';
 import './ResumeDetailsUX.css';
+import './ResumeStudioPage.css';
 
 const READINESS_LABELS = { local: 'Document extraction' };
 const TABS = ['overview', 'analysis', 'extracted'];
@@ -77,17 +80,32 @@ export function ResumeDetailsPage() {
   const [error, setError] = useState('');
   const [tags, setTags] = useState([]);
   const [tagInput, setTagInput] = useState('');
+  const [categories, setCategories] = useState([
+    'General',
+    'Software Engineering',
+    'Backend Engineering',
+    'Cloud / DevOps',
+    'Data / AI',
+    'Core Engineering',
+    'Design / Product',
+  ]);
   const tab = TABS.includes(searchParams.get('tab')) ? searchParams.get('tab') : 'overview';
 
   const load = async () => {
     try {
       setLoading(true);
-      const resumes = await resumeApi.list();
+      const [resumes, catList] = await Promise.all([
+        resumeApi.list(),
+        resumeApi.categories().catch(() => []),
+      ]);
       const found = resumes.find(item => String(item.id) === String(resumeId));
       if (!found) throw new Error('Resume not found.');
       setResume(found);
       setDraft(getStructured(found));
       setTags(found.tags || []);
+      if (Array.isArray(catList) && catList.length) {
+        setCategories(catList);
+      }
     } catch (err) { setError(err.message || 'Unable to load resume.'); }
     finally { setLoading(false); }
   };
@@ -98,7 +116,30 @@ export function ResumeDetailsPage() {
   const updateRecord = (key, index, value) => setDraft(current => ({ ...current, [key]: (current[key] || []).map((item, itemIndex) => itemIndex === index ? value : item) }));
   const analysis = resume?.analysis;
   const data = draft || {};
-  const allSkills = useMemo(() => Object.entries(data.skills || {}).filter(([key, value]) => key !== 'raw' && Array.isArray(value) && value.length).map(([key, value]) => ({ key, value })), [data.skills]);
+  const allSkills = useMemo(() => {
+    const s = data.skills || {};
+    const CANONICAL = ['languages', 'frameworks', 'cloudDevOps', 'databasesTools'];
+    const hasCanonical = CANONICAL.some(k => Array.isArray(s[k]) && s[k].length > 0);
+    return Object.entries(s)
+      .filter(([key, value]) => {
+        if (key === 'raw') return false;
+        if (!Array.isArray(value) || !value.length) return false;
+        if (hasCanonical && !CANONICAL.includes(key)) return false;
+        return true;
+      })
+      .map(([key, value]) => {
+        const labels = {
+          languages: 'Languages',
+          frameworks: 'Frameworks & Libraries',
+          cloudDevOps: 'Cloud & DevOps',
+          databasesTools: 'Databases & Tools',
+          programming: 'Programming Languages',
+          cloudDevops: 'Cloud & DevOps',
+          data: 'Databases',
+        };
+        return { key: labels[key] || key, value };
+      });
+  }, [data.skills]);
 
   const runAnalysis = async () => {
     try { setAnalyzing(true); setError(''); await resumeApi.analyze(resume.id); await load(); setSearchParams({ tab: 'analysis' }); }
@@ -114,6 +155,16 @@ export function ResumeDetailsPage() {
     if (resume.isDefault || !window.confirm('Set this as your primary resume?')) return;
     try { const updated = await resumeApi.setDefault(resume.id); setResume(current => ({ ...current, ...updated })); }
     catch (err) { setError(err.message || 'Unable to set primary resume.'); }
+  };
+  const handleCategoryChange = async event => {
+    const newCategory = event.target.value;
+    try {
+      setError('');
+      await resumeApi.updateCategory(resume.id, newCategory);
+      setResume(current => ({ ...current, category: newCategory }));
+    } catch (err) {
+      setError(err.message || 'Unable to update category.');
+    }
   };
   const rename = async () => {
     const filename = window.prompt('Rename resume', resume.filename);
@@ -133,7 +184,8 @@ export function ResumeDetailsPage() {
     event.preventDefault();
     const clean = tagInput.trim();
     if (!clean || tags.some(tag => tag.toLowerCase() === clean.toLowerCase())) return;
-    setTags(current => [...current, clean].slice(0, 20));
+    const nextTags = [...tags, clean].slice(0, 20);
+    saveTags(nextTags);
     setTagInput('');
   };
   const saveTags = async nextTags => {
@@ -144,13 +196,57 @@ export function ResumeDetailsPage() {
   if (loading) return <div className="pf-resume-detail-loading"><Loader className="spin" size={22} /> Loading resume details...</div>;
   if (!resume) return <div className="pf-resume-detail-loading">{error || 'Resume not found.'}</div>;
 
-  return <div className="pf-resume-details">
+  return <div className="pf-resume-details-page">
     <Link to="/resume" className="pf-detail-back"><ArrowLeft size={15} /> Back to My Resumes</Link>
-    <header className="pf-detail-header"><div><div className="pf-detail-file-title"><FileText size={21} /><h1>{resume.filename}</h1>{resume.isDefault && <span className="pf-detail-primary"><Star size={12} fill="currentColor" /> Primary resume</span>}</div><p>{resume.category || 'General'} · Uploaded {new Date(resume.uploadedAt).toLocaleDateString()} · Updated {new Date(resume.updatedAt || resume.uploadedAt).toLocaleDateString()}</p></div><div className="pf-detail-actions"><Button variant="secondary" onClick={() => navigate(`/resume/${resume.id}/studio`)}><WandSparkles size={15} /> Edit in Studio</Button><label className="pf-detail-download"><UploadCloud size={15} /> {replacing ? 'Replacing...' : 'Replace'}<input type="file" accept="application/pdf" onChange={replace} disabled={replacing} hidden /></label><a className="pf-detail-download" href={resume.downloadUrl} download={resume.filename}><Download size={15} /> Download</a><button type="button" className="pf-detail-more" onClick={rename} title="Rename resume" aria-label="Rename resume"><Edit3 size={16} /></button></div></header>
+    <header className="pf-detail-header">
+      <div className="pf-detail-header-left">
+        <div className="pf-detail-file-title">
+          <div className="pf-resume-pdf-box">
+            <PdfIcon size={25} className="pf-resume-pdf-icon" />
+          </div>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <h1>{resume.filename}</h1>
+              {resume.isDefault && <span className="pf-detail-primary"><Star size={12} fill="currentColor" /> Primary resume</span>}
+            </div>
+            <p>{resume.category || 'General'} · Uploaded {new Date(resume.uploadedAt).toLocaleDateString()} · Updated {new Date(resume.updatedAt || resume.uploadedAt).toLocaleDateString()}</p>
+          </div>
+        </div>
+      </div>
+      <div className="pf-detail-actions">
+        <button type="button" className="pf-btn-edit-studio" onClick={() => navigate(`/resume/${resume.id}/studio`)}>
+          <WandSparkles size={15} /> Edit in Studio
+        </button>
+        <label className="pf-detail-download-btn">
+          <UploadCloud size={15} /> {replacing ? 'Replacing...' : 'Replace'}
+          <input type="file" accept="application/pdf" onChange={replace} disabled={replacing} hidden />
+        </label>
+        <a className="pf-detail-download-btn" href={resume.downloadUrl} download={resume.filename}>
+          <Download size={15} /> Download PDF
+        </a>
+        <button type="button" className="pf-detail-more-btn" onClick={rename} title="Rename resume" aria-label="Rename resume">
+          <Edit3 size={15} />
+        </button>
+      </div>
+    </header>
     {error && <div className="pf-detail-alert" role="alert"><AlertCircle size={15} />{error}</div>}
     <nav className="pf-detail-tabs" aria-label="Resume details"><button type="button" className={tab === 'overview' ? 'is-active' : ''} onClick={() => setSearchParams({ tab: 'overview' })}>Overview</button><button type="button" className={tab === 'analysis' ? 'is-active' : ''} onClick={() => setSearchParams({ tab: 'analysis' })}>Analysis</button><button type="button" className={tab === 'extracted' ? 'is-active' : ''} onClick={() => setSearchParams({ tab: 'extracted' })}>Extracted information</button></nav>
 
-    {tab === 'overview' && <div className="pf-detail-overview"><section className="pf-detail-document"><div className="pf-detail-document-head"><h2>Original document</h2><a href={resume.fileUrl} target="_blank" rel="noreferrer"><ExternalLink size={14} /> Open document</a></div><iframe src={`${resume.fileUrl}#toolbar=1&view=FitH`} title={resume.filename} /></section><aside className="pf-detail-side"><div className="pf-detail-side-card"><span className="pf-detail-side-label">Resume status</span><strong>{resume.isDefault ? 'Primary resume' : 'Secondary resume'}</strong><p>{resume.isDefault ? 'Used automatically when you apply to a role.' : 'Available for role-specific applications.'}</p>{!resume.isDefault && <button type="button" onClick={setPrimary}><Star size={14} /> Set as primary</button>}</div><div className="pf-detail-side-card"><span className="pf-detail-side-label">Role tags</span><div className="pf-detail-tag-list">{tags.map(tag => <span key={tag}>{tag}<button type="button" onClick={() => saveTags(tags.filter(item => item !== tag))} aria-label={`Remove ${tag}`}>×</button></span>)}</div><form className="pf-detail-tag-form" onSubmit={addTag}><input value={tagInput} onChange={event => setTagInput(event.target.value)} placeholder="Add a role tag" maxLength={30} aria-label="New role tag" /><button type="submit">Add tag</button></form></div><div className="pf-detail-side-card"><span className="pf-detail-side-label">Resume analysis</span><strong>{analysis ? `${analysis.score}% ATS readiness` : 'Not analysed yet'}</strong><p>{analysis ? `Updated ${new Date(analysis.checkedAt).toLocaleString()}` : 'Check structure and content coverage.'}</p><button type="button" onClick={analysis ? () => setSearchParams({ tab: 'analysis' }) : runAnalysis} disabled={analyzing}>{analyzing ? 'Checking...' : analysis ? 'View analysis' : 'Check resume'}</button></div></aside></div>}
+    {tab === 'overview' && <div className="pf-detail-overview"><section className="pf-detail-document"><div className="pf-detail-document-head"><h2>Original document</h2>{resume.fileUrl && <a href={resume.fileUrl} target="_blank" rel="noreferrer"><ExternalLink size={14} /> Open document</a>}</div>
+      {/* 
+        CRITICAL: DO NOT MODIFY OR REMOVE THIS IFRAME / PREVIEW RENDER LOGIC.
+        - Studio-generated resumes MUST be rendered using the live `<Preview>` component for CSS margin consistency.
+        - Uploaded PDF files MUST use the `<iframe src={resume.fileUrl}>` fallback.
+        This logic ensures the preview perfectly matches the exported PDF from Studio.
+      */}
+      {!resume.filepath && resume.extractedData ? (
+        <div className="pf-studio-paper-wrap" style={{ background: '#f0f2f0', padding: '24px', borderRadius: '8px', overflow: 'auto', maxHeight: '80vh' }}>
+          <Preview data={normalizeExtractedData(resume.extractedData, null)} template="classic" />
+        </div>
+      ) : (
+        <iframe src={`${resume.fileUrl}#toolbar=1&view=FitH`} title={resume.filename} />
+      )}
+    </section><aside className="pf-detail-side"><div className="pf-detail-side-card"><span className="pf-detail-side-label">Resume status</span><strong>{resume.isDefault ? 'Primary resume' : 'Secondary resume'}</strong><p>{resume.isDefault ? 'Used automatically when you apply to a role.' : 'Available for role-specific applications.'}</p>{!resume.isDefault && <button type="button" onClick={setPrimary}><Star size={14} /> Set as primary</button>}</div><div className="pf-detail-side-card"><span className="pf-detail-side-label">Resume category</span><select value={resume.category || 'General'} onChange={handleCategoryChange} className="pf-detail-category-select" aria-label="Change resume category">{categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}</select><p>Target specialization or domain for this resume.</p></div><div className="pf-detail-side-card"><span className="pf-detail-side-label">Role tags</span><div className="pf-detail-tag-list">{tags.map(tag => <span key={tag}>{tag}<button type="button" onClick={() => saveTags(tags.filter(item => item !== tag))} aria-label={`Remove ${tag}`}>×</button></span>)}</div><form className="pf-detail-tag-form" onSubmit={addTag}><input value={tagInput} onChange={event => setTagInput(event.target.value)} placeholder="Add a role tag" maxLength={30} aria-label="New role tag" /><button type="submit">Add tag</button></form></div><div className="pf-detail-side-card"><span className="pf-detail-side-label">Resume analysis</span><strong>{analysis ? `${analysis.score}% ATS readiness` : 'Not analysed yet'}</strong><p>{analysis ? `Updated ${new Date(analysis.checkedAt).toLocaleString()}` : 'Check structure and content coverage.'}</p><button type="button" onClick={analysis ? () => setSearchParams({ tab: 'analysis' }) : runAnalysis} disabled={analyzing}>{analyzing ? 'Checking...' : analysis ? 'View analysis' : 'Check resume'}</button></div></aside></div>}
 
     {tab === 'analysis' && <section className="pf-detail-analysis"><div className="pf-analysis-hero"><div><span className="pf-detail-side-label">ATS readiness</span><h2>{analysis ? `${analysis.score}%` : 'Not checked'}</h2><p>Review how your resume performs against common screening conventions.</p></div><button type="button" onClick={runAnalysis} disabled={analyzing}>{analyzing ? <Loader className="spin" size={15} /> : <WandSparkles size={15} />}{analyzing ? 'Checking...' : analysis ? 'Check again' : 'Check resume'}</button></div>{analysis ? <><AnalysisMetrics analysis={analysis} /><div className="pf-analysis-breakdown"><h3>Readiness checks</h3>{Object.entries(analysis.portalReadiness || {}).map(([key, result]) => { const status = readinessResult(result); return <div key={key}><span>{READINESS_LABELS[key] || key}</span><b className={status.tone}>{status.label}</b></div>; })}{(analysis.checks || []).map(check => <div className="pf-analysis-finding" key={check.key}><span>{check.passed ? <CheckCircle2 size={15} /> : <AlertCircle size={15} />}{check.label}</span><p>{check.passed ? 'Looks good' : check.evidence || 'Review this section'}</p></div>)}{(analysis.findings || []).map(finding => <div className="pf-analysis-finding" key={finding.key}><span><AlertCircle size={15} />{finding.title}</span><p>{finding.detail}</p></div>)}</div><button type="button" className="pf-open-studio" onClick={() => navigate(`/resume/${resume.id}/studio`)}><WandSparkles size={15} /> Open Resume Studio</button></> : <div className="pf-detail-empty"><h3>Ready to check your resume</h3><p>Get a quick review of its structure, contact details, and content coverage.</p><button type="button" onClick={runAnalysis} disabled={analyzing}>{analyzing ? 'Checking...' : 'Check resume'}</button></div>}</section>}
 

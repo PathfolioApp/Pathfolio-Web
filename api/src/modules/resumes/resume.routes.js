@@ -11,6 +11,7 @@ router.post('/categories', controller.createCategory);
 router.patch('/categories/:name', controller.renameCategory);
 router.delete('/categories/:name', controller.deleteCategory);
 router.post('/upload', resumeUpload, controller.upload);
+router.post('/studio', controller.createStudioResume);
 router.put('/:resumeId/file', resumeUpload, controller.replace);
 router.get('/:resumeId/file', controller.getFile);
 router.patch('/:resumeId/tags', controller.updateTags);

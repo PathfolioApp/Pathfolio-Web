@@ -51,7 +51,9 @@ function extractSections(lines) {
 function extractContact(text) {
   const email = text.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i)?.[0] || '';
   const phone = text.match(/(?:\+?\d[\d\s().-]{7,}\d)/)?.[0]?.replace(/\s+/g, ' ').trim() || '';
-  const links = [...new Set(text.match(/(?:(?:https?:\/\/|www\.)[^\s)]+|(?:linkedin|github)\.com\/[A-Za-z0-9_./-]+)/gi) || [])].slice(0, 8);
+  const urlPattern = /(?:https?:\/\/|www\.)[^\s,;"'<>]+|(?:(?:linkedin|github|leetcode|codeforces|hackerrank|gitlab|behance|medium)\.com\/[A-Za-z0-9_./#&?=-]+)|(?:[a-zA-Z0-9][-a-zA-Z0-9]*\.(?:dev|me|io|in|app|tech|page|site)(?:\/[^\s,;"'<>]*)?)/gi;
+  const rawLinks = [...new Set(text.match(urlPattern) || [])].map(l => l.replace(/[.,;)]+$/, ''));
+  const links = rawLinks.filter(l => !l.includes('@'));
   const linkedin = links.find(link => /linkedin/i.test(link)) || '';
   const github = links.find(link => /github/i.test(link)) || '';
   const portfolio = links.find(link => link !== linkedin && link !== github) || '';
@@ -122,13 +124,22 @@ function skillGroups(lines) {
     return withoutLabel.split(/[,|;]\s*/);
   }).map(skill => skill.trim()).filter(Boolean);
   const uniqueSkills = [...new Map(skills.map(skill => [skill.toLowerCase(), skill])).values()];
+  const programming = uniqueSkills.filter(skill => /javascript|typescript|python|java|c\+\+|go|rust|php|ruby|kotlin|swift|\bc\b/i.test(skill));
+  const frameworks = uniqueSkills.filter(skill => /react|node|express|django|spring|next|angular|fastapi|flask|vue/i.test(skill));
+  const data = uniqueSkills.filter(skill => /sql|postgres|mysql|mongo|redis|database|pandas|numpy|spark/i.test(skill));
+  const cloudDevops = uniqueSkills.filter(skill => /aws|azure|gcp|docker|kubernetes|terraform|jenkins|linux|git|ci\/cd|nginx|cloudflare|vpn|wireguard/i.test(skill));
+  const aiMl = uniqueSkills.filter(skill => /machine learning|deep learning|tensorflow|pytorch|nlp|llm|scikit|groq/i.test(skill));
+  const other = uniqueSkills.filter(skill => !programming.includes(skill) && !frameworks.includes(skill) && !data.includes(skill) && !cloudDevops.includes(skill) && !aiMl.includes(skill));
   return {
-    programming: uniqueSkills.filter(skill => /javascript|typescript|python|java|c\+\+|go|rust|php|ruby|kotlin|swift|\bc\b/i.test(skill)),
-    frameworks: uniqueSkills.filter(skill => /react|node|express|django|spring|next|angular|fastapi|flask|vue/i.test(skill)),
-    data: uniqueSkills.filter(skill => /sql|postgres|mysql|mongo|redis|database|pandas|numpy|spark/i.test(skill)),
-    cloudDevops: uniqueSkills.filter(skill => /aws|azure|gcp|docker|kubernetes|terraform|jenkins|linux|git|ci\/cd|nginx|cloudflare|vpn|wireguard/i.test(skill)),
-    aiMl: uniqueSkills.filter(skill => /machine learning|deep learning|tensorflow|pytorch|nlp|llm|scikit|groq/i.test(skill)),
-    other: uniqueSkills.filter(skill => !/javascript|typescript|python|java|c\+\+|go|rust|php|ruby|kotlin|swift|\bc\b|react|node|express|django|spring|next|angular|fastapi|flask|vue|sql|postgres|mysql|mongo|redis|database|pandas|numpy|spark|aws|azure|gcp|docker|kubernetes|terraform|jenkins|linux|git|ci\/cd|nginx|cloudflare|vpn|wireguard|machine learning|deep learning|tensorflow|pytorch|nlp|llm|scikit|groq/i.test(skill)),
+    languages: programming,
+    programming,
+    frameworks,
+    cloudDevOps: cloudDevops,
+    cloudDevops,
+    databasesTools: [...data, ...other],
+    data,
+    aiMl,
+    other,
     raw: uniqueSkills,
   };
 }
@@ -210,12 +221,186 @@ function buildStructuredData(text, lines, sections) {
   };
 }
 
-function analyseText(rawText, pageCount = 0) {
+async function groqParseResume(text) {
+  const apiKey = process.env.GROQ_API_KEY;
+  if (!apiKey) return null;
+  
+  const models = [
+    process.env.GROQ_MODEL,
+    'openai/gpt-oss-120b',
+    'openai/gpt-oss-20b',
+    'qwen/qwen3.8-27b'
+  ].filter(Boolean);
+
+  const payload = {
+    response_format: { type: "json_object" },
+    messages: [
+      {
+        role: 'system',
+        content: `You are an expert resume parser. Parse the provided resume text into a strict JSON object with this exact schema:
+{
+  "personal": {
+    "fullName": "Candidate full name",
+    "headline": "Target role or headline",
+    "email": "Email address",
+    "phone": "Phone number",
+    "location": "City, State/Country",
+    "linkedin": "Full LinkedIn URL (https://linkedin.com/in/...)",
+    "github": "Full GitHub URL (https://github.com/...)",
+    "portfolio": "Portfolio / personal website URL",
+    "links": ["Array of all links/URLs detected (LinkedIn, GitHub, Portfolio, LeetCode, Codeforces, HackerRank, personal website, etc.)"]
+  },
+  "summary": {"text": "Professional summary or objective"},
+  "education": [{"title": "Degree and Major", "institution": "University / Institution name", "dates": "Graduation or dates", "description": "CGPA/Percentage or details", "bullets": []}],
+  "experience": [{"title": "Role / Job title", "company": "Company name", "dates": "Dates", "location": "Location", "description": "", "bullets": ["Achievement bullets"]}],
+  "projects": [{"title": "Project Name", "dates": "Dates", "technologies": "Technologies used", "liveUrl": "Live demo / deployment URL (not GitHub)", "repoUrl": "GitHub / source code repo URL", "description": "Project overview", "bullets": ["Project achievement bullets"]}],
+  "skills": {
+    "languages": ["Programming languages: e.g. Java, Python, C, C++, JavaScript, TypeScript, SQL, Go, HTML, CSS"],
+    "frameworks": ["Frameworks & libraries: e.g. React, Node.js, Express, Spring Boot, FastAPI, Flask, Tailwind CSS, Pandas"],
+    "cloudDevOps": ["Cloud, DevOps & tools: e.g. AWS, Docker, Kubernetes, Git, GitHub, GitHub Actions, Linux, CI/CD, Cloudflare"],
+    "databasesTools": ["Databases & developer tools: e.g. MySQL, PostgreSQL, MongoDB, Redis, VS Code, Postman, Jira, Jupyter"],
+    "raw": ["All technical skills combined in one flat list"]
+  },
+  "certifications": [{"title": "Certification name", "dates": "Year/Date", "issuer": "Issuing organization"}],
+  "achievements": [{"title": "Achievement or award name", "dates": "Year/Date", "description": "Description/Context"}],
+  "leadership": [{"title": "Leadership role or activity", "dates": "Year/Date", "description": "", "bullets": []}]
+}
+CRITICAL REQUIREMENTS:
+- Extract EVERY link, profile URL, or personal website from the resume into personal.links, personal.linkedin, personal.github, and personal.portfolio.
+- Organize skills accurately into languages, frameworks, cloudDevOps, and databasesTools, and also list every skill in skills.raw.
+- Return ONLY valid JSON.`
+      },
+      { role: 'user', content: String(text).substring(0, 9000) }
+    ],
+    temperature: 0.1
+  };
+
+  for (const model of models) {
+    try {
+      const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ ...payload, model })
+      });
+      
+      if (!response.ok) {
+        const errText = await response.text().catch(() => '');
+        console.warn(`Groq parsing failed with ${model} (${response.status}):`, errText);
+        continue;
+      }
+      
+      const data = await response.json();
+      const content = data.choices?.[0]?.message?.content;
+      if (content) {
+        return JSON.parse(content);
+      }
+    } catch (err) {
+      console.warn(`Groq request error for ${model}:`, err.message);
+    }
+  }
+
+  return null;
+}
+
+async function analyseText(rawText, pageCount = 0) {
   const text = String(rawText || '').replace(/[\u0000\uFFFD]/g, ' ').trim();
   const lines = cleanLines(text);
   const sections = extractSections(lines);
   const contact = extractContact(text);
-  const structured = buildStructuredData(text, lines, sections);
+  
+  let structured = null;
+  if (text.length > 50) {
+    structured = await groqParseResume(text);
+  }
+  
+  if (!structured) {
+    structured = buildStructuredData(text, lines, sections);
+  } else {
+    structured.extractedAt = new Date().toISOString();
+    structured.extractionMethod = 'llm-groq';
+    
+    const p = structured.personal || {};
+    const regexIdentity = firstNameAndHeadline(lines, contact);
+    
+    // Normalize and merge links without loss
+    const formatUrl = u => {
+      if (!u) return '';
+      const s = String(u).trim().replace(/[.,;)]+$/, '');
+      if (/^https?:\/\//i.test(s)) return s;
+      return `https://${s.replace(/^\/+/, '')}`;
+    };
+
+    const rawLinksList = [
+      ...(Array.isArray(p.links) ? p.links : []),
+      p.linkedin,
+      p.github,
+      p.portfolio,
+      ...(contact.links || []),
+      contact.linkedin,
+      contact.github,
+      contact.portfolio
+    ].filter(Boolean).map(formatUrl);
+
+    const uniqueLinks = [...new Set(rawLinksList)];
+    const linkedinLink = uniqueLinks.find(l => /linkedin\.com/i.test(l)) || (contact.linkedin ? formatUrl(contact.linkedin) : '');
+    const githubLink = uniqueLinks.find(l => /github\.com/i.test(l)) || (contact.github ? formatUrl(contact.github) : '');
+    const portfolioLink = uniqueLinks.find(l => l !== linkedinLink && l !== githubLink && !/email/i.test(l)) || (contact.portfolio ? formatUrl(contact.portfolio) : '');
+
+    structured.personal = {
+      fullName: p.fullName || regexIdentity.fullName || '',
+      headline: p.headline || regexIdentity.headline || '',
+      email: p.email || contact.email || '',
+      phone: p.phone || contact.phone || '',
+      location: p.location || '',
+      linkedin: linkedinLink,
+      github: githubLink,
+      portfolio: portfolioLink,
+      links: uniqueLinks
+    };
+
+    structured.summary = { text: structured.summary?.text || sections.summary.join(' ') || '', confidence: 'high', source: 'llm-groq' };
+    
+    const collections = ['education', 'experience', 'projects', 'certifications', 'achievements', 'leadership'];
+    collections.forEach(key => {
+      structured[key] = (structured[key] || []).map((item, i) => ({
+        id: `${key}_llm_${i}`,
+        title: item.title || '',
+        company: item.company || '',
+        institution: item.institution || '',
+        dates: item.dates || '',
+        location: item.location || '',
+        technologies: item.technologies || '',
+        liveUrl: item.liveUrl || item.repoUrl || '',
+        description: item.description || '',
+        bullets: Array.isArray(item.bullets) ? item.bullets : [],
+        raw: '',
+        confidence: 'high',
+        source: 'llm-groq'
+      }));
+    });
+    
+    const s = structured.skills || {};
+    const languages = s.languages?.length ? s.languages : (s.programming || []);
+    const frameworks = s.frameworks || [];
+    const cloudDevOps = s.cloudDevOps?.length ? s.cloudDevOps : (s.cloudDevops || []);
+    const databasesTools = s.databasesTools?.length ? s.databasesTools : [...(s.data || []), ...(s.tools || []), ...(s.other || [])];
+    const raw = Array.isArray(s.raw) && s.raw.length > 0 ? s.raw : [...languages, ...frameworks, ...cloudDevOps, ...databasesTools];
+
+    structured.skills = {
+      languages,
+      frameworks,
+      cloudDevOps,
+      databasesTools,
+      programming: languages,
+      cloudDevops: cloudDevOps,
+      data: databasesTools,
+      raw: [...new Set(raw)]
+    };
+  }
+
   const hasTextLayer = text.length >= 40;
   const hasContact = Boolean(contact.email || contact.phone);
   const hasSections = Object.values(sections).some(items => items.length > 0);
@@ -251,9 +436,52 @@ function analyseText(rawText, pageCount = 0) {
   };
 }
 
+async function extractPdfAnnotationLinks(buffer) {
+  try {
+    // Use PDF.js v2 bundled inside pdf-parse (v1 fails when required standalone)
+    const path = require('path');
+    const pdfJsPath = path.join(path.dirname(require.resolve('pdf-parse')), 'lib', 'pdf.js', 'v2.0.550', 'build', 'pdf.js');
+    const PDFJS = require(pdfJsPath);
+    PDFJS.disableWorker = true;
+    const doc = await PDFJS.getDocument(buffer);
+    const uris = new Set();
+    for (let pageNum = 1; pageNum <= doc.numPages; pageNum++) {
+      const page = await doc.getPage(pageNum);
+      const annotations = await page.getAnnotations();
+      for (const ann of annotations) {
+        // Subtype 'Link' with a URI action
+        const url = ann.url || ann.unsafeUrl || ann.dest;
+        if (typeof url === 'string' && /^https?:\/\//i.test(url)) {
+          uris.add(url.trim().replace(/[.,;)]+$/, ''));
+        }
+      }
+    }
+    return [...uris];
+  } catch (err) {
+    console.warn('PDF annotation extraction failed (non-critical):', err.message);
+    return [];
+  }
+}
+
 async function analysePdf(buffer) {
-  const parsed = await pdfParse(buffer);
-  return analyseText(parsed.text, parsed.numpages);
+  // Extract text layer + annotation layer links in parallel
+  const [parsed, annotationLinks] = await Promise.all([
+    pdfParse(buffer),
+    extractPdfAnnotationLinks(buffer),
+  ]);
+
+  let text = parsed.text;
+
+  // Inject annotation-layer links as a visible block so Groq can see them.
+  // PDF hyperlinks on words like "GitHub" / "Live Link" are completely
+  // invisible in the text layer — this bridges that gap.
+  if (annotationLinks.length > 0) {
+    const linkBlock = '\n\n[LINKS FROM DOCUMENT ANNOTATIONS]\n' + annotationLinks.join('\n');
+    text = text + linkBlock;
+    console.log(`[analysePdf] Injected ${annotationLinks.length} annotation link(s):`, annotationLinks);
+  }
+
+  return await analyseText(text, parsed.numpages);
 }
 
 module.exports = { analysePdf, analyseText };
