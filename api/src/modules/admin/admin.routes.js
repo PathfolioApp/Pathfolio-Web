@@ -20,7 +20,25 @@ router.get('/me', (req, res) => {
 });
 
 router.get('/users', (req, res) => send(res, async () => ({ users: await users.list() })));
-router.get('/overview', (req, res) => send(res, async () => ({ overview: await users.overview(), jobs: await content.jobs(), companies: await content.companies(), applications: await content.applications() })));
+router.get('/overview', (req, res) => send(res, async () => {
+  const [userOverview, jobs, companies, applications] = await Promise.all([
+    users.overview(),
+    content.jobs(),
+    content.companies(),
+    content.applications()
+  ]);
+  return {
+    overview: {
+      ...userOverview,
+      jobs,
+      companies,
+      applications
+    },
+    jobs,
+    companies,
+    applications
+  };
+}));
 router.post('/users', (req, res) => send(res, async () => ({ user: await users.create(req.body) })));
 router.post('/users/import', (req, res) => send(res, async () => ({ summary: await users.importRows(req.body.rows) })));
 router.patch('/users/:id/role', (req, res) => send(res, async () => ({ user: await users.setRole(req.params.id, req.body.role, req.student.id) })));

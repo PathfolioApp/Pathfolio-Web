@@ -206,12 +206,44 @@ function extractKeywords(text, excluded = []) {
     .map(([word]) => word);
 }
 
+function stripMarkdown(text) {
+  if (!text) return '';
+  return String(text)
+    // Remove markdown headers: # Heading, ## Heading, etc.
+    .replace(/^#{1,6}\s+/gm, '')
+    // Remove bold and italics: ***text***, **text**, *text*, __text__, _text_
+    .replace(/(\*{1,3}|_{1,3})(.*?)\1/g, '$2')
+    // Remove inline code: `code`
+    .replace(/`([^`]+)`/g, '$1')
+    // Remove markdown links: [text](url) -> text
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+    // Remove blockquotes: > quote
+    .replace(/^>\s+/gm, '')
+    // Remove list bullets / checkboxes: - [ ] item, * item, - item, + item, 1. item
+    .replace(/^[\s•●◦\-*+–—\d.)]+(\[[ xX]\]\s*)?/, '')
+    .trim();
+}
+
 function extractResponsibilities(text) {
   return text
     .split(/\r?\n/)
-    .map(line => line.replace(/^[\s•●◦\-*–—\d.)]+/, '').trim())
-    .filter(line => line.length >= 28 && line.length <= 220)
-    .filter(line => /(you will|responsib|build|design|develop|manage|lead|own|collaborat|analyz|analys|implement|maintain|support|conduct|test|deploy)/i.test(line))
+    // Filter out empty lines, markdown headers, and section title lines
+    .filter(rawLine => {
+      const trimmed = rawLine.trim();
+      if (!trimmed) return false;
+      // Skip markdown headers (e.g. # Job Title, ## Responsibilities)
+      if (/^#{1,6}\s+/.test(trimmed)) return false;
+      // Skip dividers (---, ***, ===)
+      if (/^[-*_=\s]{3,}$/.test(trimmed)) return false;
+      // Skip generic section headings (e.g. "What we look for:", "Responsibilities:")
+      if (/^(responsibilit|requirement|qualification|about (the|us)|what (we|you)|role overview|job description|overview)[^:]*:\s*$/i.test(trimmed)) return false;
+      return true;
+    })
+    .map(line => stripMarkdown(line))
+    // Filter out introductory company / recruitment statements
+    .filter(line => !/^(we are (looking for|seeking|hiring)|about (the|us)|join (our|us)|welcome to)/i.test(line))
+    .filter(line => line.length >= 20 && line.length <= 220)
+    .filter(line => /(you will|responsib|build|design|develop|manage|lead|own|collaborat|analyz|analys|implement|maintain|support|conduct|test|deploy|engineer|architect)/i.test(line))
     .slice(0, 6);
 }
 
@@ -238,9 +270,19 @@ function analyzeDescription({ jobDescription = '', jobTitle = '' } = {}) {
   const minCgpa = extractMinCgpa(text);
   const experienceYears = extractExperienceYears(text);
 
-  // Derive a role title from an explicit field or the first meaningful line.
-  const firstLine = text.split(/\r?\n/).map(line => line.trim()).find(line => line.length > 2 && line.length < 90) || '';
-  const role = clean(jobTitle) || firstLine.replace(/[.:]$/, '') || 'Untitled role';
+  // Derive a role title from an explicit field or the first meaningful line (cleaning markdown).
+  const lines = text.split(/\r?\n/).map(line => line.trim()).filter(Boolean);
+  const firstMeaningfulLine = lines.find(line => {
+    const stripped = stripMarkdown(line).replace(/^(role|job title|position)\s*:\s*/i, '').trim();
+    return stripped.length > 2 && stripped.length < 90;
+  }) || '';
+
+  const cleanedRole = stripMarkdown(firstMeaningfulLine)
+    .replace(/^(role|job title|position)\s*:\s*/i, '')
+    .replace(/[.:]$/, '')
+    .trim();
+
+  const role = clean(jobTitle) || cleanedRole || 'Untitled role';
 
   const excluded = skills.flatMap(skill => skill.toLowerCase().split(/[\s/&]+/)).filter(Boolean);
   const keywords = extractKeywords(text, excluded);

@@ -90,7 +90,16 @@ export function AdminPage() {
     catch (err) { setError(err.message); } finally { setLoading(false); }
   };
   const loadOverview = async () => {
-    try { setOverview((await adminApi.overview()).overview); } catch { /* non-critical */ }
+    try {
+      const data = await adminApi.overview();
+      const base = data.overview || {};
+      setOverview({
+        ...base,
+        jobs: data.jobs || base.jobs || [],
+        companies: data.companies || base.companies || [],
+        applications: data.applications || base.applications || []
+      });
+    } catch { /* non-critical */ }
   };
 
   useEffect(() => { loadBase(); }, [jobFilter]);
