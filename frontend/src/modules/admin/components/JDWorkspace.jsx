@@ -1,10 +1,29 @@
 import React, { useState } from 'react';
-import { AlertTriangle, CheckCircle2, Clock, Download, FileSearch, ListChecks, Sparkles, Target, Upload, UserRound, Wand2, X } from 'lucide-react';
+import {
+  AlertTriangle, CheckCircle2, Clock, Download, FileSearch, ListChecks,
+  Sparkles, Target, Upload, UserRound, Wand2, X, ChevronDown, ChevronUp,
+  Briefcase, FolderGit2, Award, ExternalLink, Linkedin, Github, CheckSquare,
+  Square, Mail, Copy, Check
+} from 'lucide-react';
 import { Button } from '../../../components/ui/Button';
 import { adminApi } from '../adminApi';
 import { Input, PanelHeading, Empty, downloadCsvFile } from '../utils/adminHelpers';
 
-const SAMPLE_JD = `Software Engineer (Frontend), Full-time, Bengaluru\n\nWe are looking for a frontend engineer to build polished, accessible web experiences for our placement platform.\n\nWhat you will do:\n- Build responsive interfaces using React, JavaScript, and modern CSS.\n- Collaborate with designers to translate Figma flows into production UI.\n- Integrate REST APIs and manage component state with Redux.\n- Write unit tests and participate in code reviews.\n\nWhat we look for:\n- Strong knowledge of HTML, CSS, and TypeScript.\n- Experience with Git and CI/CD workflows.\n- Minimum CGPA of 7.0 with no active backlogs.\n- Bachelor of Technology or equivalent engineering degree.`;
+const SAMPLE_JD = `Software Engineer (Frontend), Full-time, Bengaluru
+
+We are looking for a frontend engineer to build polished, accessible web experiences for our placement platform.
+
+What you will do:
+- Build responsive interfaces using React, JavaScript, and modern CSS.
+- Collaborate with designers to translate Figma flows into production UI.
+- Integrate REST APIs and manage component state with Redux.
+- Write unit tests and participate in code reviews.
+
+What we look for:
+- Strong knowledge of HTML, CSS, and TypeScript.
+- Experience with Git and CI/CD workflows.
+- Minimum CGPA of 7.0 with no active backlogs.
+- Bachelor of Technology or equivalent engineering degree.`;
 
 export function JDWorkspace() {
   const [jobTitle, setJobTitle] = useState('');
@@ -13,6 +32,9 @@ export function JDWorkspace() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [filters, setFilters] = useState({ search: '', minScore: 0, eligibleOnly: false });
+  const [selectedIds, setSelectedIds] = useState(new Set());
+  const [expandedIds, setExpandedIds] = useState(new Set());
+  const [copied, setCopied] = useState(false);
 
   const analyze = async event => {
     event?.preventDefault();
@@ -21,6 +43,8 @@ export function JDWorkspace() {
     try {
       const data = await adminApi.analyzeJobDescription({ jobTitle, jobDescription });
       setResult(data);
+      setSelectedIds(new Set());
+      setExpandedIds(new Set());
     } catch (err) { setError(err.message); } finally { setLoading(false); }
   };
 
@@ -33,14 +57,85 @@ export function JDWorkspace() {
     event.target.value = '';
   };
 
-  const reset = () => { setJobTitle(''); setJobDescription(''); setResult(null); setError(''); setFilters({ search: '', minScore: 0, eligibleOnly: false }); };
+  const reset = () => {
+    setJobTitle('');
+    setJobDescription('');
+    setResult(null);
+    setError('');
+    setFilters({ search: '', minScore: 0, eligibleOnly: false });
+    setSelectedIds(new Set());
+    setExpandedIds(new Set());
+  };
 
-  const exportCsv = () => {
-    if (!result?.candidates?.length) return;
+  const getScoreTheme = (score) => {
+    if (score >= 75) return { color: '#10b981', label: 'Strong match' };
+    if (score >= 50) return { color: '#2563eb', label: 'Good match' };
+    if (score >= 30) return { color: '#f59e0b', label: 'Partial match' };
+    return { color: '#64748b', label: 'Low match' };
+  };
+
+  const toggleSelectCandidate = (id) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const selectTopN = (n) => {
+    const ids = candidates.slice(0, n).map(c => c.id);
+    setSelectedIds(new Set(ids));
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size >= candidates.length && candidates.length > 0) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(candidates.map(c => c.id)));
+    }
+  };
+
+  const toggleExpand = (id) => {
+    setExpandedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const copySelectedEmails = () => {
+    const emails = (result?.candidates || [])
+      .filter(c => selectedIds.has(c.id) && c.email)
+      .map(c => c.email);
+    if (!emails.length) return;
+    navigator.clipboard.writeText(emails.join(', '));
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const exportCsv = (onlySelected = false) => {
+    const list = onlySelected && selectedIds.size > 0
+      ? (result?.candidates || []).filter(c => selectedIds.has(c.id))
+      : candidates;
+    if (!list.length) return;
     const escapeCsv = value => `"${String(value ?? '').replace(/"/g, '""')}"`;
-    const header = ['Name', 'Match score', 'Department', 'Batch', 'CGPA', 'Matched skills', 'Eligibility', 'Email'].map(escapeCsv);
-    const rows = result.candidates.map(candidate => [candidate.name, candidate.score, candidate.academic?.department || '', candidate.academic?.batchYear || '', candidate.academic?.cgpa ?? '', candidate.matchedSkills.join('; '), candidate.eligibilityFlags.join('; '), candidate.email || 'Private'].map(escapeCsv).join(','));
-    downloadCsvFile('pathfolio-jd-matches.csv', [header.join(','), ...rows].join('\n'));
+    const header = ['Roll Number', 'Name', 'Match score', 'Department', 'Batch', 'CGPA', 'Matched skills', 'Projects', 'Internships', 'Eligibility', 'Email'].map(escapeCsv);
+    const rows = list.map(c => [
+      c.rollNumber || c.academic?.rollNumber || '',
+      c.name,
+      `${c.score}%`,
+      c.academic?.department || '',
+      c.academic?.batchYear || '',
+      c.academic?.cgpa ?? '',
+      c.matchedSkills.join('; '),
+      (c.projects || []).map(p => p.projectName).join('; '),
+      (c.internships || []).map(i => `${i.role} at ${i.companyName}`).join('; '),
+      c.eligibilityFlags.join('; ') || 'Meets eligibility',
+      c.email || 'Private'
+    ].map(escapeCsv).join(','));
+    downloadCsvFile('pathfolio-jd-shortlist.csv', [header.join(','), ...rows].join('\n'));
   };
 
   const candidates = (result?.candidates || []).filter(candidate => {
@@ -48,7 +143,11 @@ export function JDWorkspace() {
     if (filters.eligibleOnly && candidate.eligibilityFlags.length) return false;
     if (!filters.search.trim()) return true;
     const needle = filters.search.toLowerCase();
-    return `${candidate.name} ${candidate.academic?.department || ''} ${candidate.matchedSkills.join(' ')}`.toLowerCase().includes(needle);
+    const roll = String(candidate.rollNumber || candidate.academic?.rollNumber || '');
+    const projectHaystack = (candidate.projects || []).map(p => `${p.projectName} ${(p.technologies || []).join(' ')}`).join(' ');
+    const internshipHaystack = (candidate.internships || []).map(i => `${i.companyName} ${i.role} ${(i.skills || []).join(' ')}`).join(' ');
+    const fullHaystack = `${candidate.name} ${roll} ${candidate.academic?.department || ''} ${candidate.matchedSkills.join(' ')} ${projectHaystack} ${internshipHaystack}`.toLowerCase();
+    return fullHaystack.includes(needle);
   });
 
   return (
@@ -65,7 +164,7 @@ export function JDWorkspace() {
           <div className="pf-admin-jd-actions">
             <Button type="submit" loading={loading} icon={Sparkles}>Analyse description</Button>
             <Button type="button" variant="ghost" onClick={reset} icon={X}>Clear</Button>
-            {result && <Button type="button" variant="outline" onClick={exportCsv} icon={Download}>Export matches</Button>}
+            {result && <Button type="button" variant="outline" onClick={() => exportCsv(false)} icon={Download}>Export all matches</Button>}
           </div>
         </form>
       </div>
@@ -97,30 +196,315 @@ export function JDWorkspace() {
             </article>
 
             <div className="pf-admin-list">
-              <div className="pf-admin-panel-heading"><div><p className="pf-admin-eyebrow">Ranked candidates</p><h2>Matches <span>{candidates.length}</span></h2></div></div>
-              <div className="pf-admin-jd-filters">
-                <input type="search" className="pf-admin-filter" placeholder="Search candidates or skills..." value={filters.search} onChange={event => setFilters(prev => ({ ...prev, search: event.target.value }))} />
-                <label className="pf-admin-jd-score"><span>Min score</span><input type="range" min="0" max="100" step="5" value={filters.minScore} onChange={event => setFilters(prev => ({ ...prev, minScore: Number(event.target.value) }))} /><b>{filters.minScore}%</b></label>
-                <label className="pf-admin-jd-toggle"><input type="checkbox" checked={filters.eligibleOnly} onChange={event => setFilters(prev => ({ ...prev, eligibleOnly: event.target.checked }))} />Eligible only</label>
+              <div className="pf-admin-panel-heading">
+                <div>
+                  <p className="pf-admin-eyebrow">Ranked candidates</p>
+                  <h2>Matches <span>{candidates.length}</span></h2>
+                </div>
               </div>
-              {candidates.length === 0 ? <Empty text="No candidates match the current filters." /> : candidates.map(candidate => (
-                <article className="pf-admin-jd-candidate" key={candidate.id}>
-                  <div className="pf-admin-jd-candidate-top">
-                    <div className="pf-admin-jd-candidate-id">
-                      <span className="pf-admin-jd-avatar"><UserRound size={18} /></span>
-                      <div><h3>{candidate.name}</h3><p>{candidate.academic?.department || 'Department not listed'}{candidate.academic?.batchYear ? ` · Batch ${candidate.academic.batchYear}` : ''}{candidate.academic?.cgpa ? ` · CGPA ${candidate.academic.cgpa}` : ''}</p></div>
-                    </div>
-                    <div className="pf-admin-jd-score-badge" style={{ '--score': `${candidate.score}%` }}><strong>{candidate.score}%</strong><span>match</span></div>
+
+              {/* Filter controls */}
+              <div className="pf-admin-jd-filters">
+                <input
+                  type="search"
+                  className="pf-admin-filter"
+                  placeholder="Search candidates, skills, projects, companies..."
+                  value={filters.search}
+                  onChange={event => setFilters(prev => ({ ...prev, search: event.target.value }))}
+                />
+                <label className="pf-admin-jd-score">
+                  <span>Min score</span>
+                  <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    step="5"
+                    value={filters.minScore}
+                    onChange={event => setFilters(prev => ({ ...prev, minScore: Number(event.target.value) }))}
+                  />
+                  <b>{filters.minScore}%</b>
+                </label>
+                <label className="pf-admin-jd-toggle">
+                  <input
+                    type="checkbox"
+                    checked={filters.eligibleOnly}
+                    onChange={event => setFilters(prev => ({ ...prev, eligibleOnly: event.target.checked }))}
+                  />
+                  Eligible only
+                </label>
+              </div>
+
+              {/* Quick Select & Shortlist Toolbar */}
+              <div className="pf-admin-jd-bulk-bar">
+                <div className="pf-admin-jd-bulk-left">
+                  <button className="pf-admin-jd-bulk-btn" type="button" onClick={toggleSelectAll}>
+                    {selectedIds.size >= candidates.length && candidates.length > 0 ? 'Deselect All' : `Select All (${candidates.length})`}
+                  </button>
+                  <button className="pf-admin-jd-bulk-btn" type="button" onClick={() => selectTopN(5)}>Top 5</button>
+                  <button className="pf-admin-jd-bulk-btn" type="button" onClick={() => selectTopN(10)}>Top 10</button>
+                  <button className="pf-admin-jd-bulk-btn" type="button" onClick={() => selectTopN(25)}>Top 25</button>
+                  {selectedIds.size > 0 && (
+                    <span className="pf-admin-jd-selected-badge">
+                      <CheckSquare size={13} /> {selectedIds.size} selected
+                    </span>
+                  )}
+                </div>
+                {selectedIds.size > 0 && (
+                  <div className="pf-admin-jd-bulk-actions">
+                    <Button type="button" variant="outline" size="sm" onClick={() => exportCsv(true)} icon={Download}>
+                      Export Shortlist ({selectedIds.size})
+                    </Button>
+                    <Button type="button" variant="ghost" size="sm" onClick={copySelectedEmails} icon={copied ? Check : Copy}>
+                      {copied ? 'Copied Emails!' : 'Copy Emails'}
+                    </Button>
                   </div>
-                  <div className="pf-admin-jd-candidate-reasons">{candidate.reasons.map(reason => <span key={reason}><CheckCircle2 size={14} />{reason}</span>)}</div>
-                  {candidate.matchedSkills.length > 0 && <div className="pf-admin-jd-block"><span className="pf-admin-jd-block-label">Matched skills</span><div className="pf-admin-jd-chips">{candidate.matchedSkills.map(skill => <b key={skill}>{skill}</b>)}</div></div>}
-                  {candidate.missingSkills.length > 0 && <div className="pf-admin-jd-block"><span className="pf-admin-jd-block-label">Not evidenced</span><div className="pf-admin-jd-chips pf-admin-jd-chips--muted">{candidate.missingSkills.map(skill => <span key={skill}>{skill}</span>)}</div></div>}
-                  <div className="pf-admin-jd-candidate-foot">
-                    {candidate.eligibilityFlags.length > 0 ? <span className="pf-admin-jd-flag"><AlertTriangle size={14} />{candidate.eligibilityFlags.join(' · ')}</span> : <span className="pf-admin-jd-ok"><CheckCircle2 size={14} />Meets stated eligibility</span>}
-                    {candidate.email ? <a className="pf-candidate-contact" href={`mailto:${candidate.email}`}>Contact candidate</a> : <span className="pf-admin-jd-private">Contact hidden by privacy settings</span>}
-                  </div>
-                </article>
-              ))}
+                )}
+              </div>
+
+              {/* Candidate Cards */}
+              {candidates.length === 0 ? (
+                <Empty text="No candidates match the current filters." />
+              ) : (
+                candidates.map(candidate => {
+                  const isSelected = selectedIds.has(candidate.id);
+                  const isExpanded = expandedIds.has(candidate.id);
+                  const theme = getScoreTheme(candidate.score);
+                  const hasBacklogs = Number(candidate.academic?.activeBacklogs) > 0;
+                  const projectCount = (candidate.projects || []).length;
+                  const internshipCount = (candidate.internships || []).length;
+                  const achievementCount = (candidate.achievements || []).length;
+                  const githubLink = candidate.social?.links?.find(l => l.platform === 'github' || l.name?.toLowerCase().includes('github'))?.url;
+                  const linkedinLink = candidate.social?.linkedin;
+
+                  return (
+                    <article
+                      className={`pf-admin-jd-candidate ${isSelected ? 'pf-admin-jd-candidate--selected' : ''}`}
+                      key={candidate.id}
+                    >
+                      <div className="pf-admin-jd-candidate-top">
+                        <div className="pf-admin-jd-candidate-id">
+                          <label className="pf-admin-jd-select-wrap" onClick={e => e.stopPropagation()}>
+                            <input
+                              type="checkbox"
+                              className="pf-admin-jd-checkbox"
+                              checked={isSelected}
+                              onChange={() => toggleSelectCandidate(candidate.id)}
+                            />
+                          </label>
+                          <span className="pf-admin-jd-avatar"><UserRound size={18} /></span>
+                          <div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                              <h3 style={{ margin: 0 }}>{candidate.name}</h3>
+                              {(candidate.rollNumber || candidate.academic?.rollNumber) && (
+                                <span className="pf-admin-jd-pill pf-admin-jd-pill--roll">
+                                  {candidate.rollNumber || candidate.academic?.rollNumber}
+                                </span>
+                              )}
+                            </div>
+                            <p style={{ margin: '2px 0 0' }}>{candidate.academic?.department || 'Department not listed'}{candidate.academic?.batchYear ? ` · Batch ${candidate.academic.batchYear}` : ''}</p>
+                            
+                            {/* Academic quick badges */}
+                            <div className="pf-admin-jd-academic-badges">
+                              {candidate.academic?.cgpa !== undefined && candidate.academic?.cgpa !== null && (
+                                <span className="pf-admin-jd-pill pf-admin-jd-pill--cgpa">
+                                  CGPA {candidate.academic.cgpa}
+                                </span>
+                              )}
+                              <span className={`pf-admin-jd-pill ${hasBacklogs ? 'pf-admin-jd-pill--warning' : 'pf-admin-jd-pill--clear'}`}>
+                                {hasBacklogs ? `${candidate.academic.activeBacklogs} Backlogs` : '0 Backlogs'}
+                              </span>
+                              {candidate.academic?.degreeProgram && (
+                                <span className="pf-admin-jd-pill">
+                                  {candidate.academic.degreeProgram}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Color-coded score badge */}
+                        <div
+                          className="pf-admin-jd-score-badge"
+                          style={{
+                            '--score': `${candidate.score}%`,
+                            '--score-color': theme.color
+                          }}
+                        >
+                          <strong style={{ color: theme.color }}>{candidate.score}%</strong>
+                          <span>match</span>
+                        </div>
+                      </div>
+
+                      {/* Reasons & Highlights */}
+                      <div className="pf-admin-jd-candidate-reasons">
+                        {candidate.reasons.map(reason => (
+                          <span key={reason}><CheckCircle2 size={14} />{reason}</span>
+                        ))}
+                      </div>
+
+                      {/* Matched skills */}
+                      {candidate.matchedSkills.length > 0 && (
+                        <div className="pf-admin-jd-block">
+                          <span className="pf-admin-jd-block-label">Matched skills ({candidate.matchedSkills.length})</span>
+                          <div className="pf-admin-jd-chips">
+                            {candidate.matchedSkills.map(skill => (
+                              <b key={skill} className="pf-chip-success">✓ {skill}</b>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Missing skills */}
+                      {candidate.missingSkills.length > 0 && (
+                        <div className="pf-admin-jd-block">
+                          <span className="pf-admin-jd-block-label">Not evidenced in profile</span>
+                          <div className="pf-admin-jd-chips pf-admin-jd-chips--muted">
+                            {candidate.missingSkills.map(skill => (
+                              <span key={skill}>{skill}</span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Expandable Technical Evidence Button */}
+                      {(projectCount > 0 || internshipCount > 0 || achievementCount > 0) && (
+                        <button
+                          type="button"
+                          className="pf-admin-jd-details-btn"
+                          onClick={() => toggleExpand(candidate.id)}
+                        >
+                          {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                          {isExpanded
+                            ? 'Hide technical evidence'
+                            : `View technical evidence (${projectCount} projects, ${internshipCount} internships)`}
+                        </button>
+                      )}
+
+                      {/* Expandable Experience Drawer */}
+                      {isExpanded && (
+                        <div className="pf-admin-jd-drawer">
+                          {/* Internships Section */}
+                          {internshipCount > 0 && (
+                            <div className="pf-admin-jd-drawer-section">
+                              <h4><Briefcase size={14} /> Internships & Work Experience</h4>
+                              <div className="pf-admin-jd-evidence-list">
+                                {candidate.internships.map((intern, i) => (
+                                  <div className="pf-admin-jd-mini-card" key={intern.id || i}>
+                                    <div className="pf-admin-jd-mini-card-head">
+                                      <h5>{intern.role} <span style={{ color: 'var(--color-primary)' }}>@ {intern.companyName}</span></h5>
+                                      <span>{intern.workMode || 'On-site'}</span>
+                                    </div>
+                                    {intern.description && (
+                                      <p className="pf-admin-jd-mini-card-desc">{intern.description}</p>
+                                    )}
+                                    {Array.isArray(intern.skills) && intern.skills.length > 0 && (
+                                      <div className="pf-admin-jd-mini-card-tech">
+                                        {intern.skills.map(s => <span key={s}>{s}</span>)}
+                                      </div>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Projects Section */}
+                          {projectCount > 0 && (
+                            <div className="pf-admin-jd-drawer-section">
+                              <h4><FolderGit2 size={14} /> Projects & Technical Implementations</h4>
+                              <div className="pf-admin-jd-evidence-list">
+                                {candidate.projects.map((proj, p) => (
+                                  <div className="pf-admin-jd-mini-card" key={proj.id || p}>
+                                    <div className="pf-admin-jd-mini-card-head">
+                                      <h5>{proj.projectName}</h5>
+                                      <span>{proj.projectType || 'Project'}</span>
+                                    </div>
+                                    {proj.description && (
+                                      <p className="pf-admin-jd-mini-card-desc">{proj.description}</p>
+                                    )}
+                                    {Array.isArray(proj.technologies) && proj.technologies.length > 0 && (
+                                      <div className="pf-admin-jd-mini-card-tech">
+                                        {proj.technologies.map(t => <span key={t}>{t}</span>)}
+                                      </div>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Key Achievements */}
+                          {achievementCount > 0 && (
+                            <div className="pf-admin-jd-drawer-section">
+                              <h4><Award size={14} /> Certifications & Achievements</h4>
+                              <div className="pf-admin-jd-evidence-list">
+                                {candidate.achievements.slice(0, 3).map((ach, a) => (
+                                  <div className="pf-admin-jd-mini-card" key={ach.id || a}>
+                                    <div className="pf-admin-jd-mini-card-head">
+                                      <h5>{ach.title}</h5>
+                                      <span>{ach.category || 'Achievement'}</span>
+                                    </div>
+                                    {ach.description && (
+                                      <p className="pf-admin-jd-mini-card-desc">{ach.description}</p>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Card Footer */}
+                      <div className="pf-admin-jd-candidate-foot">
+                        <div>
+                          {candidate.eligibilityFlags.length > 0 ? (
+                            <span className="pf-admin-jd-flag">
+                              <AlertTriangle size={14} /> {candidate.eligibilityFlags.join(' · ')}
+                            </span>
+                          ) : (
+                            <span className="pf-admin-jd-ok">
+                              <CheckCircle2 size={14} /> Meets stated eligibility
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="pf-admin-jd-socials">
+                          {githubLink && (
+                            <a
+                              className="pf-admin-jd-social-btn"
+                              href={githubLink}
+                              target="_blank"
+                              rel="noreferrer"
+                              title="GitHub Profile"
+                            >
+                              <Github size={13} /> GitHub
+                            </a>
+                          )}
+                          {linkedinLink && (
+                            <a
+                              className="pf-admin-jd-social-btn"
+                              href={linkedinLink}
+                              target="_blank"
+                              rel="noreferrer"
+                              title="LinkedIn Profile"
+                            >
+                              <Linkedin size={13} /> LinkedIn
+                            </a>
+                          )}
+                          {candidate.email ? (
+                            <a className="pf-candidate-contact" href={`mailto:${candidate.email}`}>
+                              <Mail size={13} style={{ marginRight: 4, verticalAlign: -1 }} /> Contact candidate
+                            </a>
+                          ) : (
+                            <span className="pf-admin-jd-private">Contact hidden by privacy</span>
+                          )}
+                        </div>
+                      </div>
+                    </article>
+                  );
+                })
+              )}
             </div>
           </>
         )}

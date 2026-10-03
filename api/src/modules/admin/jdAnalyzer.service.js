@@ -9,20 +9,21 @@ const SKILLS = [
   // Frontend
   { name: 'JavaScript', domain: 'Frontend', aliases: ['javascript', 'js', 'ecmascript', 'es6'] },
   { name: 'TypeScript', domain: 'Frontend', aliases: ['typescript', 'ts'] },
-  { name: 'React', domain: 'Frontend', aliases: ['react', 'reactjs', 'react.js', 'react native'] },
-  { name: 'Next.js', domain: 'Frontend', aliases: ['next.js', 'nextjs'] },
+  { name: 'React', domain: 'Frontend', aliases: ['react', 'reactjs', 'react.js', 'react native', 'vite'] },
+  { name: 'Next.js', domain: 'Frontend', aliases: ['next.js', 'nextjs', 'next'] },
   { name: 'Vue', domain: 'Frontend', aliases: ['vue', 'vuejs', 'vue.js', 'nuxt'] },
   { name: 'Angular', domain: 'Frontend', aliases: ['angular', 'angularjs'] },
   { name: 'HTML & CSS', domain: 'Frontend', aliases: ['html', 'css', 'sass', 'scss', 'less'] },
-  { name: 'Tailwind CSS', domain: 'Frontend', aliases: ['tailwind', 'tailwindcss'] },
-  { name: 'Redux', domain: 'Frontend', aliases: ['redux'] },
+  { name: 'Tailwind CSS', domain: 'Frontend', aliases: ['tailwind', 'tailwindcss', 'tailwind css'] },
+  { name: 'Redux', domain: 'Frontend', aliases: ['redux', 'zustand', 'recoil'] },
   { name: 'UI/UX Design', domain: 'Design', aliases: ['ui/ux', 'ui ux', 'ux design', 'ui design', 'user experience', 'user interface'] },
   { name: 'Figma', domain: 'Design', aliases: ['figma', 'sketch', 'adobe xd'] },
   { name: 'Product Design', domain: 'Design', aliases: ['product design', 'interaction design', 'design thinking'] },
 
   // Backend & languages
-  { name: 'Node.js', domain: 'Backend', aliases: ['node', 'node.js', 'nodejs', 'express'] },
+  { name: 'Node.js', domain: 'Backend', aliases: ['node', 'node.js', 'nodejs', 'express', 'express.js', 'expressjs'] },
   { name: 'Python', domain: 'Backend', aliases: ['python', 'py'] },
+  { name: 'FastAPI', domain: 'Backend', aliases: ['fastapi', 'fast api'] },
   { name: 'Django', domain: 'Backend', aliases: ['django'] },
   { name: 'Flask', domain: 'Backend', aliases: ['flask'] },
   { name: 'Java', domain: 'Backend', aliases: ['java', 'core java', 'j2ee'] },
@@ -36,6 +37,9 @@ const SKILLS = [
   { name: 'REST APIs', domain: 'Backend', aliases: ['rest api', 'restful', 'rest', 'api design', 'apis'] },
   { name: 'GraphQL', domain: 'Backend', aliases: ['graphql'] },
   { name: 'Microservices', domain: 'Backend', aliases: ['microservice', 'microservices'] },
+  { name: 'Prisma & ORM', domain: 'Backend', aliases: ['prisma', 'typeorm', 'hibernate', 'sqlalchemy'] },
+  { name: 'Redis', domain: 'Backend', aliases: ['redis', 'caching'] },
+  { name: 'Kafka / Messaging', domain: 'Backend', aliases: ['kafka', 'apache kafka', 'rabbitmq', 'message queue'] },
   { name: 'Kotlin', domain: 'Mobile', aliases: ['kotlin'] },
   { name: 'Swift', domain: 'Mobile', aliases: ['swift', 'ios'] },
   { name: 'Flutter', domain: 'Mobile', aliases: ['flutter', 'dart'] },
@@ -43,22 +47,22 @@ const SKILLS = [
 
   // Data & AI
   { name: 'SQL', domain: 'Data', aliases: ['sql', 'mysql', 'postgres', 'postgresql', 'sqlite', 'oracle db', 'pl/sql'] },
-  { name: 'NoSQL', domain: 'Data', aliases: ['mongodb', 'mongo', 'nosql', 'dynamodb', 'cassandra', 'redis'] },
+  { name: 'NoSQL', domain: 'Data', aliases: ['mongodb', 'mongo', 'nosql', 'dynamodb', 'cassandra', 'supabase'] },
   { name: 'Data Analysis', domain: 'Data', aliases: ['data analysis', 'data analytics', 'analytics', 'data analyst'] },
   { name: 'Data Science', domain: 'Data', aliases: ['data science', 'data scientist'] },
   { name: 'Machine Learning', domain: 'AI/ML', aliases: ['machine learning', 'ml', 'supervised learning', 'scikit', 'sklearn'] },
   { name: 'Deep Learning', domain: 'AI/ML', aliases: ['deep learning', 'neural network', 'neural networks'] },
   { name: 'TensorFlow', domain: 'AI/ML', aliases: ['tensorflow'] },
   { name: 'PyTorch', domain: 'AI/ML', aliases: ['pytorch', 'torch'] },
-  { name: 'NLP', domain: 'AI/ML', aliases: ['nlp', 'natural language processing', 'llm', 'large language model'] },
+  { name: 'NLP & LLMs', domain: 'AI/ML', aliases: ['nlp', 'natural language processing', 'llm', 'large language model', 'langchain', 'rag', 'vector search', 'vector db'] },
   { name: 'Computer Vision', domain: 'AI/ML', aliases: ['computer vision', 'opencv', 'image processing'] },
   { name: 'Pandas & NumPy', domain: 'Data', aliases: ['pandas', 'numpy', 'matplotlib', 'seaborn'] },
-  { name: 'Power BI / Tableau', domain: 'Data', aliases: ['power bi', 'powerbi', 'tableau', 'looker'] },
+  { name: 'Power BI / Tableau', domain: 'Data', aliases: ['power bi', 'powerbi', 'tableau', 'looker', 'data visualization'] },
   { name: 'Excel', domain: 'Data', aliases: ['excel', 'spreadsheet', 'google sheets'] },
   { name: 'Statistics', domain: 'Data', aliases: ['statistics', 'statistical', 'probability'] },
 
   // Cloud / DevOps / Security
-  { name: 'AWS', domain: 'Cloud', aliases: ['aws', 'amazon web services', 'ec2', 's3'] },
+  { name: 'AWS', domain: 'Cloud', aliases: ['aws', 'amazon web services', 'ec2', 's3', 'lambda'] },
   { name: 'Azure', domain: 'Cloud', aliases: ['azure', 'microsoft cloud'] },
   { name: 'Google Cloud', domain: 'Cloud', aliases: ['gcp', 'google cloud'] },
   { name: 'Docker', domain: 'DevOps', aliases: ['docker', 'containerization', 'containers'] },
@@ -242,14 +246,61 @@ function analyzeDescription({ jobDescription = '', jobTitle = '' } = {}) {
   const keywords = extractKeywords(text, excluded);
   const responsibilities = extractResponsibilities(text);
 
-  return { role, skills, keywords, domains, departments, education, minCgpa, experienceYears, responsibilities, summary: '' };
+  return { role, skills, keywords, domains, departments, education, minCgpa, experienceYears, responsibilities, rawText: text, summary: '' };
+}
+
+function mapTagToCanonicalSkill(tag) {
+  const cleaned = clean(tag).toLowerCase();
+  if (!cleaned) return null;
+  for (const skill of SKILL_INDEX) {
+    if (skill.name.toLowerCase() === cleaned) return skill.name;
+    if (skill.aliases.some(alias => alias.toLowerCase() === cleaned)) return skill.name;
+  }
+  return null;
+}
+
+function detectStudentSkills(student, text) {
+  const detected = new Set(detectSkills(text));
+
+  // Directly map explicit tags from projects and internships
+  const explicitTags = [
+    ...(student.projects || []).flatMap(p => Array.isArray(p.technologies) ? p.technologies : []),
+    ...(student.internships || []).flatMap(i => Array.isArray(i.skills) ? i.skills : [])
+  ];
+
+  for (const tag of explicitTags) {
+    const canonical = mapTagToCanonicalSkill(tag);
+    if (canonical) {
+      detected.add(canonical);
+    }
+  }
+
+  return [...detected];
 }
 
 function studentSkillText(student) {
   const tags = [
+    // Projects: names, tech tags, descriptions, contributions
+    ...(student.projects || []).flatMap(project => [
+      project.projectName,
+      ...(Array.isArray(project.technologies) ? project.technologies : []),
+      project.description,
+      ...(Array.isArray(project.contributions) ? project.contributions : [])
+    ]),
+    // Internships: roles, companies, skills tags, descriptions, responsibilities
+    ...(student.internships || []).flatMap(internship => [
+      internship.role,
+      internship.companyName,
+      ...(Array.isArray(internship.skills) ? internship.skills : []),
+      internship.description,
+      ...(Array.isArray(internship.responsibilities) ? internship.responsibilities : [])
+    ]),
+    // Passions & Hobbies
     ...(student.interests?.passions || []),
     ...(student.interests?.hobbies || []),
+    // Achievements
     ...(student.achievements || []).flatMap(achievement => [achievement.title, achievement.category, achievement.description]),
+    // Academic & Personal
     student.academic?.department,
     student.academic?.degreeProgram,
     student.personal?.fullName
@@ -261,7 +312,7 @@ function scoreStudent(student, analysis) {
   const text = studentSkillText(student);
   const lower = text.toLowerCase();
 
-  const studentSkills = detectSkills(text);
+  const studentSkills = detectStudentSkills(student, text);
   const matchedSkills = analysis.skills.filter(skill => studentSkills.includes(skill));
   const missingSkills = analysis.skills.filter(skill => !matchedSkills.includes(skill));
   const skillScore = analysis.skills.length ? Math.round((matchedSkills.length / analysis.skills.length) * 100) : 0;
@@ -270,21 +321,34 @@ function scoreStudent(student, analysis) {
   const matchedDomains = analysis.domains.filter(domain => studentDomains.includes(domain));
   const domainScore = analysis.domains.length ? Math.round((matchedDomains.length / analysis.domains.length) * 100) : 0;
 
-  const interestTerms = [...(student.interests?.passions || []), ...(student.interests?.hobbies || [])].join(' ');
+  const interestTerms = [
+    ...(student.interests?.passions || []),
+    ...(student.interests?.hobbies || []),
+    ...(student.projects || []).map(p => p.projectName),
+    ...(student.internships || []).map(i => i.role)
+  ].filter(Boolean).join(' ');
   const interestMatches = createMatcher(interestTerms);
   const matchedKeywords = analysis.keywords.filter(keyword => interestMatches(keyword));
   const interestScore = analysis.keywords.length ? Math.round((matchedKeywords.length / analysis.keywords.length) * 100) : 0;
 
+  const projectCount = (student.projects || []).length;
+  const internshipCount = (student.internships || []).length;
+  const practicalCount = projectCount + internshipCount;
+  const practicalScore = clamp(Math.round((practicalCount / 3) * 100), 0, 100);
+
   const achievementCount = (student.achievements || []).length;
   const achievementScore = clamp(Math.round((achievementCount / 3) * 100), 0, 100);
 
-  // Weighted composite. When a JD is purely descriptive (no skills detected),
-  // fall back to interest + achievement signals so results stay meaningful.
+  // Weighted composite with practical projects and internships factored in.
   const hasSkills = analysis.skills.length > 0;
   const weights = hasSkills
-    ? { skills: 0.55, domain: 0.15, interests: 0.2, achievements: 0.1 }
-    : { skills: 0, domain: 0.2, interests: 0.55, achievements: 0.25 };
-  let total = skillScore * weights.skills + domainScore * weights.domain + interestScore * weights.interests + achievementScore * weights.achievements;
+    ? { skills: 0.50, domain: 0.15, practical: 0.15, interests: 0.10, achievements: 0.10 }
+    : { skills: 0, domain: 0.20, practical: 0.35, interests: 0.30, achievements: 0.15 };
+  let total = skillScore * weights.skills +
+              domainScore * weights.domain +
+              practicalScore * weights.practical +
+              interestScore * weights.interests +
+              achievementScore * weights.achievements;
 
   const eligibilityFlags = [];
   const cgpa = student.academic?.cgpa;
@@ -311,8 +375,14 @@ function scoreStudent(student, analysis) {
   const reasons = [];
   if (matchedSkills.length) reasons.push(`Matches ${matchedSkills.length}/${analysis.skills.length} required skills`);
   if (matchedDomains.length) reasons.push(`Aligned to ${matchedDomains.join(', ')}`);
-  if (matchedKeywords.length) reasons.push(`Interests echo ${matchedKeywords.slice(0, 4).join(', ')}`);
+  if (projectCount || internshipCount) {
+    const parts = [];
+    if (projectCount) parts.push(`${projectCount} project${projectCount === 1 ? '' : 's'}`);
+    if (internshipCount) parts.push(`${internshipCount} internship${internshipCount === 1 ? '' : 's'}`);
+    reasons.push(parts.join(' & '));
+  }
   if (achievementCount) reasons.push(`${achievementCount} recorded achievement${achievementCount === 1 ? '' : 's'}`);
+  if (matchedKeywords.length) reasons.push(`Interests echo ${matchedKeywords.slice(0, 4).join(', ')}`);
   if (!reasons.length) reasons.push('Weak overlap with this description');
 
   return {
@@ -339,11 +409,15 @@ class JDAnalyzerService {
         const result = scoreStudent(student, analysis);
         return {
           id: student.id,
+          rollNumber: student.rollNumber || student.academic?.rollNumber || '',
           name: student.personal?.fullName || 'Unnamed student',
           email: student.profileSettings?.visibility === 'public' ? student.personal?.email || null : null,
           academic: student.academic || {},
           interests: student.interests || {},
           achievements: student.achievements || [],
+          projects: student.projects || [],
+          internships: student.internships || [],
+          social: student.social || { linkedin: '', links: [] },
           profileVisibility: student.profileSettings?.visibility || 'private',
           ...result
         };
