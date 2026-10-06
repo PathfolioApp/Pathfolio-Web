@@ -829,33 +829,52 @@ export function ResumeStudioPage() {
   const [saved, setSaved] = useState(false);
   const [syncNotice, setSyncNotice] = useState('');
   const [error, setError] = useState('');
-  const [zoom, setZoom] = useState(0.70);
+  const [zoom, setZoom] = useState(0.57);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const paperWrapRef = React.useRef(null);
 
   const fitToWidth = React.useCallback(() => {
     if (!paperWrapRef.current) return;
-    const availableWidth = paperWrapRef.current.clientWidth - 48;
+    const availableWidth = paperWrapRef.current.clientWidth - 44;
     const paperWidthPx = 794;
     if (availableWidth > 120) {
-      const targetZoom = Math.min(1.05, Math.max(0.4, Number((availableWidth / paperWidthPx).toFixed(2))));
+      const targetZoom = Math.min(1.05, Math.max(0.35, Number((availableWidth / paperWidthPx).toFixed(2))));
       setZoom(targetZoom);
     }
   }, []);
 
+  // Automatically fit zoom by default whenever resume data is loaded or mounts
   useEffect(() => {
-    const timer = setTimeout(fitToWidth, 80);
-    window.addEventListener('resize', fitToWidth);
+    if (!data) return;
+    const t1 = setTimeout(fitToWidth, 60);
+    const t2 = setTimeout(fitToWidth, 240);
     return () => {
-      clearTimeout(timer);
-      window.removeEventListener('resize', fitToWidth);
+      clearTimeout(t1);
+      clearTimeout(t2);
     };
-  }, [fitToWidth]);
+  }, [data, fitToWidth]);
 
+  // Observe preview container width changes to keep zoom fitted dynamically
   useEffect(() => {
-    const timer = setTimeout(fitToWidth, 100);
-    return () => clearTimeout(timer);
-  }, [isFullscreen, fitToWidth]);
+    const el = paperWrapRef.current;
+    if (!el) return;
+
+    let lastWidth = el.clientWidth;
+    const observer = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        const width = entry.contentRect.width;
+        if (Math.abs(width - lastWidth) > 4) {
+          lastWidth = width;
+          fitToWidth();
+        }
+      }
+    });
+
+    observer.observe(el);
+    fitToWidth();
+
+    return () => observer.disconnect();
+  }, [data, isFullscreen, fitToWidth]);
 
   useEffect(() => {
     const handleKeyDown = (e) => {
