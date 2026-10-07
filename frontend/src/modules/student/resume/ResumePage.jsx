@@ -1,13 +1,14 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   Archive, BarChart3, Check, CheckCircle2, ChevronDown, Download, Edit3, FileText, Filter, MoreHorizontal,
   Plus, Search, Settings2, Sparkles, Star, Trash2, UploadCloud, X, Zap, Layers, FileCheck, Gauge,
-  CircleDashed, AlertCircle, Target
+  CircleDashed, AlertCircle, Target, Loader, RefreshCw
 } from 'lucide-react';
 import { resumeApi, uploadResume } from './resumeApi';
 import { Button } from '../../../components/ui/Button';
 import { PdfIcon } from '../../../components/ui/PdfIcon';
+import AiToast from '../../../components/ui/AiToast';
 import './ResumePage.css';
 import './ResumePageEnhancements.css';
 
@@ -37,6 +38,78 @@ export function ResumePage() {
   const [savingCategory, setSavingCategory] = useState(false);
   const [error, setError] = useState('');
 
+  // Modal dialog states to eliminate unreliable browser native window.prompt/confirm
+  const [categoryModalResume, setCategoryModalResume] = useState(null);
+  const [selectedCategory, setSelectedCategory] = useState('General');
+  const [customCategoryName, setCustomCategoryName] = useState('');
+  const [updatingCategory, setUpdatingCategory] = useState(false);
+
+  const [primaryModalResume, setPrimaryModalResume] = useState(null);
+  const [updatingPrimary, setUpdatingPrimary] = useState(false);
+
+  const [deleteModalResume, setDeleteModalResume] = useState(null);
+  const [deletingResume, setDeletingResume] = useState(false);
+
+  const [reparsingId, setReparsingId] = useState(null);
+  const [toast, setToast] = useState(null);
+  const [toastLeaving, setToastLeaving] = useState(false);
+  const toastTimeoutRef = React.useRef(null);
+
+  const showToast = ({ type, title, message, actionLabel, actionLink, duration = 4500 }) => {
+    if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
+    setToastLeaving(false);
+    setToast({ type, title, message, actionLabel, actionLink, duration });
+
+    if (duration > 0) {
+      toastTimeoutRef.current = setTimeout(() => {
+        setToastLeaving(true);
+        setTimeout(() => setToast(null), 320);
+      }, duration);
+    }
+  };
+
+  const dismissToast = () => {
+    if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
+    setToastLeaving(true);
+    setTimeout(() => setToast(null), 320);
+  };
+
+  const handleReAnalyze = async (resume, e) => {
+    e?.stopPropagation();
+    setOpenMenu(null);
+    try {
+      setReparsingId(resume.id);
+      setError('');
+      showToast({
+        type: 'loading',
+        title: 'Re-extracting resume...',
+        message: `Analyzing "${resume.filename || 'resume'}" structure and details.`,
+        duration: 0,
+      });
+      await resumeApi.reparse(resume.id);
+      await load();
+      showToast({
+        type: 'success',
+        title: 'Resume re-extracted',
+        message: 'Profile, education, skills, and projects updated.',
+        actionLabel: 'Open in Studio',
+        actionLink: `/resume/${resume.id}/studio`,
+        duration: 5000,
+      });
+    } catch (err) {
+      const errMsg = err.message || 'Failed to re-extract resume details.';
+      setError(errMsg);
+      showToast({
+        type: 'error',
+        title: 'Re-extraction failed',
+        message: errMsg,
+        duration: 6000,
+      });
+    } finally {
+      setReparsingId(null);
+    }
+  };
+
   const load = async () => {
     try {
       setLoading(true);
@@ -51,6 +124,14 @@ export function ResumePage() {
   };
 
   useEffect(() => { load(); }, []);
+
+  // Close context menu when user clicks anywhere outside
+  useEffect(() => {
+    if (!openMenu) return;
+    const handleOutsideClick = () => setOpenMenu(null);
+    window.addEventListener('click', handleOutsideClick);
+    return () => window.removeEventListener('click', handleOutsideClick);
+  }, [openMenu]);
 
   const roles = useMemo(() => ['All', ...new Set(resumes.flatMap(resume => resume.tags || []))], [resumes]);
   const visibleResumes = useMemo(() => {
@@ -94,22 +175,77 @@ export function ResumePage() {
     }
   };
 
-  const setPrimary = async resume => {
-    if (resume.isDefault || !window.confirm(`Make ${resume.filename} your Primary Resume?`)) return;
-    try {
-      await resumeApi.setDefault(resume.id);
-      await load();
-    } catch (err) { setError(err.message || 'Unable to change your primary resume.'); }
+  const openCategoryModal = (resume, e) => {
+    e?.stopPropagation();
+    setOpenMenu(null);
+    setCategoryModalResume(resume);
+    setSelectedCategory(resume.category || 'General');
+    setCustomCategoryName('');
   };
 
-  const deleteResume = async resume => {
-    const replacement = resume.isDefault ? resumes.find(item => item.id !== resume.id) : null;
-    if (!window.confirm(`Delete ${resume.filename}? The original uploaded file will be removed.`)) return;
+  const handleCategorySubmit = async e => {
+    e.preventDefault();
+    if (!categoryModalResume) return;
+    const finalCategory = selectedCategory === '__custom__' ? customCategoryName.trim() : selectedCategory.trim();
+    if (!finalCategory) return;
     try {
-      await resumeApi.remove(resume.id);
-      if (replacement && window.confirm(`Set ${replacement.filename} as your new Primary Resume?`)) await resumeApi.setDefault(replacement.id);
+      setUpdatingCategory(true);
+      setError('');
+      await resumeApi.updateCategory(categoryModalResume.id, finalCategory);
+      setCategoryModalResume(null);
       await load();
-    } catch (err) { setError(err.message || 'Unable to delete resume.'); }
+    } catch (err) {
+      setError(err.message || 'Unable to update category.');
+    } finally {
+      setUpdatingCategory(false);
+    }
+  };
+
+  const openPrimaryModal = (resume, e) => {
+    e?.stopPropagation();
+    setOpenMenu(null);
+    if (resume.isDefault) return;
+    setPrimaryModalResume(resume);
+  };
+
+  const handleConfirmPrimary = async () => {
+    if (!primaryModalResume) return;
+    try {
+      setUpdatingPrimary(true);
+      setError('');
+      await resumeApi.setDefault(primaryModalResume.id);
+      setPrimaryModalResume(null);
+      await load();
+    } catch (err) {
+      setError(err.message || 'Unable to change your primary resume.');
+    } finally {
+      setUpdatingPrimary(false);
+    }
+  };
+
+  const openDeleteModal = (resume, e) => {
+    e?.stopPropagation();
+    setOpenMenu(null);
+    setDeleteModalResume(resume);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteModalResume) return;
+    const replacement = deleteModalResume.isDefault ? resumes.find(item => item.id !== deleteModalResume.id) : null;
+    try {
+      setDeletingResume(true);
+      setError('');
+      await resumeApi.remove(deleteModalResume.id);
+      if (replacement) {
+        await resumeApi.setDefault(replacement.id).catch(() => {});
+      }
+      setDeleteModalResume(null);
+      await load();
+    } catch (err) {
+      setError(err.message || 'Unable to delete resume.');
+    } finally {
+      setDeletingResume(false);
+    }
   };
 
   const createCategory = async event => {
@@ -138,21 +274,6 @@ export function ResumePage() {
     catch (err) { setError(err.message || 'Unable to remove category.'); }
   };
 
-  const changeResumeCategory = async resume => {
-    const currentCat = resume.category || 'General';
-    const nextCat = window.prompt(
-      `Change category for "${resume.filename}":\n\nExisting categories: ${categories.join(', ')}`,
-      currentCat
-    );
-    if (!nextCat || !nextCat.trim() || nextCat.trim() === currentCat) return;
-    try {
-      await resumeApi.updateCategory(resume.id, nextCat.trim());
-      await load();
-    } catch (err) {
-      setError(err.message || 'Unable to update category.');
-    }
-  };
-
   return (
     <div className="pf-resume-library">
       <header className="pf-library-header">
@@ -169,9 +290,9 @@ export function ResumePage() {
           >
             <Target size={15} /> Tailor for JD
           </button>
-          <button type="button" className="pf-btn-build-studio" onClick={() => navigate('/resume/studio')}>
+          <Link to="/resume/studio" className="pf-btn-build-studio">
             <Sparkles size={15} /> Build in Studio
-          </button>
+          </Link>
           <label className="pf-library-upload">
             <UploadCloud size={16} /> {uploading ? 'Uploading...' : 'Upload PDF'}
             <input type="file" accept="application/pdf" multiple onChange={handleUpload} disabled={uploading} hidden />
@@ -339,9 +460,9 @@ export function ResumePage() {
             <p>{resumes.length ? 'Try clearing your filters or search term to see all resumes.' : 'Upload an existing PDF or build an ATS-ready resume in the studio.'}</p>
             {!resumes.length && (
               <div style={{ display: 'flex', gap: '10px', marginTop: '14px' }}>
-                <button type="button" className="pf-btn-build-studio" onClick={() => navigate('/resume/studio')}>
+                <Link to="/resume/studio" className="pf-btn-build-studio">
                   <Sparkles size={15} /> Build in Studio
-                </button>
+                </Link>
               </div>
             )}
           </div>
@@ -356,9 +477,11 @@ export function ResumePage() {
                   </div>
                   <div className="pf-resume-row-details">
                     <div className="pf-resume-title-row">
-                      <h2 onClick={() => navigate(`/resume/${resume.id}`)} title={resume.filename}>
-                        {resume.filename}
-                      </h2>
+                      <Link to={`/resume/${resume.id}`} className="pf-resume-title-link">
+                        <h2 title={resume.filename}>
+                          {resume.filename}
+                        </h2>
+                      </Link>
                       {resume.isDefault && (
                         <span className="pf-resume-primary-pill" title="Default primary resume used for applications">
                           <Star size={11} fill="currentColor" /> Primary
@@ -366,7 +489,7 @@ export function ResumePage() {
                       )}
                       <span
                         className="pf-category-badge is-clickable"
-                        onClick={() => changeResumeCategory(resume)}
+                        onClick={e => openCategoryModal(resume, e)}
                         title="Click to change category"
                       >
                         {resume.category || 'General'}
@@ -419,50 +542,71 @@ export function ResumePage() {
                 </div>
 
                 <div className="pf-resume-row-actions">
-                  <button
-                    type="button"
+                  <Link
+                    to={`/resume/${resume.id}`}
                     className="pf-btn-subtle"
-                    onClick={() => navigate(`/resume/${resume.id}`)}
                   >
                     View Resume
-                  </button>
-                  <button
-                    type="button"
+                  </Link>
+                  <Link
+                    to={`/resume/${resume.id}/studio`}
                     className="pf-btn-primary-pill"
-                    onClick={() => navigate(`/resume/${resume.id}/studio`)}
                   >
-                    <Sparkles size={13} /> Edit in Studio
-                  </button>
+                    <Sparkles size={13} /> {resume.filepath ? 'Import to Studio' : 'Edit in Studio'}
+                  </Link>
                   <button
                     type="button"
                     className="pf-row-more"
-                    onClick={() => setOpenMenu(openMenu === resume.id ? null : resume.id)}
+                    onClick={e => {
+                      e.stopPropagation();
+                      setOpenMenu(openMenu === resume.id ? null : resume.id);
+                    }}
                     aria-label={`More actions for ${resume.filename}`}
                   >
                     <MoreHorizontal size={18} />
                   </button>
                   {openMenu === resume.id && (
-                    <div className="pf-resume-action-menu">
-                      <button type="button" onClick={() => navigate(`/resume/${resume.id}?tab=analysis`)}>
+                    <div className="pf-resume-action-menu" onClick={e => e.stopPropagation()}>
+                      <Link
+                        to={`/resume/${resume.id}?tab=analysis`}
+                        onClick={() => setOpenMenu(null)}
+                      >
                         <BarChart3 size={14} /> View Analysis
-                      </button>
-                      <a href={resume.downloadUrl} download={resume.filename}>
+                      </Link>
+                      {resume.filepath && (
+                        <button
+                          type="button"
+                          onClick={e => handleReAnalyze(resume, e)}
+                          disabled={reparsingId === resume.id}
+                        >
+                          <RefreshCw size={14} className={reparsingId === resume.id ? 'pf-spin' : ''} />
+                          {reparsingId === resume.id ? 'Re-extracting...' : 'Re-extract with AI'}
+                        </button>
+                      )}
+                      <a
+                        href={resume.downloadUrl}
+                        download={resume.filename}
+                        onClick={() => setOpenMenu(null)}
+                      >
                         <Download size={14} /> Download PDF
                       </a>
                       <button
                         type="button"
-                        onClick={() => { setOpenMenu(null); changeResumeCategory(resume); }}
+                        onClick={e => openCategoryModal(resume, e)}
                       >
                         <Edit3 size={14} /> Change Category
                       </button>
                       {!resume.isDefault && (
-                        <button type="button" onClick={() => { setOpenMenu(null); setPrimary(resume); }}>
+                        <button
+                          type="button"
+                          onClick={e => openPrimaryModal(resume, e)}
+                        >
                           <Star size={14} /> Set as primary
                         </button>
                       )}
                       <button
                         type="button"
-                        onClick={() => { setOpenMenu(null); deleteResume(resume); }}
+                        onClick={e => openDeleteModal(resume, e)}
                         className="is-danger"
                       >
                         <Trash2 size={14} /> Delete
@@ -475,6 +619,198 @@ export function ResumePage() {
           })
         )}
       </main>
+
+      {/* 1. Change Category Modal */}
+      {categoryModalResume && (
+        <div className="pf-library-modal-backdrop" onClick={() => !updatingCategory && setCategoryModalResume(null)}>
+          <div className="pf-library-modal-card" onClick={e => e.stopPropagation()}>
+            <div className="pf-library-modal-header">
+              <div className="pf-library-modal-title">
+                <div className="pf-library-modal-icon-badge">
+                  <Edit3 size={17} />
+                </div>
+                <div>
+                  <h3>Change Category</h3>
+                  <p>{categoryModalResume.filename}</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                className="pf-library-modal-close"
+                onClick={() => !updatingCategory && setCategoryModalResume(null)}
+                aria-label="Close dialog"
+              >
+                <X size={16} />
+              </button>
+            </div>
+            <form onSubmit={handleCategorySubmit} className="pf-library-modal-body">
+              <p className="pf-library-modal-desc">
+                Select a domain or specialization for this resume:
+              </p>
+              <div className="pf-library-modal-field">
+                <label>Category</label>
+                <select
+                  value={selectedCategory}
+                  onChange={e => setSelectedCategory(e.target.value)}
+                  className="pf-library-modal-select"
+                >
+                  {categories.map(cat => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
+                  <option value="__custom__">+ Add New Custom Category...</option>
+                </select>
+              </div>
+
+              {selectedCategory === '__custom__' && (
+                <div className="pf-library-modal-field">
+                  <label>New Category Name</label>
+                  <input
+                    type="text"
+                    value={customCategoryName}
+                    onChange={e => setCustomCategoryName(e.target.value)}
+                    placeholder="e.g. Mobile Engineering"
+                    className="pf-library-modal-input"
+                    maxLength={48}
+                    required
+                    autoFocus
+                  />
+                </div>
+              )}
+
+              <div className="pf-library-modal-actions">
+                <button
+                  type="button"
+                  className="pf-library-modal-btn pf-library-modal-btn--secondary"
+                  onClick={() => setCategoryModalResume(null)}
+                  disabled={updatingCategory}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="pf-library-modal-btn pf-library-modal-btn--primary"
+                  disabled={updatingCategory}
+                >
+                  {updatingCategory ? <><Loader size={14} className="spin" /> Updating...</> : 'Save Category'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* 2. Set as Primary Modal */}
+      {primaryModalResume && (
+        <div className="pf-library-modal-backdrop" onClick={() => !updatingPrimary && setPrimaryModalResume(null)}>
+          <div className="pf-library-modal-card" onClick={e => e.stopPropagation()}>
+            <div className="pf-library-modal-header">
+              <div className="pf-library-modal-title">
+                <div className="pf-library-modal-icon-badge">
+                  <Star size={17} />
+                </div>
+                <div>
+                  <h3>Set as Primary Resume</h3>
+                  <p>{primaryModalResume.filename}</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                className="pf-library-modal-close"
+                onClick={() => !updatingPrimary && setPrimaryModalResume(null)}
+                aria-label="Close dialog"
+              >
+                <X size={16} />
+              </button>
+            </div>
+            <div className="pf-library-modal-body">
+              <p className="pf-library-modal-desc">
+                Make <strong>{primaryModalResume.filename}</strong> your default Primary Resume?
+              </p>
+              <p className="pf-library-modal-subdesc">
+                Your Primary Resume is automatically submitted for campus placement applications and prioritized in recruiter search listings.
+              </p>
+              <div className="pf-library-modal-actions">
+                <button
+                  type="button"
+                  className="pf-library-modal-btn pf-library-modal-btn--secondary"
+                  onClick={() => setPrimaryModalResume(null)}
+                  disabled={updatingPrimary}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="pf-library-modal-btn pf-library-modal-btn--primary"
+                  onClick={handleConfirmPrimary}
+                  disabled={updatingPrimary}
+                >
+                  {updatingPrimary ? <><Loader size={14} className="spin" /> Setting...</> : <><Star size={14} /> Confirm Primary</>}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 3. Delete Resume Modal */}
+      {deleteModalResume && (
+        <div className="pf-library-modal-backdrop" onClick={() => !deletingResume && setDeleteModalResume(null)}>
+          <div className="pf-library-modal-card" onClick={e => e.stopPropagation()}>
+            <div className="pf-library-modal-header">
+              <div className="pf-library-modal-title">
+                <div className="pf-library-modal-icon-badge is-danger">
+                  <Trash2 size={17} />
+                </div>
+                <div>
+                  <h3 style={{ color: '#c92a2a' }}>Delete Resume</h3>
+                  <p>{deleteModalResume.filename}</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                className="pf-library-modal-close"
+                onClick={() => !deletingResume && setDeleteModalResume(null)}
+                aria-label="Close dialog"
+              >
+                <X size={16} />
+              </button>
+            </div>
+            <div className="pf-library-modal-body">
+              <p className="pf-library-modal-desc">
+                Are you sure you want to permanently delete <strong>{deleteModalResume.filename}</strong>?
+              </p>
+              <p className="pf-library-modal-subdesc">
+                This will delete the resume and all associated analysis data. This action cannot be reversed.
+              </p>
+              <div className="pf-library-modal-actions">
+                <button
+                  type="button"
+                  className="pf-library-modal-btn pf-library-modal-btn--secondary"
+                  onClick={() => setDeleteModalResume(null)}
+                  disabled={deletingResume}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="pf-library-modal-btn pf-library-modal-btn--danger"
+                  onClick={handleConfirmDelete}
+                  disabled={deletingResume}
+                >
+                  {deletingResume ? <><Loader size={14} className="spin" /> Deleting...</> : <><Trash2 size={14} /> Delete Resume</>}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Sleek Floating AI Notification Toast */}
+      <AiToast
+        toast={toast}
+        onClose={dismissToast}
+        isLeaving={toastLeaving}
+      />
     </div>
   );
 }

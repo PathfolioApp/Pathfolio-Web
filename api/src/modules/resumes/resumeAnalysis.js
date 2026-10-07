@@ -1,4 +1,6 @@
 const pdfParse = require('pdf-parse');
+const config = require('../../config');
+const geminiService = require('../../shared/gemini.service');
 
 const SECTION_NAMES = {
   summary: /^(summary|professional summary|profile|professional profile|objective|career objective|about me)$/i,
@@ -222,14 +224,16 @@ function buildStructuredData(text, lines, sections) {
 }
 
 async function groqParseResume(text) {
-  const apiKey = process.env.GROQ_API_KEY;
-  if (!apiKey) return null;
+  const apiKey = config.groqApiKey || process.env.GROQ_API_KEY;
+  if (!apiKey) {
+    console.warn('[Resume Parse] ℹ️ No GROQ_API_KEY configured. Skipping Groq LLM.');
+    return null;
+  }
   
   const models = [
-    process.env.GROQ_MODEL,
-    'openai/gpt-oss-120b',
-    'openai/gpt-oss-20b',
-    'qwen/qwen3.8-27b'
+    config.groqModel,
+    'llama-3.3-70b-versatile',
+    'llama-3.1-8b-instant'
   ].filter(Boolean);
 
   const payload = {
@@ -276,131 +280,160 @@ CRITICAL REQUIREMENTS:
   };
 
   for (const model of models) {
+    const startTime = Date.now();
+    console.log(`[Resume Parse] 🚀 [Tier 2: Groq LLM] Trying model "${model}" (${text.length} chars input)...`);
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 25000);
+
       const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${apiKey}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ ...payload, model })
+        body: JSON.stringify({ ...payload, model }),
+        signal: controller.signal
       });
+      clearTimeout(timeoutId);
+
+      const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
       
       if (!response.ok) {
         const errText = await response.text().catch(() => '');
-        console.warn(`Groq parsing failed with ${model} (${response.status}):`, errText);
+        console.warn(`[Resume Parse] ⚠️ [Tier 2: Groq LLM] Model "${model}" failed (HTTP ${response.status} in ${elapsed}s): ${errText.slice(0, 200)}`);
         continue;
       }
       
       const data = await response.json();
       const content = data.choices?.[0]?.message?.content;
       if (content) {
-        return JSON.parse(content);
+        const parsed = JSON.parse(content);
+        console.log(`[Resume Parse] ✅ [Tier 2: Groq LLM] SUCCESS with model "${model}" in ${elapsed}s`);
+        return parsed;
       }
     } catch (err) {
-      console.warn(`Groq request error for ${model}:`, err.message);
+      const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+      const isAbort = err.name === 'AbortError' || err.message?.includes('aborted');
+      console.warn(`[Resume Parse] ⚠️ [Tier 2: Groq LLM] Model "${model}" error after ${elapsed}s: ${isAbort ? 'Request timed out (25s)' : err.message}`);
     }
   }
 
+  console.warn('[Resume Parse] ⚠️ [Tier 2: Groq LLM] All candidate models failed or exhausted.');
   return null;
 }
 
-async function analyseText(rawText, pageCount = 0) {
-  const text = String(rawText || '').replace(/[\u0000\uFFFD]/g, ' ').trim();
-  const lines = cleanLines(text);
-  const sections = extractSections(lines);
-  const contact = extractContact(text);
+function normalizeLlmStructured(structured, text, lines, sections, contact, sourceMethod) {
+  structured.extractedAt = new Date().toISOString();
+  structured.extractionMethod = sourceMethod;
   
-  let structured = null;
-  if (text.length > 50) {
-    structured = await groqParseResume(text);
-  }
+  const p = structured.personal || {};
+  const regexIdentity = firstNameAndHeadline(lines, contact);
   
-  if (!structured) {
-    structured = buildStructuredData(text, lines, sections);
-  } else {
-    structured.extractedAt = new Date().toISOString();
-    structured.extractionMethod = 'llm-groq';
-    
-    const p = structured.personal || {};
-    const regexIdentity = firstNameAndHeadline(lines, contact);
-    
-    // Normalize and merge links without loss
-    const formatUrl = u => {
-      if (!u) return '';
-      const s = String(u).trim().replace(/[.,;)]+$/, '');
-      if (/^https?:\/\//i.test(s)) return s;
-      return `https://${s.replace(/^\/+/, '')}`;
-    };
+  // Normalize and merge links without loss
+  const formatUrl = u => {
+    if (!u) return '';
+    const s = String(u).trim().replace(/[.,;)]+$/, '');
+    if (/^https?:\/\//i.test(s)) return s;
+    return `https://${s.replace(/^\/+/, '')}`;
+  };
 
-    const rawLinksList = [
-      ...(Array.isArray(p.links) ? p.links : []),
-      p.linkedin,
-      p.github,
-      p.portfolio,
-      ...(contact.links || []),
-      contact.linkedin,
-      contact.github,
-      contact.portfolio
-    ].filter(Boolean).map(formatUrl);
+  const isCandidateProfileLink = u => {
+    if (!u) return false;
+    const lower = u.toLowerCase();
+    if (lower.includes('linkedin.com/in/') || lower.includes('linkedin.com/pub/')) return true;
+    if (lower.includes('leetcode.com/') || lower.includes('codolio.com/') || lower.includes('codeforces.com/') || lower.includes('hackerrank.com/')) return true;
+    if (lower.includes('github.com/')) {
+      const cleanPath = lower.replace(/^https?:\/\//, '').replace(/^www\./, '').split('?')[0].split('#')[0];
+      const segments = cleanPath.split('/').filter(Boolean);
+      return segments.length <= 2; // github.com/username only
+    }
+    // Exclude third-party project sites or verification links from personal header
+    if (lower.includes('coursera.org') || lower.includes('huggingface.co') || lower.includes('github.com/')) return false;
+    // Allow clean portfolio / personal domain
+    return !lower.includes('live') && !lower.includes('demo') && !lower.includes('project') && !lower.includes('store');
+  };
 
-    const uniqueLinks = [...new Set(rawLinksList)];
-    const linkedinLink = uniqueLinks.find(l => /linkedin\.com/i.test(l)) || (contact.linkedin ? formatUrl(contact.linkedin) : '');
-    const githubLink = uniqueLinks.find(l => /github\.com/i.test(l)) || (contact.github ? formatUrl(contact.github) : '');
-    const portfolioLink = uniqueLinks.find(l => l !== linkedinLink && l !== githubLink && !/email/i.test(l)) || (contact.portfolio ? formatUrl(contact.portfolio) : '');
+  const rawLinksList = [
+    ...(Array.isArray(p.links) ? p.links : []),
+    p.linkedin,
+    p.github,
+    p.portfolio,
+    contact.linkedin,
+    contact.github,
+    contact.portfolio
+  ].filter(Boolean).map(formatUrl).filter(isCandidateProfileLink);
 
-    structured.personal = {
-      fullName: p.fullName || regexIdentity.fullName || '',
-      headline: p.headline || regexIdentity.headline || '',
-      email: p.email || contact.email || '',
-      phone: p.phone || contact.phone || '',
-      location: p.location || '',
-      linkedin: linkedinLink,
-      github: githubLink,
-      portfolio: portfolioLink,
-      links: uniqueLinks
-    };
+  const uniqueLinks = [...new Set(rawLinksList)];
+  const linkedinLink = uniqueLinks.find(l => /linkedin\.com/i.test(l)) || (isCandidateProfileLink(contact.linkedin) ? formatUrl(contact.linkedin) : '');
+  const githubLink = uniqueLinks.find(l => /github\.com/i.test(l)) || (isCandidateProfileLink(contact.github) ? formatUrl(contact.github) : '');
+  const portfolioLink = uniqueLinks.find(l => l !== linkedinLink && l !== githubLink && !/email/i.test(l)) || (isCandidateProfileLink(contact.portfolio) ? formatUrl(contact.portfolio) : '');
 
-    structured.summary = { text: structured.summary?.text || sections.summary.join(' ') || '', confidence: 'high', source: 'llm-groq' };
-    
-    const collections = ['education', 'experience', 'projects', 'certifications', 'achievements', 'leadership'];
-    collections.forEach(key => {
-      structured[key] = (structured[key] || []).map((item, i) => ({
-        id: `${key}_llm_${i}`,
-        title: item.title || '',
-        company: item.company || '',
-        institution: item.institution || '',
-        dates: item.dates || '',
-        location: item.location || '',
-        technologies: item.technologies || '',
-        liveUrl: item.liveUrl || item.repoUrl || '',
-        description: item.description || '',
-        bullets: Array.isArray(item.bullets) ? item.bullets : [],
-        raw: '',
-        confidence: 'high',
-        source: 'llm-groq'
-      }));
-    });
-    
-    const s = structured.skills || {};
-    const languages = s.languages?.length ? s.languages : (s.programming || []);
-    const frameworks = s.frameworks || [];
-    const cloudDevOps = s.cloudDevOps?.length ? s.cloudDevOps : (s.cloudDevops || []);
-    const databasesTools = s.databasesTools?.length ? s.databasesTools : [...(s.data || []), ...(s.tools || []), ...(s.other || [])];
-    const raw = Array.isArray(s.raw) && s.raw.length > 0 ? s.raw : [...languages, ...frameworks, ...cloudDevOps, ...databasesTools];
+  structured.personal = {
+    fullName: p.fullName || regexIdentity.fullName || '',
+    headline: p.headline || regexIdentity.headline || '',
+    email: p.email || contact.email || '',
+    phone: p.phone || contact.phone || '',
+    location: p.location || '',
+    linkedin: linkedinLink,
+    github: githubLink,
+    portfolio: portfolioLink,
+    links: uniqueLinks
+  };
 
-    structured.skills = {
-      languages,
-      frameworks,
-      cloudDevOps,
-      databasesTools,
-      programming: languages,
-      cloudDevops: cloudDevOps,
-      data: databasesTools,
-      raw: [...new Set(raw)]
-    };
+  structured.summary = { text: structured.summary?.text || sections.summary.join(' ') || '', confidence: 'high', source: sourceMethod };
+  
+  const collections = ['education', 'experience', 'projects', 'certifications', 'achievements', 'leadership'];
+  collections.forEach(key => {
+    structured[key] = (structured[key] || []).map((item, i) => ({
+      id: `${key}_llm_${i}`,
+      title: item.title || '',
+      company: item.company || '',
+      institution: item.institution || '',
+      issuer: item.issuer || item.organization || '',
+      dates: item.dates || '',
+      location: item.location || '',
+      technologies: item.technologies || '',
+      liveUrl: item.liveUrl || (item.repoUrl ? '' : (item.url && !item.url.includes('github.com') ? item.url : '')),
+      repoUrl: item.repoUrl || (item.liveUrl?.includes('github.com') ? item.liveUrl : (item.url?.includes('github.com') ? item.url : '')),
+      degree: item.degree || item.title || '',
+      degreeProgram: item.degreeProgram || item.title || '',
+      description: item.description || '',
+      bullets: Array.isArray(item.bullets) ? item.bullets : [],
+      raw: '',
+      confidence: 'high',
+      source: sourceMethod
+    }));
+  });
+  
+  const s = structured.skills || {};
+  const languages = s.languages?.length ? s.languages : (s.programming || []);
+  const frameworks = s.frameworks || [];
+  const cloudDevOps = s.cloudDevOps?.length ? s.cloudDevOps : (s.cloudDevops || []);
+  const databasesTools = s.databasesTools?.length ? s.databasesTools : [...(s.data || []), ...(s.tools || []), ...(s.other || [])];
+  const coreConcepts = Array.isArray(s.coreConcepts) ? s.coreConcepts : (s.concepts || []);
+  const raw = Array.isArray(s.raw) && s.raw.length > 0 ? s.raw : [...languages, ...frameworks, ...cloudDevOps, ...databasesTools, ...coreConcepts];
+
+  structured.skills = {
+    languages,
+    frameworks,
+    cloudDevOps,
+    databasesTools,
+    coreConcepts,
+    programming: languages,
+    cloudDevops: cloudDevOps,
+    data: databasesTools,
+    raw: [...new Set(raw)]
+  };
+
+  if (Array.isArray(structured.sectionOrder) && structured.sectionOrder.length > 0) {
+    structured.sectionOrder = structured.sectionOrder;
   }
 
+  return structured;
+}
+
+function assembleAnalysisResult(text, lines, sections, contact, structured, pageCount) {
   const hasTextLayer = text.length >= 40;
   const hasContact = Boolean(contact.email || contact.phone);
   const hasSections = Object.values(sections).some(items => items.length > 0);
@@ -436,6 +469,43 @@ async function analyseText(rawText, pageCount = 0) {
   };
 }
 
+async function analyseText(rawText, pageCount = 0) {
+  const text = String(rawText || '').replace(/[\u0000\uFFFD]/g, ' ').trim();
+  const lines = cleanLines(text);
+  const sections = extractSections(lines);
+  const contact = extractContact(text);
+  
+  let structured = null;
+  let sourceMethod = 'pdf-text';
+
+  // Tier 1: Try Gemini text parse
+  if (text.length > 50 && config.geminiApiKey) {
+    structured = await geminiService.parseResumeText(text);
+    if (structured) sourceMethod = structured.extractionMethod || 'gemini-text';
+  }
+
+  // Tier 2: Try Groq text parse
+  if (!structured && text.length > 50) {
+    structured = await groqParseResume(text);
+    if (structured) sourceMethod = 'llm-groq';
+  }
+  
+  if (!structured) {
+    console.log('[Resume Parse] ℹ️ [Tier 3: Deterministic Regex] Fallback to rule-based regex parser.');
+    structured = buildStructuredData(text, lines, sections);
+  } else {
+    structured = normalizeLlmStructured(structured, text, lines, sections, contact, sourceMethod);
+  }
+
+  console.log(`[Resume Parse] 🎯 Parsing Completed!`);
+  console.log(`  • Extraction Method: [${structured.extractionMethod || sourceMethod}]`);
+  console.log(`  • Candidate Name:    "${structured.personal?.fullName || 'Not detected'}"`);
+  console.log(`  • Headline / Role:   "${structured.personal?.headline || 'Not detected'}"`);
+  console.log(`  • Sections Summary:  ${structured.experience?.length || 0} exp, ${structured.education?.length || 0} edu, ${structured.projects?.length || 0} projects, ${structured.skills?.raw?.length || 0} skills`);
+
+  return assembleAnalysisResult(text, lines, sections, contact, structured, pageCount);
+}
+
 async function extractPdfAnnotationLinks(buffer) {
   try {
     // Use PDF.js v2 bundled inside pdf-parse (v1 fails when required standalone)
@@ -458,30 +528,73 @@ async function extractPdfAnnotationLinks(buffer) {
     }
     return [...uris];
   } catch (err) {
-    console.warn('PDF annotation extraction failed (non-critical):', err.message);
+    console.warn('[Resume Parse] ⚠️ PDF annotation extraction failed (non-critical):', err.message);
     return [];
   }
 }
 
 async function analysePdf(buffer) {
+  const sizeKb = (buffer ? buffer.length / 1024 : 0).toFixed(1);
+  console.log(`\n======================================================`);
+  console.log(`[Resume Parse] 📄 Started PDF resume analysis (Size: ${sizeKb} KB)`);
+  console.log(`======================================================`);
+
   // Extract text layer + annotation layer links in parallel
   const [parsed, annotationLinks] = await Promise.all([
-    pdfParse(buffer),
+    pdfParse(buffer).catch(err => {
+      console.warn('[Resume Parse] ⚠️ pdfParse failed (non-critical):', err.message);
+      return { text: '', numpages: 1 };
+    }),
     extractPdfAnnotationLinks(buffer),
   ]);
 
-  let text = parsed.text;
+  let text = parsed.text || '';
+  const numPages = parsed.numpages || 1;
 
-  // Inject annotation-layer links as a visible block so Groq can see them.
-  // PDF hyperlinks on words like "GitHub" / "Live Link" are completely
-  // invisible in the text layer — this bridges that gap.
   if (annotationLinks.length > 0) {
     const linkBlock = '\n\n[LINKS FROM DOCUMENT ANNOTATIONS]\n' + annotationLinks.join('\n');
     text = text + linkBlock;
-    console.log(`[analysePdf] Injected ${annotationLinks.length} annotation link(s):`, annotationLinks);
+    console.log(`[Resume Parse] 🔗 Injected ${annotationLinks.length} annotation link(s):`, annotationLinks);
   }
 
-  return await analyseText(text, parsed.numpages);
+  const lines = cleanLines(text);
+  const sections = extractSections(lines);
+  const contact = extractContact(text);
+
+  // Tier 1: Try Gemini Multimodal directly with the PDF buffer
+  let geminiStructured = null;
+  if (config.geminiApiKey) {
+    try {
+      const extraContext = annotationLinks.length > 0 ? `Hyperlinks detected in document: ${annotationLinks.join(', ')}` : '';
+      geminiStructured = await geminiService.parseResumePdf(buffer, extraContext);
+    } catch (err) {
+      console.warn('[Resume Parse] ⚠️ Gemini Multimodal parse failed:', err.message);
+    }
+  }
+
+  if (geminiStructured) {
+    const method = geminiStructured.extractionMethod || 'gemini-multimodal';
+    const structured = normalizeLlmStructured(
+      geminiStructured,
+      text,
+      lines,
+      sections,
+      contact,
+      method
+    );
+
+    console.log(`[Resume Parse] 🎯 Parsing Completed!`);
+    console.log(`  • Extraction Method: [${structured.extractionMethod || method}]`);
+    console.log(`  • Candidate Name:    "${structured.personal?.fullName || 'Not detected'}"`);
+    console.log(`  • Headline / Role:   "${structured.personal?.headline || 'Not detected'}"`);
+    console.log(`  • Sections Summary:  ${structured.experience?.length || 0} exp, ${structured.education?.length || 0} edu, ${structured.projects?.length || 0} projects, ${structured.skills?.raw?.length || 0} skills`);
+
+    return assembleAnalysisResult(text, lines, sections, contact, structured, numPages);
+  }
+
+  console.log('[Resume Parse] 🔄 Falling back from Multimodal to Text Analysis pipeline...');
+  // Tier 2 & 3: Fall back to text analysis (Gemini text, Groq, or deterministic regex)
+  return await analyseText(text, numPages);
 }
 
 module.exports = { analysePdf, analyseText };

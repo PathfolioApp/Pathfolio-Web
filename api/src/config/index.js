@@ -43,5 +43,7 @@ module.exports = {
     from: process.env.SMTP_FROM || process.env.SMTP_USER,
     configured: Boolean(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASSWORD)
   },
-  geminiApiKey: process.env.GEMINI_API_KEY?.trim() || null
+  geminiApiKey: process.env.GEMINI_API_KEY?.trim() || null,
+  groqApiKey: process.env.GROQ_API_KEY?.trim() || null,
+  groqModel: process.env.GROQ_MODEL?.trim() || 'llama-3.3-70b-versatile'
 };

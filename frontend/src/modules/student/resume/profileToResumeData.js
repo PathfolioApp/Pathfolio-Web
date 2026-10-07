@@ -58,6 +58,13 @@ const TAXONOMY = {
     'mysql', 'postgresql', 'postgres', 'mongodb', 'sqlite', 'redis', 'elasticsearch',
     'dynamodb', 'cassandra', 'firebase', 'supabase', 'prisma', 'git', 'github', 'gitlab',
     'postman', 'power bi', 'tableau', 'excel', 'microsoft excel', 'figma', 'jira', 'rest api', 'graphql'
+  ],
+  coreConcepts: [
+    'data structures & algorithms', 'data structures and algorithms', 'dsa',
+    'object-oriented programming', 'object oriented programming', 'oop', 'oops',
+    'database management system', 'database management systems', 'dbms',
+    'computer networks', 'cn', 'operating system', 'operating systems', 'os',
+    'software development life cycle', 'sdlc', 'system design'
   ]
 };
 
@@ -67,6 +74,7 @@ export function categorizeSkill(skillName) {
   if (TAXONOMY.frameworks.some(fw => lower === fw || lower.startsWith(`${fw} `))) return 'frameworks';
   if (TAXONOMY.cloudDevOps.some(cd => lower === cd || lower.startsWith(`${cd} `))) return 'cloudDevOps';
   if (TAXONOMY.databasesTools.some(dt => lower === dt || lower.startsWith(`${dt} `))) return 'databasesTools';
+  if (TAXONOMY.coreConcepts.some(cc => lower === cc || lower.startsWith(`${cc} `))) return 'coreConcepts';
   return 'tools';
 }
 
@@ -124,20 +132,23 @@ export function profileToResumeData(student) {
   const dept = academic.department || 'Computer Science & Engineering';
   const headline = `${degree} in ${dept} | Software & Cloud Systems`;
 
-  // 2. Education
+  // 2. Education (Institution first, Degree/academic details second)
   const education = [];
   const mainDegreeTitle = `${degree} in ${dept}`;
   const collegeInst = academic.institution || academic.university || academic.college || 'Kalinga Institute of Industrial Technology (KIIT)';
   const kiitDates = academic.batchYear ? academic.batchYear : academic.graduationYear ? `Class of ${academic.graduationYear}` : '2023 – 2027';
-  const cgpaText = academic.cgpa ? `Cumulative GPA: ${academic.cgpa} / 10.0` : '';
+  const cgpaText = academic.cgpa ? `CGPA: ${academic.cgpa} / 10.0` : '';
+  const collegeSubline = [mainDegreeTitle, cgpaText].filter(Boolean).join(' · ');
 
   education.push({
     id: 'edu_college',
-    title: mainDegreeTitle,
+    title: collegeInst,
     institution: collegeInst,
     company: collegeInst,
+    degreeProgram: mainDegreeTitle,
+    degree: mainDegreeTitle,
     dates: kiitDates,
-    description: cgpaText,
+    description: collegeSubline,
     bullets: [],
   });
 
@@ -146,20 +157,23 @@ export function profileToResumeData(student) {
     const board = academic.twelfthBoard ? String(academic.twelfthBoard).trim() : '';
     const inst = school && board ? `${school} (${board})` : (school || board || 'Senior Secondary School');
 
-    const details = [];
+    const details = ['Class XII'];
     if (academic.twelfthPercentage) {
       const pct = String(academic.twelfthPercentage).trim();
-      details.push(`Percentage: ${pct.endsWith('%') ? pct : `${pct}%`}`);
+      details.push(pct.endsWith('%') ? pct : `${pct}%`);
     }
     if (academic.twelfthStream) {
-      details.push(`Stream: ${String(academic.twelfthStream).trim()}`);
+      const stream = String(academic.twelfthStream).trim();
+      details.push(stream.replace(/^Stream:\s*/i, ''));
     }
 
     education.push({
       id: 'edu_twelfth',
-      title: 'Class XII (Senior Secondary)',
+      title: inst,
       institution: inst,
       company: inst,
+      degreeProgram: 'Class XII',
+      degree: 'Class XII',
       dates: academic.twelfthYear ? String(academic.twelfthYear).trim() : '',
       description: details.join(' · '),
       bullets: [],
@@ -171,17 +185,19 @@ export function profileToResumeData(student) {
     const board = academic.tenthBoard ? String(academic.tenthBoard).trim() : '';
     const inst = school && board ? `${school} (${board})` : (school || board || 'Secondary School');
 
-    const details = [];
+    const details = ['Class X'];
     if (academic.tenthPercentage) {
       const pct = String(academic.tenthPercentage).trim();
-      details.push(`Percentage: ${pct.endsWith('%') ? pct : `${pct}%`}`);
+      details.push(pct.endsWith('%') ? pct : `${pct}%`);
     }
 
     education.push({
       id: 'edu_tenth',
-      title: 'Class X (Secondary)',
+      title: inst,
       institution: inst,
       company: inst,
+      degreeProgram: 'Class X',
+      degree: 'Class X',
       dates: academic.tenthYear ? String(academic.tenthYear).trim() : '',
       description: details.join(' · '),
       bullets: [],
@@ -202,6 +218,9 @@ export function profileToResumeData(student) {
       bullets = intern.responsibilities.split('\n').map(r => r.replace(/^[-*•]\s*/, '').trim()).filter(Boolean);
     }
 
+    // Auto-generate trims to top 4 high-impact bullets for clean 1-page density
+    const curatedBullets = bullets.slice(0, 4);
+
     return {
       id: intern.id || `intern_${idx}`,
       title: role,
@@ -210,8 +229,10 @@ export function profileToResumeData(student) {
       institution: company,
       dates,
       location: loc,
-      description: intern.description || '',
-      bullets,
+      // First look from profile auto-generate trims redundant intro description when bullets exist to fit 1 page,
+      // while preserving it if no bullets are available so candidate profile data is never lost.
+      description: curatedBullets.length > 0 ? '' : (intern.description || ''),
+      bullets: curatedBullets.length > 0 ? curatedBullets : (intern.description ? [intern.description] : []),
       skills: Array.isArray(intern.skills) ? intern.skills : [],
       website: intern.companyWebsite || '',
     };
@@ -230,6 +251,9 @@ export function profileToResumeData(student) {
       bullets = proj.contributions.split('\n').map(c => c.replace(/^[-*•]\s*/, '').trim()).filter(Boolean);
     }
 
+    // Auto-generate trims to top 3 high-impact bullets for clean 1-page density
+    const curatedBullets = bullets.slice(0, 3);
+
     const techList = Array.isArray(proj.technologies) ? proj.technologies : [];
     const techStack = techList.join(', ');
 
@@ -239,8 +263,10 @@ export function profileToResumeData(student) {
       name: title,
       role,
       dates,
-      description: proj.description || '',
-      bullets,
+      // First look from profile auto-generate trims redundant intro description when bullets exist to fit 1 page,
+      // while preserving it if no bullets are available so project information is never lost.
+      description: curatedBullets.length > 0 ? '' : (proj.description || ''),
+      bullets: curatedBullets.length > 0 ? curatedBullets : (proj.description ? [proj.description] : []),
       technologies: techStack,
       techList,
       liveUrl: proj.projectUrl || '',
@@ -274,6 +300,7 @@ export function profileToResumeData(student) {
     frameworks: [],
     cloudDevOps: [],
     databasesTools: [],
+    coreConcepts: [],
     tools: [],
   };
 
@@ -359,9 +386,20 @@ export function profileToResumeData(student) {
       frameworks: categorized.frameworks,
       cloudDevOps: categorized.cloudDevOps,
       databasesTools: categorized.databasesTools,
+      coreConcepts: categorized.coreConcepts,
     },
     certifications: certRecords,
     achievements: achRecords,
     leadership: leadRecords,
+    sectionOrder: [
+      'summary',
+      'skills',
+      'experience',
+      'projects',
+      'education',
+      'certifications',
+      'achievements',
+      'leadership',
+    ],
   };
 }

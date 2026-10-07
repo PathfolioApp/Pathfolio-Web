@@ -19,6 +19,7 @@ router.patch('/:resumeId/filename', controller.rename);
 router.patch('/:resumeId/category', controller.updateCategory);
 router.patch('/:resumeId/extracted', controller.updateExtractedData);
 router.post('/:resumeId/analyze', controller.analyze);
+router.post('/:resumeId/reparse', controller.analyze);
 router.put('/:resumeId/default', controller.setDefault);
 router.delete('/:resumeId', controller.remove);
 

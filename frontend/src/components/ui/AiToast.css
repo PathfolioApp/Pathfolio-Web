@@ -1,0 +1,222 @@
+/* Sleek Floating Toast Notification - Pathfolio Standard */
+
+.pf-ai-toast-portal {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  z-index: 999999;
+  pointer-events: auto;
+  animation: pf-toast-slide-in 0.26s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.pf-ai-toast-portal.is-leaving {
+  animation: pf-toast-slide-out 0.22s cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+
+.pf-ai-toast {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  width: min(390px, calc(100vw - 32px));
+  padding: 14px 16px 14px 14px;
+  background: #ffffff;
+  border: 1px solid #dce5dd;
+  border-radius: 12px;
+  box-shadow: 
+    0 12px 32px -4px rgba(20, 38, 26, 0.12),
+    0 3px 10px rgba(20, 38, 26, 0.04),
+    0 1px 2px rgba(20, 38, 26, 0.02);
+  color: #16241a;
+  overflow: hidden;
+  font-family: var(--font-sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif);
+}
+
+/* Status Type Borders */
+.pf-ai-toast--loading {
+  border-color: #cde2d3;
+}
+
+.pf-ai-toast--success {
+  border-color: #bfe0c8;
+}
+
+.pf-ai-toast--error {
+  border-color: #f6c8c8;
+}
+
+/* Icon Badges */
+.pf-ai-toast-icon-wrapper {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 1px;
+}
+
+.pf-ai-toast-badge {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.pf-ai-toast-badge--loading {
+  background: #edf7f0;
+  color: #264e36;
+  border: 1px solid #d5eadb;
+}
+
+.pf-ai-toast-badge--success {
+  background: #edf7f0;
+  border: 1px solid #cce8d4;
+  color: #1a6637;
+}
+
+.pf-ai-toast-badge--error {
+  background: #fdf2f2;
+  border: 1px solid #f7cece;
+  color: #a83232;
+}
+
+/* Body Content */
+.pf-ai-toast-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.pf-ai-toast-title {
+  margin: 0;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #152219;
+  letter-spacing: -0.01em;
+  line-height: 1.35;
+}
+
+.pf-ai-toast-desc {
+  margin: 3px 0 0;
+  font-size: 0.8rem;
+  color: #4e5e54;
+  line-height: 1.45;
+  word-break: break-word;
+}
+
+.pf-ai-toast--error .pf-ai-toast-desc {
+  color: #992828;
+}
+
+/* Action button row */
+.pf-ai-toast-action-row {
+  margin-top: 10px;
+}
+
+.pf-ai-toast-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  border-radius: 6px;
+  font-size: 0.77rem;
+  font-weight: 600;
+  text-decoration: none;
+  background: #264e36;
+  border: 1px solid #1e3f2b;
+  color: #ffffff;
+  cursor: pointer;
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 1px 3px rgba(38, 78, 54, 0.15);
+}
+
+.pf-ai-toast-action-btn:hover {
+  background: #1b3d29;
+  border-color: #143020;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(38, 78, 54, 0.22);
+}
+
+/* Close Button */
+.pf-ai-toast-close-btn {
+  flex-shrink: 0;
+  background: transparent;
+  border: none;
+  color: #7d8f83;
+  padding: 3px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: grid;
+  place-items: center;
+}
+
+.pf-ai-toast-close-btn:hover {
+  color: #152219;
+  background: #f0f4f1;
+}
+
+/* Subtle Bottom Progress Meter */
+.pf-ai-toast-meter {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: #264e36;
+  animation: pf-toast-progress linear forwards;
+  transform-origin: left center;
+}
+
+.pf-ai-toast--error .pf-ai-toast-meter {
+  background: #a83232;
+}
+
+/* Keyframe Animations */
+@keyframes pf-toast-slide-in {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.97);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes pf-toast-slide-out {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.97);
+  }
+}
+
+.pf-ai-toast-spin {
+  animation: pf-toast-spin-kf 0.9s linear infinite;
+}
+
+@keyframes pf-toast-spin-kf {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes pf-toast-progress {
+  0% { transform: scaleX(1); }
+  100% { transform: scaleX(0); }
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 640px) {
+  .pf-ai-toast-portal {
+    top: 14px;
+    right: 14px;
+    left: 14px;
+  }
+  .pf-ai-toast {
+    width: 100%;
+  }
+}

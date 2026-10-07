@@ -6,6 +6,10 @@
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .pf-studio-record-edit label,
@@ -17,6 +21,22 @@
   font-size: 0.74rem;
   font-weight: 600;
   letter-spacing: -0.01em;
+  min-width: 0;
+  max-width: 100%;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.pf-studio-record-edit input,
+.pf-studio-record-edit textarea,
+.pf-studio-categories-card input,
+.pf-studio-categories-card textarea,
+.pf-studio-field input,
+.pf-studio-field textarea {
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .pf-studio-field-hint {
@@ -25,8 +45,47 @@
   font-weight: 400;
 }
 
-@media (max-width: 820px) {
+/* Full-width field spanning entire record card */
+.pf-studio-full-field {
+  width: 100% !important;
+  max-width: 100% !important;
+  grid-column: 1 / -1;
+}
+
+/* Auto-growing sleek input (single-to-multiline) that mirrors standard inputs */
+textarea.pf-studio-auto-input {
+  min-height: 38px;
+  line-height: 1.4;
+  padding: 8px 12px;
+  resize: none !important;
+  overflow-y: hidden;
+  overflow-x: hidden;
+  box-sizing: border-box;
+  field-sizing: content;
+  word-break: break-word;
+  white-space: pre-wrap;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+/* Container query: automatically switch to 1 column when the Section Editor is under 520px */
+@container (max-width: 520px) {
   .pf-studio-record-fields {
     grid-template-columns: 1fr;
+    gap: 10px;
+  }
+}
+
+/* Viewport fallback for standard screens where the 3-column studio layout leaves the editor compact */
+@media (max-width: 1366px) {
+  .pf-studio-grid:not(.is-sidebar-collapsed):not(.is-preview-hidden) .pf-studio-record-fields {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+}
+
+@media (max-width: 860px) {
+  .pf-studio-record-fields {
+    grid-template-columns: 1fr;
+    gap: 10px;
   }
 }
