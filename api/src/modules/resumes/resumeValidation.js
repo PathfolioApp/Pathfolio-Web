@@ -91,11 +91,52 @@ function normalizeCategory(category) {
   return value || 'General';
 }
 
+/**
+ * Generates an industry-standard, ATS-compliant resume filename.
+ * Format: Firstname_Lastname_Role_Company.pdf
+ * Cleans slashes, colons, pipes, em-dashes, and special characters into clean underscores,
+ * collapses multiple underscores, caps to safe length, and ensures 100% valid filesystem name.
+ */
+function generateProfessionalResumeFilename(name, role, company) {
+  const cleanPart = (str) => {
+    return String(str || '')
+      .replace(/[/\\]+/g, '_')
+      .replace(/[\u0000<>:"|?*—–]/g, '_')
+      .replace(/[^a-zA-Z0-9_\- ]/g, '')
+      .trim()
+      .replace(/\s+/g, '_')
+      .replace(/_+/g, '_');
+  };
+
+  const namePart = cleanPart(name) || 'Candidate';
+  const rolePart = cleanPart(role);
+  const companyPart = cleanPart(company);
+
+  const parts = [namePart];
+  if (rolePart) parts.push(rolePart);
+  if (companyPart) {
+    parts.push(companyPart);
+  } else if (!rolePart) {
+    parts.push('Resume');
+  }
+
+  let base = parts.join('_').replace(/_+/g, '_').replace(/^_+|_+$/g, '');
+  if (!base) base = 'Resume_Tailored';
+
+  const maxBaseLen = MAX_FILENAME_LENGTH - 4;
+  if (base.length > maxBaseLen) {
+    base = base.slice(0, maxBaseLen).replace(/_+$/, '');
+  }
+
+  return `${base}.pdf`;
+}
+
 module.exports = {
   MAX_RESUME_SIZE,
   normalizeTags,
   sanitizeFilename,
   validateFilenameForRename,
+  generateProfessionalResumeFilename,
   validateDriveUrl,
   validatePdfBuffer,
   normalizeCategory,

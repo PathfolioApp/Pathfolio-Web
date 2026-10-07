@@ -25,6 +25,8 @@ export const resumeApi = {
   reparse: id => request(`/api/resumes/${id}/reparse`, { method: 'POST' }),
   createStudioResume: data =>
     request('/api/resumes/studio', { method: 'POST', body: JSON.stringify(data) }),
+  tailor: ({ jobTitle, company, jobDescription }) =>
+    request('/api/resumes/tailor', { method: 'POST', body: JSON.stringify({ jobTitle, company, jobDescription }) }),
   updateExtracted: (id, extractedData) =>
     request(`/api/resumes/${id}/extracted`, { method: 'PATCH', body: JSON.stringify({ extractedData }) }),
   setDefault: (id) =>

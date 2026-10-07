@@ -1,14 +1,17 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   Archive, BarChart3, Check, CheckCircle2, ChevronDown, Download, Edit3, FileText, Filter, MoreHorizontal,
   Plus, Search, Settings2, Sparkles, Star, Trash2, UploadCloud, X, Zap, Layers, FileCheck, Gauge,
-  CircleDashed, AlertCircle, Target, Loader, RefreshCw
+  CircleDashed, AlertCircle, Target, Loader, RefreshCw, Compass, Briefcase
 } from 'lucide-react';
 import { resumeApi, uploadResume } from './resumeApi';
 import { Button } from '../../../components/ui/Button';
 import { PdfIcon } from '../../../components/ui/PdfIcon';
 import AiToast from '../../../components/ui/AiToast';
+import TailorJdModal from './components/TailorJdModal';
+import JdFitStatsModal from './components/JdFitStatsModal';
 import './ResumePage.css';
 import './ResumePageEnhancements.css';
 
@@ -18,6 +21,79 @@ function analysisStatus(resume) {
   if (!resume.analysis) return { label: 'Not analysed', tone: 'muted' };
   if ((resume.analysis.score || 0) >= 75) return { label: 'ATS Ready', tone: 'good' };
   return { label: 'Needs review', tone: 'warn' };
+}
+
+function getTailoredCompanyLabel(tailoredMeta) {
+  if (!tailoredMeta) return null;
+  const raw = String(tailoredMeta.company || '').trim();
+  if (!raw) return null;
+  const lower = raw.toLowerCase();
+  const genericPlaceholders = new Set([
+    'target employer',
+    'company',
+    'target',
+    'employer',
+    'target role',
+    'tailored role',
+    'role',
+    'none',
+    'n/a',
+    'null',
+    'undefined'
+  ]);
+  if (genericPlaceholders.has(lower)) {
+    return null;
+  }
+  return raw;
+}
+
+function getTailoredRoleLabel(tailoredMeta) {
+  if (!tailoredMeta) return null;
+  const raw = String(tailoredMeta.jobTitle || '').trim();
+  if (!raw) return null;
+  const lower = raw.toLowerCase();
+  const genericPlaceholders = new Set([
+    'target role',
+    'tailored role',
+    'role',
+    'target',
+    'none',
+    'n/a',
+    'null',
+    'undefined'
+  ]);
+  if (genericPlaceholders.has(lower)) {
+    return null;
+  }
+  return raw;
+}
+
+function getCleanDisplayTags(resume, tailoredMeta) {
+  if (!Array.isArray(resume.tags) || resume.tags.length === 0) return [];
+
+  const genericJunk = new Set([
+    'tailored',
+    'company',
+    'tailored role',
+    'target employer',
+    'target role',
+    'role',
+    'general'
+  ]);
+
+  const companyLower = String(tailoredMeta?.company || '').trim().toLowerCase();
+  const roleLower = String(tailoredMeta?.jobTitle || '').trim().toLowerCase();
+
+  return resume.tags.filter(tag => {
+    const t = String(tag || '').trim().toLowerCase();
+    if (!t) return false;
+    if (genericJunk.has(t)) return false;
+    if (tailoredMeta) {
+      if (companyLower && (t === companyLower || companyLower.includes(t) || t.includes(companyLower))) return false;
+      if (roleLower && (t === roleLower || roleLower.includes(t) || t.includes(roleLower))) return false;
+    }
+    return true;
+  });
 }
 
 export function ResumePage() {
@@ -37,6 +113,10 @@ export function ResumePage() {
   const [categoryError, setCategoryError] = useState('');
   const [savingCategory, setSavingCategory] = useState(false);
   const [error, setError] = useState('');
+
+  // Tailor for JD modal states
+  const [isTailorModalOpen, setIsTailorModalOpen] = useState(false);
+  const [selectedStatsResume, setSelectedStatsResume] = useState(null);
 
   // Modal dialog states to eliminate unreliable browser native window.prompt/confirm
   const [categoryModalResume, setCategoryModalResume] = useState(null);
@@ -133,11 +213,26 @@ export function ResumePage() {
     return () => window.removeEventListener('click', handleOutsideClick);
   }, [openMenu]);
 
-  const roles = useMemo(() => ['All', ...new Set(resumes.flatMap(resume => resume.tags || []))], [resumes]);
+  const roles = useMemo(() => {
+    const cleanTagsList = resumes.flatMap(resume => {
+      const tailoredMeta = resume.extractedData?.tailoredMeta || resume.analysis?.tailoredMeta;
+      return getCleanDisplayTags(resume, tailoredMeta);
+    });
+    return ['All', ...new Set(cleanTagsList.filter(Boolean))];
+  }, [resumes]);
+
   const visibleResumes = useMemo(() => {
     const query = search.trim().toLowerCase();
     return resumes
-      .filter(resume => !query || resume.filename.toLowerCase().includes(query) || (resume.tags || []).some(tag => tag.toLowerCase().includes(query)))
+      .filter(resume => {
+        if (!query) return true;
+        const matchesFilename = resume.filename.toLowerCase().includes(query);
+        const matchesTags = (resume.tags || []).some(tag => tag.toLowerCase().includes(query));
+        const tailoredMeta = resume.extractedData?.tailoredMeta || resume.analysis?.tailoredMeta;
+        const matchesCompany = tailoredMeta?.company && tailoredMeta.company.toLowerCase().includes(query);
+        const matchesJobTitle = tailoredMeta?.jobTitle && tailoredMeta.jobTitle.toLowerCase().includes(query);
+        return matchesFilename || matchesTags || matchesCompany || matchesJobTitle;
+      })
       .filter(resume => category === 'All' || (resume.category || 'General') === category)
       .filter(resume => role === 'All' || (resume.tags || []).includes(role))
       .filter(resume => !primaryOnly || resume.isDefault)
@@ -286,7 +381,7 @@ export function ResumePage() {
           <button
             type="button"
             className="pf-btn-tailor-jd"
-            onClick={() => setNotice('AI Resume Tailor is coming soon! You will be able to input any Job Description and auto-generate an ATS-optimized resume matched to your profile.')}
+            onClick={() => setIsTailorModalOpen(true)}
           >
             <Target size={15} /> Tailor for JD
           </button>
@@ -469,6 +564,13 @@ export function ResumePage() {
         ) : (
           visibleResumes.map(resume => {
             const status = analysisStatus(resume);
+            const tailoredMeta = resume.extractedData?.tailoredMeta || resume.analysis?.tailoredMeta;
+            const cleanCompany = getTailoredCompanyLabel(tailoredMeta);
+            const targetRole = getTailoredRoleLabel(tailoredMeta);
+            const displayTags = getCleanDisplayTags(resume, tailoredMeta);
+            const isTailoredCategory = (resume.category || '').trim().toLowerCase() === 'tailored';
+            const showCategoryBadge = !tailoredMeta || (!isTailoredCategory && Boolean(resume.category));
+
             return (
               <article className={`pf-resume-row ${openMenu === resume.id ? 'is-menu-open' : ''}`} key={resume.id}>
                 <div className="pf-resume-row-file">
@@ -482,18 +584,37 @@ export function ResumePage() {
                           {resume.filename}
                         </h2>
                       </Link>
+                      {tailoredMeta && (
+                        <span
+                          className="pf-resume-tailored-pill"
+                          title={`Tailored for ${targetRole ? `${targetRole}${cleanCompany ? ` at ${cleanCompany}` : ''}` : (cleanCompany || 'Target JD')} • Click for Fit Insights`}
+                          onClick={() => setSelectedStatsResume(resume)}
+                          role="button"
+                          tabIndex={0}
+                        >
+                          <Target size={11} />
+                          <span className="pf-tailored-pill-label">Tailored</span>
+                          {cleanCompany && (
+                            <span className="pf-tailored-pill-company" title={cleanCompany}>
+                              · {cleanCompany}
+                            </span>
+                          )}
+                        </span>
+                      )}
                       {resume.isDefault && (
                         <span className="pf-resume-primary-pill" title="Default primary resume used for applications">
                           <Star size={11} fill="currentColor" /> Primary
                         </span>
                       )}
-                      <span
-                        className="pf-category-badge is-clickable"
-                        onClick={e => openCategoryModal(resume, e)}
-                        title="Click to change category"
-                      >
-                        {resume.category || 'General'}
-                      </span>
+                      {showCategoryBadge && (
+                        <span
+                          className="pf-category-badge is-clickable"
+                          onClick={e => openCategoryModal(resume, e)}
+                          title="Click to change category"
+                        >
+                          {resume.category || 'General'}
+                        </span>
+                      )}
                     </div>
 
                     <div className="pf-resume-row-sub">
@@ -505,15 +626,21 @@ export function ResumePage() {
                         Updated {new Date(resume.updatedAt || resume.uploadedAt || new Date()).toLocaleDateString()}
                       </span>
 
-                      {resume.tags && resume.tags.length > 0 && (
+                      {(targetRole || displayTags.length > 0) && (
                         <>
                           <span className="pf-sub-divider" />
                           <div className="pf-resume-row-tags">
-                            {resume.tags.slice(0, 6).map(tag => (
+                            {targetRole && (
+                              <span className="pf-resume-role-pill" title={`Target role: ${targetRole}`}>
+                                <Briefcase size={11} />
+                                <span>{targetRole}</span>
+                              </span>
+                            )}
+                            {displayTags.slice(0, 6).map(tag => (
                               <span key={tag} className="pf-resume-tag-pill">{tag}</span>
                             ))}
-                            {resume.tags.length > 6 && (
-                              <span className="pf-resume-tag-pill pf-tag-more">+{resume.tags.length - 6}</span>
+                            {displayTags.length > 6 && (
+                              <span className="pf-resume-tag-pill pf-tag-more">+{displayTags.length - 6}</span>
                             )}
                           </div>
                         </>
@@ -523,22 +650,38 @@ export function ResumePage() {
                 </div>
 
                 <div className="pf-resume-row-analysis">
-                  <span className={`pf-analysis-status is-${status.tone}`}>
-                    {status.tone === 'good' ? (
-                      <CheckCircle2 size={14} />
-                    ) : status.tone === 'warn' ? (
-                      <AlertCircle size={14} />
-                    ) : (
-                      <CircleDashed size={14} />
-                    )}
-                    {status.label}
-                    {resume.analysis?.score !== undefined && (
+                  {tailoredMeta ? (
+                    <button
+                      type="button"
+                      className={`pf-analysis-status is-${tailoredMeta.matchScore >= 80 ? 'good' : 'warn'} is-clickable`}
+                      onClick={() => setSelectedStatsResume(resume)}
+                      title="Click to view ATS JD Match & Improvement Insights"
+                    >
+                      <Target size={14} />
+                      JD Fit
                       <span className="pf-analysis-score-inline">
                         <span className="pf-score-divider" />
-                        {resume.analysis.score}%
+                        {tailoredMeta.matchScore}%
                       </span>
-                    )}
-                  </span>
+                    </button>
+                  ) : (
+                    <span className={`pf-analysis-status is-${status.tone}`}>
+                      {status.tone === 'good' ? (
+                        <CheckCircle2 size={14} />
+                      ) : status.tone === 'warn' ? (
+                        <AlertCircle size={14} />
+                      ) : (
+                        <CircleDashed size={14} />
+                      )}
+                      {status.label}
+                      {resume.analysis?.score !== undefined && (
+                        <span className="pf-analysis-score-inline">
+                          <span className="pf-score-divider" />
+                          {resume.analysis.score}%
+                        </span>
+                      )}
+                    </span>
+                  )}
                 </div>
 
                 <div className="pf-resume-row-actions">
@@ -567,6 +710,18 @@ export function ResumePage() {
                   </button>
                   {openMenu === resume.id && (
                     <div className="pf-resume-action-menu" onClick={e => e.stopPropagation()}>
+                      {tailoredMeta && (
+                        <button
+                          type="button"
+                          className="pf-action-menu-highlight"
+                          onClick={() => {
+                            setOpenMenu(null);
+                            setSelectedStatsResume(resume);
+                          }}
+                        >
+                          <Compass size={14} /> JD Fit & Improvement Stats
+                        </button>
+                      )}
                       <Link
                         to={`/resume/${resume.id}?tab=analysis`}
                         onClick={() => setOpenMenu(null)}
@@ -621,7 +776,7 @@ export function ResumePage() {
       </main>
 
       {/* 1. Change Category Modal */}
-      {categoryModalResume && (
+      {categoryModalResume && createPortal(
         <div className="pf-library-modal-backdrop" onClick={() => !updatingCategory && setCategoryModalResume(null)}>
           <div className="pf-library-modal-card" onClick={e => e.stopPropagation()}>
             <div className="pf-library-modal-header">
@@ -696,11 +851,12 @@ export function ResumePage() {
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* 2. Set as Primary Modal */}
-      {primaryModalResume && (
+      {primaryModalResume && createPortal(
         <div className="pf-library-modal-backdrop" onClick={() => !updatingPrimary && setPrimaryModalResume(null)}>
           <div className="pf-library-modal-card" onClick={e => e.stopPropagation()}>
             <div className="pf-library-modal-header">
@@ -749,11 +905,12 @@ export function ResumePage() {
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* 3. Delete Resume Modal */}
-      {deleteModalResume && (
+      {deleteModalResume && createPortal(
         <div className="pf-library-modal-backdrop" onClick={() => !deletingResume && setDeleteModalResume(null)}>
           <div className="pf-library-modal-card" onClick={e => e.stopPropagation()}>
             <div className="pf-library-modal-header">
@@ -802,8 +959,28 @@ export function ResumePage() {
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
+
+      {/* Tailor for JD Modal */}
+      <TailorJdModal
+        isOpen={isTailorModalOpen}
+        onClose={() => setIsTailorModalOpen(false)}
+        onSuccess={() => {
+          loadResumes();
+        }}
+      />
+
+      {/* JD Fit & Improvement Stats Modal */}
+      <JdFitStatsModal
+        isOpen={Boolean(selectedStatsResume)}
+        resume={selectedStatsResume}
+        onClose={() => setSelectedStatsResume(null)}
+        onOpenStudio={(resumeId) => {
+          navigate(`/resume/${resumeId}/studio`);
+        }}
+      />
 
       {/* Sleek Floating AI Notification Toast */}
       <AiToast

@@ -807,6 +807,39 @@
   font-weight: 600;
 }
 
+.pf-resume-role-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #f1f5f9;
+  color: #0f172a;
+  border: 1px solid #cbd5e1;
+  padding: 1.5px 8px;
+  border-radius: 6px;
+  font-size: 0.70rem;
+  font-weight: 600;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  max-width: 240px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.pf-resume-role-pill svg {
+  color: #475569;
+  flex-shrink: 0;
+}
+
+.pf-resume-role-pill:hover {
+  background: #e2e8f0;
+  border-color: #94a3b8;
+  color: #020617;
+  transform: translateY(-0.5px);
+}
+
 /* ATS Readiness Pill */
 .pf-resume-row-analysis {
   display: flex;
@@ -1111,6 +1144,7 @@
   text-decoration: none;
   color: inherit;
   min-width: 0;
+  flex: 0 1 auto;
   display: inline-block;
   max-width: 100%;
 }
@@ -1124,24 +1158,39 @@
 .pf-library-modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(14, 28, 19, 0.55);
-  backdrop-filter: blur(4px);
-  display: grid;
-  place-items: center;
-  z-index: 1000;
-  padding: 20px;
-  animation: pfModalFadeIn 0.18s ease-out;
+  width: 100vw;
+  height: 100vh;
+  background: radial-gradient(circle at 50% 36%, rgba(18, 38, 28, 0.72) 0%, rgba(8, 19, 13, 0.86) 100%);
+  backdrop-filter: blur(12px) saturate(180%) brightness(0.88);
+  -webkit-backdrop-filter: blur(12px) saturate(180%) brightness(0.88);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999;
+  padding: 16px;
+  animation: pfBackdropFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .pf-library-modal-card {
   background: #ffffff;
-  border: 1px solid #d5e2d7;
+  border: 1px solid rgba(255, 255, 255, 0.85);
   border-radius: 14px;
   width: 100%;
-  max-width: 460px;
-  box-shadow: 0 24px 44px -8px rgba(14, 35, 22, 0.25);
+  max-width: 440px;
+  box-shadow: 
+    0 24px 60px -12px rgba(3, 14, 8, 0.44),
+    0 10px 24px -6px rgba(0, 0, 0, 0.2),
+    0 0 0 1px rgba(255, 255, 255, 0.65);
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 40px);
   animation: pfModalZoomIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes pfBackdropFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 @keyframes pfModalFadeIn {
@@ -1152,7 +1201,7 @@
 @keyframes pfModalZoomIn {
   from {
     opacity: 0;
-    transform: scale(0.96) translateY(8px);
+    transform: scale(0.96) translateY(6px);
   }
   to {
     opacity: 1;
@@ -1164,27 +1213,35 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 18px 20px 14px;
+  padding: 13px 18px 12px;
   border-bottom: 1px solid #edf2ed;
+  background: #ffffff;
 }
 
 .pf-library-modal-title {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 
 .pf-library-modal-title h3 {
-  font-size: 0.98rem;
+  font-size: 0.94rem;
   font-weight: 700;
   color: #132417;
   margin: 0;
+  line-height: 1.25;
+}
+
+.pf-library-modal-title p {
+  font-size: 0.76rem;
+  color: #5d7162;
+  margin: 1px 0 0;
 }
 
 .pf-library-modal-icon-badge {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
   background: #edf7f0;
   border: 1px solid #c8e7cf;
   color: #185e31;
@@ -1204,7 +1261,7 @@
   background: transparent;
   color: #7b8e7e;
   cursor: pointer;
-  padding: 6px;
+  padding: 5px;
   border-radius: 6px;
   display: grid;
   place-items: center;
@@ -1217,21 +1274,21 @@
 }
 
 .pf-library-modal-body {
-  padding: 20px;
+  padding: 15px 18px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
 }
 
 .pf-library-modal-desc {
-  font-size: 0.85rem;
+  font-size: 0.83rem;
   color: #2e4433;
   margin: 0;
   line-height: 1.45;
 }
 
 .pf-library-modal-subdesc {
-  font-size: 0.78rem;
+  font-size: 0.76rem;
   color: #6c7f6f;
   margin: 0;
   line-height: 1.4;
@@ -1240,11 +1297,11 @@
 .pf-library-modal-field {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 5px;
 }
 
 .pf-library-modal-field label {
-  font-size: 0.78rem;
+  font-size: 0.76rem;
   font-weight: 600;
   color: #27402d;
 }
@@ -1253,10 +1310,10 @@
 .pf-library-modal-input {
   width: 100%;
   border: 1px solid #d2ded4;
-  border-radius: 8px;
+  border-radius: 7px;
   background: #fafcfa;
-  padding: 9px 12px;
-  font-size: 0.85rem;
+  padding: 8px 11px;
+  font-size: 0.83rem;
   font-weight: 500;
   color: #152419;
   outline: none;
@@ -1275,19 +1332,19 @@
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 10px;
-  margin-top: 6px;
-  padding-top: 14px;
+  gap: 9px;
+  margin-top: 4px;
+  padding-top: 12px;
   border-top: 1px solid #edf2ed;
 }
 
 .pf-library-modal-btn {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 16px;
-  border-radius: 8px;
-  font-size: 0.82rem;
+  gap: 5px;
+  padding: 7px 14px;
+  border-radius: 7px;
+  font-size: 0.8rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -1335,3 +1392,902 @@
     transform: rotate(360deg);
   }
 }
+
+/* ==========================================================================
+   Tailor for JD & JD Fit Stats Modal Styles
+   ========================================================================== */
+
+.pf-resume-tailored-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2.5px 9px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  background: #f0f6ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  flex-shrink: 0;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 1px 2px rgba(29, 78, 216, 0.04);
+}
+
+.pf-resume-tailored-pill:hover {
+  background: #dbeafe;
+  border-color: #93c5fd;
+  color: #1e40af;
+  transform: translateY(-0.5px);
+  box-shadow: 0 2px 5px rgba(29, 78, 216, 0.12);
+}
+
+.pf-resume-tailored-pill:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 1px;
+}
+
+.pf-tailored-pill-label {
+  font-weight: 600;
+}
+
+.pf-tailored-pill-company {
+  max-width: 170px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: inline-block;
+  vertical-align: middle;
+  font-weight: 500;
+  color: #2563eb;
+}
+
+button.pf-analysis-status.is-clickable {
+  border: 0;
+  cursor: pointer;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  font-family: inherit;
+}
+
+button.pf-analysis-status.is-clickable:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(23, 56, 36, 0.12);
+  filter: brightness(0.97);
+}
+
+button.pf-analysis-status.is-clickable:focus-visible {
+  outline: 2px solid #173824;
+  outline-offset: 1px;
+}
+
+.pf-resume-action-menu .pf-action-menu-highlight {
+  color: #0284c7 !important;
+  font-weight: 600 !important;
+  background: #f0f9ff !important;
+  border-radius: 6px;
+  margin-bottom: 3px;
+}
+
+.pf-resume-action-menu .pf-action-menu-highlight:hover {
+  background: #e0f2fe !important;
+  color: #0369a1 !important;
+}
+
+.pf-tailor-modal-overlay {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  /* Deep cinematic emerald-obsidian vignette */
+  background: radial-gradient(
+    circle at 50% 36%,
+    rgba(18, 38, 28, 0.72) 0%,
+    rgba(8, 19, 13, 0.86) 100%
+  );
+  /* Silky smooth frosted glassmorphism */
+  backdrop-filter: blur(12px) saturate(180%) brightness(0.88);
+  -webkit-backdrop-filter: blur(12px) saturate(180%) brightness(0.88);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999;
+  padding: 16px;
+  animation: pfBackdropFadeIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.pf-tailor-modal-card {
+  background: #ffffff;
+  border-radius: 15px;
+  width: 100%;
+  max-width: 540px;
+  max-height: calc(100vh - 36px);
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  box-shadow: 
+    0 24px 60px -12px rgba(3, 14, 8, 0.44),
+    0 10px 24px -6px rgba(0, 0, 0, 0.2),
+    0 0 0 1px rgba(255, 255, 255, 0.65);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: pfModalZoomIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.pf-tailor-modal-card.is-stats-card {
+  max-width: 640px;
+}
+
+.pf-tailor-modal-header {
+  padding: 13px 18px 12px;
+  border-bottom: 1px solid #edf2ed;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: #ffffff;
+  flex-shrink: 0;
+}
+
+.pf-tailor-modal-header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pf-tailor-icon-badge {
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  background: #ecfdf5;
+  border: 1px solid #d1fae5;
+  color: #059669;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.pf-tailor-icon-badge.is-indigo {
+  background: #eef2ff;
+  border-color: #e0e7ff;
+  color: #4338ca;
+}
+
+.pf-tailor-modal-header h2 {
+  font-size: 14.5px;
+  font-weight: 700;
+  color: #0f2416;
+  margin: 0;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+}
+
+.pf-tailor-modal-header p {
+  font-size: 11.5px;
+  color: #5d7162;
+  margin: 1px 0 0;
+  line-height: 1.35;
+}
+
+.pf-stats-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #475569;
+  font-weight: 500;
+  margin-top: 1px;
+}
+
+.pf-stats-meta-row span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.pf-stats-dot {
+  color: #cbd5e1;
+}
+
+.pf-tailor-modal-close {
+  background: none;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 5px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+
+.pf-tailor-modal-close:hover {
+  background: #f1f5f9;
+  color: #334155;
+}
+
+.pf-tailor-modal-body {
+  padding: 14px 18px 16px;
+  overflow-y: auto;
+  flex: 1 1 auto;
+}
+
+.pf-tailor-modal-body.is-scrollable {
+  max-height: calc(85vh - 120px);
+}
+
+.pf-tailor-error-banner {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
+  padding: 7px 11px;
+  border-radius: 7px;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 11px;
+}
+
+/* Notice Callout - Ultra-slim 1-line badge */
+.pf-tailor-notice-callout {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  padding: 6px 11px;
+  border-radius: 7px;
+  font-size: 11.5px;
+  color: #166534;
+  line-height: 1.4;
+  margin-bottom: 11px;
+}
+
+.pf-tailor-notice-callout strong {
+  color: #14532d;
+}
+
+.pf-tailor-notice-icon {
+  flex-shrink: 0;
+  color: #16a34a;
+}
+
+/* Inputs Form - Ultra-compact, fits without any scrolling */
+.pf-tailor-row-inputs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.pf-tailor-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 10px;
+}
+
+.pf-tailor-field.is-last-field {
+  margin-bottom: 0;
+}
+
+.pf-tailor-label-split {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.pf-tailor-field label {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #334155;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.pf-tailor-char-count {
+  font-size: 11px;
+  color: #94a3b8;
+}
+
+.pf-tailor-char-count.is-valid {
+  color: #059669;
+}
+
+.pf-tailor-field input {
+  width: 100%;
+  border: 1px solid #cbd5e1;
+  border-radius: 7px;
+  padding: 7px 10px;
+  font-size: 12.5px;
+  color: #0f172a;
+  outline: none;
+  transition: all 0.15s;
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
+.pf-tailor-field textarea {
+  width: 100%;
+  border: 1px solid #cbd5e1;
+  border-radius: 7px;
+  padding: 7px 10px;
+  font-size: 12.5px;
+  color: #0f172a;
+  outline: none;
+  transition: all 0.15s;
+  box-sizing: border-box;
+  font-family: inherit;
+  resize: vertical;
+  line-height: 1.45;
+  height: 80px;
+  min-height: 70px;
+  max-height: 115px;
+}
+
+.pf-tailor-field input:focus,
+.pf-tailor-field textarea:focus {
+  border-color: #059669;
+  box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.12);
+}
+
+.pf-tailor-modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 9px;
+  margin-top: 11px;
+  padding-top: 10px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.pf-btn-tailor-cancel {
+  background: none;
+  border: 1px solid #cbd5e1;
+  color: #475569;
+  font-weight: 600;
+  font-size: 12px;
+  padding: 6.5px 14px;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.pf-btn-tailor-cancel:hover {
+  background: #f8fafc;
+}
+
+.pf-btn-tailor-submit {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #173824;
+  color: #ffffff;
+  border: none;
+  font-weight: 600;
+  font-size: 12.5px;
+  padding: 7px 16px;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.pf-btn-tailor-submit:hover:not(:disabled) {
+  background: #0f2718;
+}
+
+.pf-btn-tailor-submit:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* Loading View */
+.pf-tailor-loading-view {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 24px 12px;
+}
+
+.pf-tailor-spinner-box {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: #ecfdf5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #059669;
+  margin-bottom: 16px;
+}
+
+.pf-tailor-spin-icon {
+  animation: pfSpin 1s linear infinite;
+}
+
+.pf-tailor-loading-text h3 {
+  font-size: 17px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 6px 0;
+}
+
+.pf-tailor-loading-text p {
+  font-size: 13px;
+  color: #64748b;
+  margin: 0 0 24px 0;
+  max-width: 380px;
+}
+
+.pf-tailor-progress-steps {
+  width: 100%;
+  max-width: 440px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  text-align: left;
+}
+
+.pf-tailor-stage-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  color: #94a3b8;
+  font-size: 13px;
+  transition: all 0.2s ease;
+}
+
+.pf-tailor-stage-dot {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  background: #e2e8f0;
+  color: #64748b;
+  flex-shrink: 0;
+}
+
+.pf-tailor-stage-item.is-active {
+  border-color: #6ee7b7;
+  background: #f0fdf4;
+  color: #047857;
+  font-weight: 600;
+}
+
+.pf-tailor-stage-item.is-active .pf-tailor-stage-dot {
+  background: #059669;
+  color: #ffffff;
+}
+
+.pf-tailor-stage-item.is-done {
+  border-color: #cbd5e1;
+  background: #ffffff;
+  color: #334155;
+}
+
+.pf-tailor-stage-item.is-done .pf-tailor-stage-dot {
+  background: #d1fae5;
+  color: #059669;
+}
+
+/* Success View */
+.pf-tailor-success-view {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.pf-tailor-success-top {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  padding: 16px 20px;
+  border-radius: 12px;
+}
+
+.pf-tailor-score-ring {
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  border: 3px solid #10b981;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #ecfdf5;
+  flex-shrink: 0;
+}
+
+.pf-tailor-score-num {
+  font-size: 18px;
+  font-weight: 800;
+  color: #047857;
+  line-height: 1;
+}
+
+.pf-tailor-score-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: #059669;
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+
+.pf-tailor-success-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #059669;
+  margin-bottom: 4px;
+}
+
+.pf-tailor-success-details h3 {
+  font-size: 16px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 4px 0;
+}
+
+.pf-tailor-success-details p {
+  font-size: 12.5px;
+  color: #64748b;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.pf-tailor-skills-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pf-tailor-skills-title {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #047857;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.pf-tailor-skills-title.is-gap {
+  color: #b45309;
+}
+
+.pf-tailor-skill-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.pf-tailor-chip {
+  padding: 3px 9px;
+  border-radius: 6px;
+  font-size: 11.5px;
+  font-weight: 500;
+}
+
+.pf-tailor-chip.is-matched {
+  background: #ecfdf5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+}
+
+.pf-tailor-chip.is-gap {
+  background: #fffbeb;
+  color: #92400e;
+  border: 1px solid #fde68a;
+}
+
+.pf-tailor-chip.is-more {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.pf-tailor-success-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.pf-btn-tailor-studio {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #059669;
+  color: #ffffff;
+  border: none;
+  font-weight: 600;
+  font-size: 13.5px;
+  padding: 9px 18px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.pf-btn-tailor-studio:hover {
+  background: #047857;
+}
+
+.pf-btn-tailor-secondary {
+  background: #f1f5f9;
+  border: none;
+  color: #475569;
+  font-weight: 600;
+  font-size: 13px;
+  padding: 9px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.pf-btn-tailor-secondary:hover {
+  background: #e2e8f0;
+}
+
+/* ==========================================================================
+   JD Fit Stats & Roadmap Styles
+   ========================================================================== */
+
+.pf-stats-score-banner {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin-bottom: 20px;
+}
+
+.pf-stats-gauge-ring {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.pf-stats-gauge-ring.is-high {
+  background: #ecfdf5;
+  border: 3.5px solid #10b981;
+}
+
+.pf-stats-gauge-ring.is-high .pf-stats-gauge-value {
+  color: #047857;
+}
+
+.pf-stats-gauge-ring.is-medium {
+  background: #eff6ff;
+  border: 3.5px solid #3b82f6;
+}
+
+.pf-stats-gauge-ring.is-medium .pf-stats-gauge-value {
+  color: #1d4ed8;
+}
+
+.pf-stats-gauge-ring.is-low {
+  background: #fffbeb;
+  border: 3.5px solid #f59e0b;
+}
+
+.pf-stats-gauge-ring.is-low .pf-stats-gauge-value {
+  color: #b45309;
+}
+
+.pf-stats-gauge-value {
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.pf-stats-gauge-sub {
+  font-size: 10px;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+
+.pf-stats-rating-tag {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 4px;
+}
+
+.pf-stats-score-info p {
+  font-size: 13px;
+  color: #475569;
+  line-height: 1.45;
+  margin: 0;
+}
+
+.pf-stats-section {
+  margin-bottom: 22px;
+}
+
+.pf-stats-section-heading {
+  font-size: 14px;
+  font-weight: 700;
+  color: #0f172a;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0 0 10px 0;
+}
+
+.pf-stats-section-sub {
+  font-size: 12.5px;
+  color: #64748b;
+  margin: -6px 0 12px 0;
+  line-height: 1.4;
+}
+
+.pf-stats-strengths-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pf-stats-strength-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 13px;
+  color: #166534;
+  line-height: 1.4;
+}
+
+.pf-stats-check-icon {
+  color: #16a34a;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.pf-stats-skills-split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.pf-stats-skill-col {
+  border-radius: 10px;
+  padding: 12px 14px;
+  border: 1px solid #e2e8f0;
+}
+
+.pf-stats-skill-col.is-matched-col {
+  background: #fcfdfc;
+  border-color: #d1fae5;
+}
+
+.pf-stats-skill-col.is-gap-col {
+  background: #fffdfa;
+  border-color: #fde68a;
+}
+
+.pf-stats-skill-col-header {
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.pf-stats-skill-col.is-matched-col .pf-stats-skill-col-header {
+  color: #065f46;
+}
+
+.pf-stats-skill-col.is-gap-col .pf-stats-skill-col-header {
+  color: #92400e;
+}
+
+.pf-stats-skill-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.pf-stats-pill {
+  padding: 2.5px 8px;
+  border-radius: 5px;
+  font-size: 11.5px;
+  font-weight: 500;
+}
+
+.pf-stats-pill.is-matched {
+  background: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
+}
+
+.pf-stats-pill.is-gap {
+  background: #fffbeb;
+  color: #b45309;
+  border: 1px solid #fde68a;
+}
+
+.pf-stats-empty-note {
+  font-size: 12px;
+  color: #94a3b8;
+  font-style: italic;
+}
+
+/* Roadmap cards */
+.pf-stats-roadmap-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pf-stats-roadmap-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 12px 14px;
+}
+
+.pf-stats-roadmap-num {
+  font-size: 12px;
+  font-weight: 800;
+  color: #4338ca;
+  background: #e0e7ff;
+  border-radius: 6px;
+  padding: 2px 7px;
+  flex-shrink: 0;
+}
+
+.pf-stats-roadmap-content {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.pf-stats-roadmap-cat {
+  font-size: 11px;
+  font-weight: 700;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.pf-stats-roadmap-content p {
+  font-size: 13px;
+  color: #1e293b;
+  line-height: 1.45;
+  margin: 0;
+}
+

@@ -67,6 +67,33 @@ const SECTIONS = [
 const RECORD_SECTIONS = ['education', 'experience', 'projects', 'certifications', 'achievements', 'leadership'];
 const DATE_PATTERN = /(?:[A-Z][a-z]{2,9}\.?\s+)?(?:19|20)\d{2}(?:\s*(?:[\/-]|–|—|to)\s*(?:(?:[A-Z][a-z]{2,9}\.?\s+)?(?:19|20)\d{2}|present|current))?|(?:0?[1-9]|1[0-2])[\/-](?:19|20)\d{2}/i;
 
+const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+function formatIsoDateStr(str) {
+  if (!str) return '';
+  const s = String(str).trim();
+  const rangeMatch = s.match(/^(\d{4})[-/](\d{1,2})(?:[-/]\d{1,2})?\s*(?:[-–—]|to)\s*(\d{4})[-/](\d{1,2})(?:[-/]\d{1,2})?$/i);
+  if (rangeMatch) {
+    const y1 = rangeMatch[1], m1 = parseInt(rangeMatch[2], 10);
+    const y2 = rangeMatch[3], m2 = parseInt(rangeMatch[4], 10);
+    if (m1 >= 1 && m1 <= 12 && m2 >= 1 && m2 <= 12) {
+      return `${MONTH_NAMES[m1 - 1]} ${y1} – ${MONTH_NAMES[m2 - 1]} ${y2}`;
+    }
+  }
+  const toPresentMatch = s.match(/^(\d{4})[-/](\d{1,2})(?:[-/]\d{1,2})?\s*(?:[-–—]|to)\s*(present|current)$/i);
+  if (toPresentMatch) {
+    const y1 = toPresentMatch[1], m1 = parseInt(toPresentMatch[2], 10);
+    if (m1 >= 1 && m1 <= 12) {
+      return `${MONTH_NAMES[m1 - 1]} ${y1} – Present`;
+    }
+  }
+  const singleMatch = s.match(/^(\d{4})[-/](\d{1,2})(?:[-/]\d{1,2})?$/);
+  if (singleMatch) {
+    const y = singleMatch[1], m = parseInt(singleMatch[2], 10);
+    if (m >= 1 && m <= 12) return `${MONTH_NAMES[m - 1]} ${y}`;
+  }
+  return s;
+}
+
 function unbundleEducation(eduItems, profileData) {
   if (!Array.isArray(eduItems) || eduItems.length === 0) return eduItems || [];
 
@@ -204,7 +231,8 @@ export function normalizeExtractedData(source, profileData) {
   const records = key => Array.isArray(data[key]) ? data[key].map(item => {
     const originalTitle = item.title || item.role || item.company || item.institution || item.name || '';
     const sourceText = `${originalTitle} ${item.raw || ''}`;
-    const dates = item.dates || sourceText.match(DATE_PATTERN)?.[0] || '';
+    const rawDates = item.dates || sourceText.match(DATE_PATTERN)?.[0] || '';
+    const dates = formatIsoDateStr(rawDates);
     return {
       ...item,
       title: dates ? originalTitle.replace(DATE_PATTERN, '').trim() || originalTitle : originalTitle,
@@ -225,6 +253,9 @@ export function normalizeExtractedData(source, profileData) {
     data.personal?.linkedin,
     data.personal?.github,
     data.personal?.portfolio,
+    data.personal?.leetcode,
+    data.personal?.codeforces,
+    data.personal?.hackerrank,
   ].filter(Boolean)
    .map(formatLink)
    .filter(isCandidateProfileLink)
@@ -282,6 +313,12 @@ export function normalizeExtractedData(source, profileData) {
       headline: data.personal?.headline || '',
       location: data.personal?.location || '',
       links: rawLinks,
+      linkedin: data.personal?.linkedin || '',
+      github: data.personal?.github || '',
+      portfolio: data.personal?.portfolio || '',
+      leetcode: data.personal?.leetcode || '',
+      codeforces: data.personal?.codeforces || '',
+      hackerrank: data.personal?.hackerrank || '',
     },
     summary: { text: data.summary?.text || '' },
     education: unbundleEducation(records('education'), profileData),
@@ -341,12 +378,12 @@ function recordDescription(item) {
 }
 
 function formatEducationEntry(item) {
-  const dates = recordDates(item);
+  const dates = formatIsoDateStr(recordDates(item));
   let institution = item.institution || item.school || item.college || item.university || '';
   let degree = item.degreeProgram || item.degree || item.qualification || '';
   let title = item.title || item.name || '';
   let location = item.location || '';
-  let rawDesc = recordDescription(item);
+  let rawDesc = String(recordDescription(item) || '');
 
   // Clean redundant wordings
   let cleanDesc = rawDesc
@@ -357,24 +394,46 @@ function formatEducationEntry(item) {
     .replace(/Class X \(Secondary\)/gi, 'Class X')
     .trim();
 
-  let cleanTitle = title
+  let cleanTitle = String(title || '')
     .replace(/Class XII \(Senior Secondary\)/gi, 'Class XII')
     .replace(/Class X \(Secondary\)/gi, 'Class X')
     .trim();
 
-  let cleanDegree = degree
+  let cleanDegree = String(degree || '')
     .replace(/Class XII \(Senior Secondary\)/gi, 'Class XII')
     .replace(/Class X \(Secondary\)/gi, 'Class X')
     .trim();
+
+  // Specifically hardcode KIIT for university education instead of generic University
+  const isSchool = /XII|12|X|10|Secondary/i.test(cleanDegree) || /XII|12|X|10|Secondary/i.test(cleanTitle) || /school|cbse|icse/i.test(institution);
+  if (!isSchool) {
+    if (!institution || /^(?:university|college|kiit|kalinga.*)$/i.test(institution.trim()) || /kiit/i.test(institution)) {
+      institution = 'Kalinga Institute of Industrial Technology (KIIT)';
+    }
+    if (!location) {
+      location = 'Bhubaneswar, India';
+    }
+  }
 
   let topTitle = institution;
   let degreeLine = cleanDegree || '';
 
   if (!topTitle) {
-    topTitle = cleanTitle || degreeLine || 'Education';
+    topTitle = cleanTitle || degreeLine || 'Kalinga Institute of Industrial Technology (KIIT)';
   } else if (cleanTitle && cleanTitle.toLowerCase() !== topTitle.toLowerCase()) {
     if (!degreeLine) {
       degreeLine = cleanTitle;
+    }
+  }
+
+  // Deduplicate degree line from cleanDesc if cleanDesc contains it or starts with it
+  if (degreeLine && cleanDesc) {
+    if (cleanDesc.toLowerCase().startsWith(degreeLine.toLowerCase())) {
+      cleanDesc = cleanDesc.slice(degreeLine.length).replace(/^[\s·\-,|]+/, '').trim();
+    } else if (cleanDesc.toLowerCase() === degreeLine.toLowerCase()) {
+      cleanDesc = '';
+    } else if (cleanDesc.toLowerCase().includes(degreeLine.toLowerCase())) {
+      cleanDesc = cleanDesc.replace(new RegExp(degreeLine.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'), '').replace(/^[\s·\-,|]+|[\s·\-,|]+$/g, '').trim();
     }
   }
 
@@ -382,7 +441,7 @@ function formatEducationEntry(item) {
   if (degreeLine) {
     subParts.push(degreeLine);
   }
-  if (cleanDesc && !degreeLine.toLowerCase().includes(cleanDesc.toLowerCase())) {
+  if (cleanDesc && !degreeLine.toLowerCase().includes(cleanDesc.toLowerCase()) && !subParts.some(p => p.toLowerCase().includes(cleanDesc.toLowerCase()))) {
     subParts.push(cleanDesc);
   }
 
@@ -398,7 +457,7 @@ function formatExperienceHeader(item) {
   const role = value(item, ['role', 'title', 'position']) || 'Experience';
   const company = value(item, ['company', 'organization', 'institution', 'companyName']);
   const location = item.location || '';
-  const dates = recordDates(item);
+  const dates = formatIsoDateStr(recordDates(item));
 
   const metaParts = [];
   if (company && company.trim().toLowerCase() !== role.trim().toLowerCase()) {
@@ -482,13 +541,22 @@ function getRepoLabel(url) {
 }
 
 function getProjectLinks(item) {
-  let liveUrl = item.liveUrl || item.projectUrl || '';
+  let liveUrl = item.liveUrl || item.projectUrl || item.deployedUrl || item.demoUrl || item.website || '';
   let repoUrl = item.repoUrl || item.githubUrl || item.github || '';
 
+  // If liveUrl actually points to a git repo, shift to repoUrl
   if (liveUrl && (liveUrl.includes('github.com') || liveUrl.includes('gitlab') || liveUrl.includes('bitbucket'))) {
     if (!repoUrl) {
       repoUrl = liveUrl;
       liveUrl = '';
+    }
+  }
+
+  // If repoUrl does not point to a git repo and liveUrl is empty, shift to liveUrl
+  if (repoUrl && !repoUrl.includes('github.com') && !repoUrl.includes('gitlab') && !repoUrl.includes('bitbucket')) {
+    if (!liveUrl) {
+      liveUrl = repoUrl;
+      repoUrl = '';
     }
   }
 
@@ -521,7 +589,8 @@ function formatLinkDisplay(url) {
   return formatPlatformLabel(url);
 }
 
-function renderRecordEntry(secKey, item, index, dataBlockId) {
+function renderRecordEntry(secKey, item, index, dataBlockId, isCompact = false, condenseDesc = false) {
+  if (!item || typeof item !== 'object') return null;
   if (secKey === 'experience') {
     const exp = formatExperienceHeader(item);
     return (
@@ -547,7 +616,7 @@ function renderRecordEntry(secKey, item, index, dataBlockId) {
 
   if (secKey === 'projects') {
     const pl = getProjectLinks(item);
-    const dates = recordDates(item);
+    const dates = formatIsoDateStr(recordDates(item));
     return (
       <div className="pf-studio-entry" key={item.id || index} data-block-id={dataBlockId}>
         <div className="pf-paper-entry-title-row">
@@ -608,20 +677,47 @@ function renderRecordEntry(secKey, item, index, dataBlockId) {
     );
   }
 
-  // Certifications, Achievements, Leadership, etc.
+  // Certifications: prefer concise entry (name + issuer + date) when space is constrained
+  if (secKey === 'certifications') {
+    const dates = recordDates(item);
+    const sub = recordSubMeta(item);
+    const showDesc = !condenseDesc && !isCompact && Boolean(recordDescription(item));
+    return (
+      <div className="pf-studio-entry" key={item.id || index} data-block-id={dataBlockId}>
+        <div className="pf-paper-entry-title-row">
+          <div className="pf-paper-entry-left">
+            <b>{value(item, ['title', 'name'])}</b>
+          </div>
+          {dates && <span className="pf-paper-entry-date">{dates}</span>}
+        </div>
+        {sub && <span className="pf-paper-entry-sub">{sub}</span>}
+        {showDesc && <p className="pf-entry-desc">{recordDescription(item)}</p>}
+        {item.bullets?.length > 0 && !condenseDesc && (
+          <ul>
+            {item.bullets.map((bullet, bulletIndex) => (
+              <li key={bulletIndex}>{bullet}</li>
+            ))}
+          </ul>
+        )}
+      </div>
+    );
+  }
+
+  // Achievements, Leadership, Activities & Positions of Responsibility
   const dates = recordDates(item);
   const sub = recordSubMeta(item);
+  const showDesc = !condenseDesc && Boolean(recordDescription(item));
   return (
     <div className="pf-studio-entry" key={item.id || index} data-block-id={dataBlockId}>
       <div className="pf-paper-entry-title-row">
         <div className="pf-paper-entry-left">
-          <b>{value(item, ['title', 'name'])}</b>
+          <b>{value(item, ['title', 'role', 'name', 'position'])}</b>
         </div>
         {dates && <span className="pf-paper-entry-date">{dates}</span>}
       </div>
       {sub && <span className="pf-paper-entry-sub">{sub}</span>}
-      {recordDescription(item) && <p>{recordDescription(item)}</p>}
-      {item.bullets?.length > 0 && (
+      {showDesc && <p className="pf-entry-desc">{recordDescription(item)}</p>}
+      {item.bullets?.length > 0 && !condenseDesc && (
         <ul>
           {item.bullets.map((bullet, bulletIndex) => (
             <li key={bulletIndex}>{bullet}</li>
@@ -658,14 +754,16 @@ export function buildResumeBlocks(data) {
     } else if (Array.isArray(data[secKey]) && data[secKey].length > 0) {
       blocks.push({ id: `title-${secKey}`, type: 'section-title', section: secKey });
       data[secKey].forEach((item, idx) => {
-        blocks.push({ id: `entry-${secKey}-${idx}`, type: 'entry', section: secKey, item, index: idx });
+        if (item) {
+          blocks.push({ id: `entry-${secKey}-${idx}`, type: 'entry', section: secKey, item, index: idx });
+        }
       });
     }
   }
   return blocks;
 }
 
-function renderResumeBlock(block, data, template) {
+function renderResumeBlock(block, data, template, isCompact = false, condenseDesc = false) {
   if (block.type === 'header') {
     const personal = data.personal || {};
     return (
@@ -758,15 +856,29 @@ function renderResumeBlock(block, data, template) {
   }
 
   if (block.type === 'entry') {
-    return renderRecordEntry(block.section, block.item, block.index, block.id);
+    return renderRecordEntry(block.section, block.item, block.index, block.id, isCompact, condenseDesc);
   }
 
   return null;
 }
 
-export function Preview({ data, template, onPageCountChange }) {
+export function Preview({
+  data,
+  template,
+  onPageCountChange,
+  isCompact: externalIsCompact,
+  onCompactChange,
+  condenseDesc: externalCondenseDesc,
+  onCondenseDescChange
+}) {
   const measureRef = React.useRef(null);
   const blocks = React.useMemo(() => buildResumeBlocks(data), [data]);
+  const [internalCompact, setInternalCompact] = useState(false);
+  const [internalCondenseDesc, setInternalCondenseDesc] = useState(false);
+
+  const isCompact = externalIsCompact !== undefined ? externalIsCompact : internalCompact;
+  const condenseDesc = externalCondenseDesc !== undefined ? externalCondenseDesc : internalCondenseDesc;
+
   const [paginatedPages, setPaginatedPages] = useState([[...blocks]]);
 
   React.useLayoutEffect(() => {
@@ -781,20 +893,43 @@ export function Preview({ data, template, onPageCountChange }) {
       }
 
       // In Chrome printable A4 at 96 DPI:
-      // Full A4 height = 297mm (1122.5px).
-      // thead margin top = 14mm, tfoot margin bottom = 14mm.
-      // After accounting for table fragment buffers and print margins,
-      // Chrome's print engine pagination breaks Page 1 at ~940-950px.
-      // Setting PAGE_CONTENT_MAX_PX to 945 precisely aligns preview page breaks with PDF export.
+      // Page 1 print boundary breaks at ~940-950px.
+      // Setting PAGE_CONTENT_MAX_PX to 945 aligns preview page bounds with PDF export.
       const PAGE_CONTENT_MAX_PX = 945;
 
       const elements = blocks.map(b => container.querySelector(`[data-block-id="${b.id}"]`));
       if (elements.some(el => !el)) return;
 
       const firstRect = elements[0].getBoundingClientRect();
-      const newPages = [[]];
-      let curPage = 0;
-      let pageStartTop = firstRect.top;
+      const lastRect = elements[elements.length - 1].getBoundingClientRect();
+      const totalRenderedHeight = lastRect.bottom - firstRect.top;
+
+      // 1. Dynamic compact density: if content exceeds 895px, apply compact density
+      if (totalRenderedHeight > 895 && !isCompact) {
+        setInternalCompact(true);
+        if (onCompactChange) onCompactChange(true);
+        return;
+      }
+
+      // 2. Dynamic description condensation:
+      // If content exceeds 940px, condense lower-priority descriptions (certifications, achievements, leadership)
+      // to retain the credentials themselves on the page without overflowing
+      if (totalRenderedHeight > 940 && !condenseDesc) {
+        setInternalCondenseDesc(true);
+        if (onCondenseDescChange) onCondenseDescChange(true);
+        return;
+      }
+
+      // If content fits comfortably well below the single-page boundary (< 840px) and descriptions were condensed,
+      // allow descriptions to expand to fill available space
+      if (totalRenderedHeight < 840 && condenseDesc && externalCondenseDesc === undefined) {
+        setInternalCondenseDesc(false);
+        if (onCondenseDescChange) onCondenseDescChange(false);
+        return;
+      }
+
+      const pageStartTop = firstRect.top;
+      const page1Blocks = [];
 
       for (let i = 0; i < blocks.length; i++) {
         const b = blocks[i];
@@ -804,7 +939,7 @@ export function Preview({ data, template, onPageCountChange }) {
         let requiredBottom = elRect.bottom;
 
         // Section title orphan avoidance (page-break-after: avoid):
-        // If block is a section title, ensure title + next entry fit on the same page.
+        // Ensure title + first entry fit together on the same page.
         if (b.type === 'section-title' && i + 1 < blocks.length && elements[i + 1]) {
           const nextEl = elements[i + 1];
           requiredBottom = nextEl.getBoundingClientRect().bottom;
@@ -812,19 +947,35 @@ export function Preview({ data, template, onPageCountChange }) {
 
         const requiredOnPage = requiredBottom - pageStartTop;
 
-        if (requiredOnPage > PAGE_CONTENT_MAX_PX && newPages[curPage].length > 0) {
-          curPage++;
-          newPages[curPage] = [];
-          pageStartTop = elRect.top;
+        if (requiredOnPage <= PAGE_CONTENT_MAX_PX) {
+          page1Blocks.push(b);
+        } else {
+          // Reached A4 boundary
+          break;
         }
-
-        newPages[curPage].push(b);
       }
 
+      // Strict single-page layout enforcement:
+      // Content is NEVER truncated mid-word or mid-sentence.
+      // Overflow items are dropped as complete low-priority blocks (achievements/certifications/leadership).
+      // Remove any section-title whose section has no entries remaining on Page 1.
+      const sectionsWithEntries = new Set(
+        page1Blocks
+          .filter(b => b.type === 'entry' && b.section)
+          .map(b => b.section)
+      );
+
+      const finalPage1Blocks = page1Blocks.filter(b => {
+        if (b.type === 'section-title') {
+          return sectionsWithEntries.has(b.section);
+        }
+        return true;
+      });
+
       if (isMounted) {
-        setPaginatedPages(newPages);
+        setPaginatedPages([finalPage1Blocks]);
         if (onPageCountChange) {
-          onPageCountChange(newPages.length);
+          onPageCountChange(1);
         }
       }
     };
@@ -846,7 +997,7 @@ export function Preview({ data, template, onPageCountChange }) {
       isMounted = false;
       window.removeEventListener('resize', handleResize);
     };
-  }, [blocks, template, onPageCountChange]);
+  }, [blocks, template, isCompact, condenseDesc, onPageCountChange, onCompactChange, onCondenseDescChange]);
 
   return (
     <>
@@ -854,15 +1005,15 @@ export function Preview({ data, template, onPageCountChange }) {
       {typeof document !== 'undefined' && createPortal(
         <div
           ref={measureRef}
-          className={`pf-studio-paper pf-studio-paper--${template} pf-measure-container`}
+          className={`pf-studio-paper pf-studio-paper--${template} ${isCompact ? 'is-compact' : ''} pf-measure-container`}
           aria-hidden="true"
         >
-          {blocks.map(b => renderResumeBlock(b, data, template))}
+          {blocks.map(b => renderResumeBlock(b, data, template, isCompact, condenseDesc))}
         </div>,
         document.body
       )}
 
-      {/* Visible paginated physical sheets */}
+      {/* Visible paginated physical sheets - guaranteed single-page */}
       <div className="pf-studio-pages-stack">
         {paginatedPages.map((pageBlocks, pageIdx) => (
           <div className="pf-studio-paper-sheet-card" key={pageIdx}>
@@ -871,10 +1022,10 @@ export function Preview({ data, template, onPageCountChange }) {
                 <span>Page {pageIdx + 1} of {paginatedPages.length}</span>
               </div>
             )}
-            <article className={`pf-studio-paper pf-studio-paper--${template}`}>
+            <article className={`pf-studio-paper pf-studio-paper--${template} ${isCompact ? 'is-compact' : ''}`}>
               {pageBlocks.map(b => (
                 <React.Fragment key={b.id}>
-                  {renderResumeBlock(b, data, template)}
+                  {renderResumeBlock(b, data, template, isCompact, condenseDesc)}
                 </React.Fragment>
               ))}
             </article>
@@ -885,7 +1036,7 @@ export function Preview({ data, template, onPageCountChange }) {
   );
 }
 
-function printable(data, template) {
+function printable(data, template, isCompact = false, docTitle = '', condenseDesc = false) {
   const escapeHtml = input => String(input || '').replace(/[&<>\"]/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '\"': '&quot;' }[char]));
   const personal = data.personal || {};
   const skillsObj = data.skills || {};
@@ -976,12 +1127,13 @@ function printable(data, template) {
     const leftContent = `<div class="entry-left"><b>${titleVal}</b>${projectLinks}</div>`;
     const dateContent = datesVal ? `<span class="entry-date">${datesVal}</span>` : '';
     const titleRow = `<div class="entry-title-row">${leftContent}${dateContent}</div>`;
+    const hideDesc = ((key === 'certifications' || key === 'achievements' || key === 'leadership') && condenseDesc) || (key === 'certifications' && isCompact);
     return `
     <div class="entry">
       ${titleRow}
       ${subMetaVal ? `<span class="entry-sub">${subMetaVal}</span>` : ''}
       ${item.technologies ? `<p class="tech"><b>Tech Stack:</b> ${escapeHtml(item.technologies)}</p>` : ''}
-      ${recordDescription(item) ? `<p>${escapeHtml(recordDescription(item))}</p>` : ''}
+      ${hideDesc ? '' : (recordDescription(item) ? `<p>${escapeHtml(recordDescription(item))}</p>` : '')}
       ${item.bullets?.length ? `<ul>${item.bullets.map(bullet => `<li>${escapeHtml(bullet)}</li>`).join('')}</ul>` : ''}
     </div>`;
   }).join('')}</section>` : '';
@@ -1027,7 +1179,7 @@ function printable(data, template) {
 <html>
 <head>
   <meta charset="utf-8">
-  <title>${escapeHtml(personal.fullName || 'Resume')}</title>
+  <title>${escapeHtml(docTitle || personal.fullName || 'Resume')}</title>
   <style>
     @page { margin: 0; }
     *, *::before, *::after {
@@ -1208,6 +1360,22 @@ function printable(data, template) {
     .compact .entry-date { font-size: 7.5pt; }
     .compact .role-meta { font-size: 8pt; }
     .compact .proj-link a { font-size: 6.8pt; padding: 0.25pt 2.5pt; }
+    .is-compact { font-size: 8.3pt !important; line-height: 1.28 !important; }
+    .is-compact .head { padding-bottom: 3.5pt !important; margin-bottom: 5pt !important; }
+    .is-compact .head h1 { font-size: 17.5pt !important; margin: 0 0 1.5pt !important; }
+    .is-compact .head p { margin: 1pt 0 !important; font-size: 8.1pt !important; line-height: 1.25 !important; }
+    .is-compact .head-links { font-size: 7.9pt !important; margin: 1.5pt 0 !important; }
+    .is-compact section { margin-top: 5pt !important; }
+    .is-compact h2 { font-size: 8.6pt !important; margin: 0 0 2pt !important; padding-bottom: 1pt !important; }
+    .is-compact .entry { margin-bottom: 3pt !important; }
+    .is-compact .entry b { font-size: 8.4pt !important; }
+    .is-compact .entry-date { font-size: 7.8pt !important; }
+    .is-compact .entry-sub { font-size: 7.8pt !important; margin-bottom: 0.5pt !important; }
+    .is-compact .tech { font-size: 7.8pt !important; margin: 0.5pt 0 !important; }
+    .is-compact ul { margin: 1pt 0 2pt 11pt !important; }
+    .is-compact li { font-size: 8.1pt !important; line-height: 1.25 !important; margin-bottom: 0.5pt !important; }
+    .is-compact .entry p { margin: 1pt 0 !important; font-size: 8.1pt !important; line-height: 1.25 !important; }
+    .is-compact .proj-link a { font-size: 7pt !important; padding: 0.5pt 3pt !important; }
     .technical .head { text-align: left; border-left: 4pt solid #8b4f25; border-bottom: 0; padding-left: 8pt; }
     .technical .head a { color: #264e36; font-weight: 600; }
     .technical .entry-date { font-size: 8pt; color: #55665a; }
@@ -1245,7 +1413,7 @@ function printable(data, template) {
     <tbody>
       <tr>
         <td>
-          <main class="resume ${template}">
+          <main class="resume ${template} ${isCompact ? 'is-compact' : ''}">
             <header class="head">
               <h1>${escapeHtml(personal.fullName || 'Candidate')}</h1>
               <p>${contactLine}</p>
@@ -1565,7 +1733,53 @@ function RecordEditor({ section, records, onChange, onAdd, onRemove, onMove, onR
   );
 }
 
-export function ResumeStudioPage() {
+class ResumeStudioErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.error('ResumeStudio render crashed:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ padding: '60px 24px', textAlign: 'center', maxWidth: '600px', margin: '40px auto', background: '#fff', borderRadius: '16px', border: '1px solid #e1e7e2', boxShadow: '0 8px 30px rgba(0,0,0,0.06)' }}>
+          <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: '#fee2e2', color: '#dc2626', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', fontSize: '24px' }}>⚠️</div>
+          <h2 style={{ fontSize: '20px', fontWeight: '700', color: '#1d2921', marginBottom: '8px' }}>Resume Studio encountered an issue</h2>
+          <p style={{ fontSize: '14px', color: '#55665a', marginBottom: '20px' }}>
+            {this.state.error?.message || 'An unexpected rendering error occurred.'}
+          </p>
+          <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+            <button
+              type="button"
+              onClick={() => { this.setState({ hasError: false, error: null }); window.location.reload(); }}
+              style={{ padding: '10px 18px', background: '#264e36', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: '600', cursor: 'pointer' }}
+            >
+              Reload Studio
+            </button>
+            <button
+              type="button"
+              onClick={() => { window.location.href = '/resume'; }}
+              style={{ padding: '10px 18px', background: '#f0f3f1', color: '#1d2921', border: '1px solid #d4ddd7', borderRadius: '8px', fontWeight: '600', cursor: 'pointer' }}
+            >
+              Back to Resumes
+            </button>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+function ResumeStudioInner() {
   const { resumeId } = useParams();
   const navigate = useNavigate();
   const [resume, setResume] = useState(null);
@@ -1600,8 +1814,9 @@ export function ResumeStudioPage() {
   const [renaming, setRenaming] = useState(false);
   const paperWrapRef = React.useRef(null);
   const saveDropdownRef = React.useRef(null);
-  const renameInputRef = React.useRef(null);
   const [pageCount, setPageCount] = useState(1);
+  const [isCompact, setIsCompact] = useState(false);
+  const [condenseDesc, setCondenseDesc] = useState(false);
   const [reparsing, setReparsing] = useState(false);
   const [toast, setToast] = useState(null);
   const [toastLeaving, setToastLeaving] = useState(false);
@@ -1773,6 +1988,13 @@ export function ResumeStudioPage() {
               setError('Could not find the requested resume.');
               setData(null);
             }
+          } else if (resumes.length > 0) {
+            const defaultResume = resumes.find(item => item.isDefault) || resumes[0];
+            setResume(defaultResume);
+            setData(normalizeExtractedData(defaultResume.extractedData || defaultResume.analysis?.structured || {}, profileData));
+          } else if (profileData) {
+            setResume(null);
+            setData(profileToResumeData(profileData));
           } else {
             setResume(null);
             setData(null);
@@ -2063,7 +2285,10 @@ export function ResumeStudioPage() {
 
   const exportPdf = () => {
     if (!data) return;
-    const htmlContent = printable(data, template);
+    const docTitle = resume?.filename
+      ? resume.filename.replace(/\.pdf$/i, '')
+      : (data.personal?.fullName ? `${data.personal.fullName.replace(/\s+/g, '_')}_Resume` : 'Resume');
+    const htmlContent = printable(data, template, isCompact, docTitle, condenseDesc);
 
     const popup = window.open('', '_blank');
     if (popup) {
@@ -2770,7 +2995,15 @@ export function ResumeStudioPage() {
 
             <div className="pf-studio-paper-wrap" ref={paperWrapRef}>
               <div className="pf-studio-paper-scaler" style={{ zoom }}>
-                <Preview data={data} template={template} onPageCountChange={setPageCount} />
+                <Preview
+                  data={data}
+                  template={template}
+                  onPageCountChange={setPageCount}
+                  isCompact={isCompact}
+                  onCompactChange={setIsCompact}
+                  condenseDesc={condenseDesc}
+                  onCondenseDescChange={setCondenseDesc}
+                />
               </div>
             </div>
           </section>
@@ -2778,7 +3011,7 @@ export function ResumeStudioPage() {
       </main>
       )}
 
-      {isSaveAsOpen && (
+      {isSaveAsOpen && createPortal(
         <div className="pf-studio-modal-backdrop" onClick={() => !savingAs && setIsSaveAsOpen(false)}>
           <div className="pf-studio-modal-card" onClick={e => e.stopPropagation()}>
             <div className="pf-studio-modal-header">
@@ -2862,7 +3095,8 @@ export function ResumeStudioPage() {
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Sleek Floating AI Notification Toast */}
@@ -2872,5 +3106,13 @@ export function ResumeStudioPage() {
         isLeaving={toastLeaving}
       />
     </div>
+  );
+}
+
+export function ResumeStudioPage() {
+  return (
+    <ResumeStudioErrorBoundary>
+      <ResumeStudioInner />
+    </ResumeStudioErrorBoundary>
   );
 }

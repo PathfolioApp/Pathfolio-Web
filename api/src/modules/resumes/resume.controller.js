@@ -2,10 +2,12 @@ const crypto = require('crypto');
 const resumeStore = require('./resumeStore');
 const r2Service = require('./r2.service');
 const { analysePdf } = require('./resumeAnalysis');
+const tailorResumeService = require('./tailorResume.service');
 const {
   validatePdfBuffer,
   sanitizeFilename,
   validateFilenameForRename,
+  generateProfessionalResumeFilename,
   normalizeTags,
   normalizeCategory,
   RESUME_CATEGORIES,
@@ -37,7 +39,7 @@ async function bodyToBuffer(body) {
   return Buffer.from(body);
 }
 
-function renderStudioHtml(data) {
+function renderStudioHtml(data, filename = '') {
   const escape = str => String(str || '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const personal = data.personal || {};
   const summary = data.summary?.text || '';
@@ -58,7 +60,7 @@ function renderStudioHtml(data) {
 <html>
 <head>
   <meta charset="utf-8">
-  <title>${escape(personal.fullName || 'Student')} - Resume</title>
+  <title>${escape(filename ? filename.replace(/\.pdf$/i, '') : ((personal.fullName || 'Student') + ' - Resume'))}</title>
   <style>
     @page { size: A4 portrait; margin: 10mm 12mm; }
     *, *::before, *::after { box-sizing: border-box; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
@@ -96,8 +98,8 @@ function renderStudioHtml(data) {
     ${entries(data.projects, 'Projects')}
     ${entries(data.education, 'Education')}
     ${entries(data.certifications, 'Certifications')}
-    ${entries(data.achievements, 'Achievements')}
-    ${entries(data.leadership, 'Leadership')}
+    ${entries(data.achievements, 'Achievements & Awards')}
+    ${entries(data.leadership, 'Leadership & Activities')}
   </main>
 </body>
 </html>`;
@@ -215,6 +217,65 @@ const resumeController = {
     }
   },
 
+  async tailor(req, res, next) {
+    try {
+      const { jobTitle, company, jobDescription } = req.body || {};
+      if (!jobDescription || typeof jobDescription !== 'string' || jobDescription.trim().length < 40) {
+        throw badRequest('A detailed Job Description is required (minimum 40 characters)');
+      }
+
+      const { resumeData, tailoredMeta } = await tailorResumeService.tailorForJd(req.student.id, {
+        jobTitle: jobTitle?.trim(),
+        company: company?.trim(),
+        jobDescription: jobDescription.trim()
+      });
+
+      const candidateName = resumeData.personal?.fullName || req.student?.name || 'Candidate';
+      const safeFilename = generateProfessionalResumeFilename(candidateName, jobTitle, company);
+
+      // Keep tags clean for tailored resumes without stuffing redundant role/company/Tailored strings.
+      // Genuine user tags can be added later by the student.
+      const normalizedTags = Array.isArray(req.body?.tags) ? normalizeTags(req.body.tags) : [];
+      const normalizedCategory = normalizeCategory('Tailored');
+
+      const count = await resumeStore.count(req.student.id);
+      const isDefault = count === 0;
+
+      // Build analysis object with ATS score and tailored insights
+      const analysis = {
+        score: tailoredMeta.matchScore,
+        tailoredMeta,
+        checkedAt: new Date().toISOString(),
+        findings: (tailoredMeta.missingOrWeakSkills || []).map(skill => ({
+          title: `Missing skill: ${skill}`,
+          detail: `The job description emphasizes ${skill}, which was not identified in your verified profile.`,
+          severity: 'medium'
+        }))
+      };
+
+      const resume = await resumeStore.create(req.student.id, {
+        filename: safeFilename,
+        filepath: '',
+        driveLink: null,
+        isCloud: false,
+        tags: normalizedTags,
+        category: normalizedCategory,
+        analysis,
+        extractedData: resumeData,
+        isDefault
+      });
+
+      res.status(201).json({
+        ...resume,
+        tailoredMeta,
+        fileUrl: `/api/resumes/${resume.id}/file?mode=view`,
+        downloadUrl: `/api/resumes/${resume.id}/file?mode=download`
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
+
   async getFile(req, res, next) {
     try {
       const resume = await resumeStore.findOwnedResume(req.student.id, req.params.resumeId);
@@ -222,7 +283,7 @@ const resumeController = {
       if (!resume.filepath) {
         if (resume.extractedData) {
           const safeFilename = String(resume.filename || 'resume').replace(/"/g, '').replace(/\.pdf$/i, '');
-          const html = renderStudioHtml(resume.extractedData);
+          const html = renderStudioHtml(resume.extractedData, safeFilename);
           res.setHeader('Content-Type', 'text/html; charset=utf-8');
           res.setHeader('Content-Disposition', `inline; filename="${safeFilename}.html"`);
           return res.send(html);

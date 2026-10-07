@@ -120,6 +120,11 @@ export function profileToResumeData(student) {
   // Extract Links
   const links = [];
   if (social.linkedin) links.push(social.linkedin);
+  if (social.github) links.push(social.github);
+  if (social.portfolio) links.push(social.portfolio);
+  if (social.leetcode) links.push(social.leetcode);
+  if (social.codeforces) links.push(social.codeforces);
+  if (social.hackerrank) links.push(social.hackerrank);
   if (Array.isArray(social.links)) {
     social.links.forEach(l => {
       const url = typeof l === 'string' ? l : l?.url;
@@ -135,7 +140,7 @@ export function profileToResumeData(student) {
   // 2. Education (Institution first, Degree/academic details second)
   const education = [];
   const mainDegreeTitle = `${degree} in ${dept}`;
-  const collegeInst = academic.institution || academic.university || academic.college || 'Kalinga Institute of Industrial Technology (KIIT)';
+  const collegeInst = 'Kalinga Institute of Industrial Technology (KIIT)';
   const kiitDates = academic.batchYear ? academic.batchYear : academic.graduationYear ? `Class of ${academic.graduationYear}` : '2023 – 2027';
   const cgpaText = academic.cgpa ? `CGPA: ${academic.cgpa} / 10.0` : '';
   const collegeSubline = [mainDegreeTitle, cgpaText].filter(Boolean).join(' · ');
@@ -148,7 +153,7 @@ export function profileToResumeData(student) {
     degreeProgram: mainDegreeTitle,
     degree: mainDegreeTitle,
     dates: kiitDates,
-    description: collegeSubline,
+    description: cgpaText,
     bullets: [],
   });
 
@@ -157,7 +162,7 @@ export function profileToResumeData(student) {
     const board = academic.twelfthBoard ? String(academic.twelfthBoard).trim() : '';
     const inst = school && board ? `${school} (${board})` : (school || board || 'Senior Secondary School');
 
-    const details = ['Class XII'];
+    const details = [];
     if (academic.twelfthPercentage) {
       const pct = String(academic.twelfthPercentage).trim();
       details.push(pct.endsWith('%') ? pct : `${pct}%`);
@@ -172,8 +177,8 @@ export function profileToResumeData(student) {
       title: inst,
       institution: inst,
       company: inst,
-      degreeProgram: 'Class XII',
-      degree: 'Class XII',
+      degreeProgram: 'Class XII (Senior Secondary)',
+      degree: 'Class XII (Senior Secondary)',
       dates: academic.twelfthYear ? String(academic.twelfthYear).trim() : '',
       description: details.join(' · '),
       bullets: [],
@@ -185,7 +190,7 @@ export function profileToResumeData(student) {
     const board = academic.tenthBoard ? String(academic.tenthBoard).trim() : '';
     const inst = school && board ? `${school} (${board})` : (school || board || 'Secondary School');
 
-    const details = ['Class X'];
+    const details = [];
     if (academic.tenthPercentage) {
       const pct = String(academic.tenthPercentage).trim();
       details.push(pct.endsWith('%') ? pct : `${pct}%`);
@@ -196,8 +201,8 @@ export function profileToResumeData(student) {
       title: inst,
       institution: inst,
       company: inst,
-      degreeProgram: 'Class X',
-      degree: 'Class X',
+      degreeProgram: 'Class X (Secondary)',
+      degree: 'Class X (Secondary)',
       dates: academic.tenthYear ? String(academic.tenthYear).trim() : '',
       description: details.join(' · '),
       bullets: [],
@@ -257,6 +262,29 @@ export function profileToResumeData(student) {
     const techList = Array.isArray(proj.technologies) ? proj.technologies : [];
     const techStack = techList.join(', ');
 
+    let liveUrl = proj.projectUrl || proj.liveUrl || proj.deployedUrl || proj.demoUrl || proj.website || '';
+    let repoUrl = proj.repoUrl || proj.githubUrl || proj.github || '';
+
+    if (liveUrl && /github\.com|gitlab\.com|bitbucket\.org/i.test(liveUrl)) {
+      if (!repoUrl) repoUrl = liveUrl;
+      liveUrl = '';
+    }
+    if (repoUrl && !/github\.com|gitlab\.com|bitbucket\.org/i.test(repoUrl)) {
+      if (!liveUrl) liveUrl = repoUrl;
+      repoUrl = '';
+    }
+    if ((!liveUrl || !repoUrl) && Array.isArray(proj.links)) {
+      for (const l of proj.links) {
+        const u = typeof l === 'string' ? l : l?.url || '';
+        if (!u) continue;
+        if (/github\.com|gitlab\.com|bitbucket\.org/i.test(u)) {
+          if (!repoUrl) repoUrl = u;
+        } else {
+          if (!liveUrl) liveUrl = u;
+        }
+      }
+    }
+
     return {
       id: proj.id || `proj_${idx}`,
       title,
@@ -269,9 +297,11 @@ export function profileToResumeData(student) {
       bullets: curatedBullets.length > 0 ? curatedBullets : (proj.description ? [proj.description] : []),
       technologies: techStack,
       techList,
-      liveUrl: proj.projectUrl || '',
-      repoUrl: proj.repoUrl || '',
-      links: [proj.projectUrl, proj.repoUrl].filter(Boolean),
+      liveUrl,
+      projectUrl: liveUrl,
+      repoUrl,
+      githubUrl: repoUrl,
+      links: [repoUrl, liveUrl].filter(Boolean),
     };
   });
 
@@ -334,12 +364,44 @@ export function profileToResumeData(student) {
       bullets: [],
     };
 
-    if (category.includes('certif') || category.includes('license') || category.includes('course')) {
+    if (category.includes('certif') || category.includes('license') || category.includes('course') || /certified|certificate/i.test(title)) {
       certRecords.push(entry);
-    } else if (category.includes('leader') || category.includes('club') || category.includes('volunteer') || category.includes('society')) {
-      leadRecords.push(entry);
+    } else if (
+      category.includes('leader') || category.includes('club') || category.includes('volunteer') ||
+      category.includes('society') || category.includes('head') || category.includes('coordinator') ||
+      category.includes('position') || category.includes('responsib') || category.includes('extracurricular') ||
+      category.includes('activity') || /lead|coordinator|head|president|vice|secretary|treasurer|volunteer/i.test(title)
+    ) {
+      leadRecords.push({
+        ...entry,
+        role: title,
+        company: ach.organization || ach.club || '',
+        institution: ach.organization || ach.club || ''
+      });
     } else {
       achRecords.push(entry);
+    }
+  });
+
+  // Check student positions of responsibility and extracurricular activities
+  const extraActivities = [
+    ...(Array.isArray(student.positionsOfResponsibility) ? student.positionsOfResponsibility : []),
+    ...(Array.isArray(student.extracurriculars) ? student.extracurriculars : []),
+    ...(Array.isArray(student.activities) ? student.activities : [])
+  ];
+  extraActivities.forEach((act, idx) => {
+    const title = act.title || act.role || act.name || 'Activity';
+    if (!leadRecords.some(l => (l.title || l.role || '').toLowerCase() === title.toLowerCase())) {
+      leadRecords.push({
+        id: act.id || `lead_extra_${idx}`,
+        title,
+        role: act.role || title,
+        company: act.organization || act.club || act.institution || '',
+        institution: act.organization || act.club || '',
+        dates: act.dates || act.year ? String(act.year || act.dates) : '',
+        description: act.description || '',
+        bullets: []
+      });
     }
   });
 

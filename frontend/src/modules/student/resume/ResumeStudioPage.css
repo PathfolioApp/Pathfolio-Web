@@ -452,23 +452,33 @@
 .pf-studio-modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(14, 28, 19, 0.5);
-  backdrop-filter: blur(4px);
-  display: grid;
-  place-items: center;
-  z-index: 1000;
-  padding: 20px;
-  animation: pfFadeIn 0.18s ease-out;
+  width: 100vw;
+  height: 100vh;
+  background: radial-gradient(circle at 50% 36%, rgba(18, 38, 28, 0.72) 0%, rgba(8, 19, 13, 0.86) 100%);
+  backdrop-filter: blur(12px) saturate(180%) brightness(0.88);
+  -webkit-backdrop-filter: blur(12px) saturate(180%) brightness(0.88);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999;
+  padding: 16px;
+  animation: pfFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .pf-studio-modal-card {
   background: #ffffff;
-  border: 1px solid #d5e2d7;
+  border: 1px solid rgba(255, 255, 255, 0.85);
   border-radius: 14px;
   width: 100%;
-  max-width: 480px;
-  box-shadow: 0 24px 44px -8px rgba(14, 35, 22, 0.25);
+  max-width: 460px;
+  max-height: calc(100vh - 40px);
+  box-shadow: 
+    0 24px 60px -12px rgba(3, 14, 8, 0.44),
+    0 10px 24px -6px rgba(0, 0, 0, 0.2),
+    0 0 0 1px rgba(255, 255, 255, 0.65);
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
   animation: pfModalZoom 0.22s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -1770,8 +1780,11 @@
 .pf-preview-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(14, 28, 20, 0.65);
-  backdrop-filter: blur(5px);
+  width: 100vw;
+  height: 100vh;
+  background: radial-gradient(circle at 50% 36%, rgba(18, 38, 28, 0.75) 0%, rgba(8, 19, 13, 0.88) 100%);
+  backdrop-filter: blur(12px) saturate(180%) brightness(0.88);
+  -webkit-backdrop-filter: blur(12px) saturate(180%) brightness(0.88);
   z-index: 9998;
   animation: pfFadeIn 0.2s ease;
 }
@@ -2265,6 +2278,76 @@
   font-size: 7pt;
   padding: 0.5px 4px;
   border-radius: 2px;
+}
+
+/* Dynamic Single-Page Compact Layout Modifier */
+.pf-studio-paper.is-compact {
+  padding: 11mm 16mm !important;
+  font-size: 8.4pt !important;
+  line-height: 1.28 !important;
+}
+.pf-studio-paper.is-compact header {
+  padding-bottom: 3.5pt !important;
+  margin-bottom: 5pt !important;
+}
+.pf-studio-paper.is-compact header h1 {
+  font-size: 17.5pt !important;
+  margin: 0 0 1.5pt !important;
+}
+.pf-studio-paper.is-compact header p {
+  margin: 1pt 0 !important;
+  font-size: 8.1pt !important;
+  line-height: 1.25 !important;
+}
+.pf-studio-paper.is-compact .pf-paper-links {
+  margin: 1.5px 0 !important;
+  font-size: 7.9pt !important;
+}
+.pf-studio-paper.is-compact section,
+.pf-studio-paper.is-compact .pf-paper-sec-heading {
+  margin-top: 5pt !important;
+}
+.pf-studio-paper.is-compact h2 {
+  font-size: 8.6pt !important;
+  margin: 0 0 2.5pt !important;
+  padding-bottom: 1pt !important;
+}
+.pf-studio-paper.is-compact .pf-studio-entry {
+  margin-bottom: 3pt !important;
+}
+.pf-studio-paper.is-compact .pf-studio-entry b {
+  font-size: 8.4pt !important;
+}
+.pf-studio-paper.is-compact .pf-paper-entry-date {
+  font-size: 7.8pt !important;
+}
+.pf-studio-paper.is-compact .pf-paper-role-meta {
+  font-size: 8pt !important;
+}
+.pf-studio-paper.is-compact .pf-paper-entry-sub {
+  font-size: 7.8pt !important;
+  margin-bottom: 0.5pt !important;
+}
+.pf-studio-paper.is-compact .pf-paper-tech-stack {
+  font-size: 7.8pt !important;
+  margin: 0.5pt 0 !important;
+}
+.pf-studio-paper.is-compact ul {
+  margin: 1pt 0 2pt 11pt !important;
+}
+.pf-studio-paper.is-compact li {
+  font-size: 8.1pt !important;
+  line-height: 1.26 !important;
+  margin-bottom: 0.5pt !important;
+}
+.pf-studio-paper.is-compact p {
+  margin: 1pt 0 !important;
+  font-size: 8.1pt !important;
+  line-height: 1.26 !important;
+}
+.pf-studio-paper.is-compact .pf-paper-project-link a {
+  font-size: 7.2pt !important;
+  padding: 0.5px 4px !important;
 }
 
 /* 4. Technical */
