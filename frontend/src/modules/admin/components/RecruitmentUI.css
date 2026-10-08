@@ -1,0 +1,149 @@
+/* Recruitment Intelligence - admin surfaces.
+   Reuses the Pathfolio tokens + existing pf-admin-* structures; only the
+   recruitment-specific pieces below are new. */
+
+/* Score breakdown (explainable priority) */
+.pf-rec-score { display: grid; gap: 8px; }
+.pf-rec-score__row { display: grid; grid-template-columns: 150px 130px 52px 1fr; align-items: center; gap: 10px; }
+.pf-rec-score__label { font-size: .8rem; font-weight: 600; color: var(--text-secondary); }
+.pf-rec-score__bar { height: 6px; border-radius: var(--radius-full); background: var(--bg-subtle); overflow: hidden; }
+.pf-rec-score__fill { display: block; height: 100%; border-radius: var(--radius-full); background: var(--color-sage); }
+.pf-rec-score__value { font-size: .76rem; font-weight: 600; color: var(--text-muted); white-space: nowrap; }
+.pf-rec-score__detail { font-size: .76rem; color: var(--text-faint); }
+.pf-rec-score--compact .pf-rec-score__row { grid-template-columns: 130px 100px 48px; }
+.pf-rec-score--compact .pf-rec-score__detail { display: none; }
+
+/* Score chip */
+.pf-rec-scorechip { display: inline-flex; align-items: baseline; gap: 2px; border: 1px solid var(--border-accent); border-radius: var(--radius-sm); padding: 3px 8px; background: var(--color-primary-subtle); }
+.pf-rec-scorechip b { font-size: 1rem; color: var(--color-primary); }
+.pf-rec-scorechip i { font-style: normal; font-size: .68rem; color: var(--text-faint); }
+.pf-rec-scorechip--high { background: var(--color-success-bg); border-color: var(--color-success-border); }
+.pf-rec-scorechip--high b { color: var(--color-success); }
+.pf-rec-scorechip--mid { background: var(--color-primary-subtle); }
+.pf-rec-scorechip--low { background: var(--color-warning-bg); border-color: var(--color-warning); }
+.pf-rec-scorechip--low b { color: var(--color-warning); }
+.pf-rec-scorechip--minimal { background: var(--bg-subtle); border-color: var(--border-subtle); }
+.pf-rec-scorechip--minimal b { color: var(--text-faint); }
+
+/* AI disclosure labels */
+.pf-rec-ai-label { display: flex; align-items: center; gap: 6px; margin: 8px 0 0; color: var(--color-sage); font-size: .74rem; font-weight: 600; }
+.pf-rec-ai-unavailable { display: flex; align-items: center; gap: 6px; margin: 8px 0 0; color: var(--text-muted); font-size: .76rem; border: 1px dashed var(--border-medium); border-radius: var(--radius-sm); padding: 8px 10px; background: var(--bg-subtle); }
+
+/* Pipeline tracker */
+.pf-rec-pipeline { display: flex; flex-wrap: wrap; gap: 4px 0; list-style: none; margin: 12px 0 0; padding: 0; }
+.pf-rec-pipeline li { display: inline-flex; align-items: center; gap: 5px; padding: 2px 10px 2px 0; font-size: .72rem; color: var(--text-faint); }
+.pf-rec-pipeline li:not(:last-child)::after { content: '→'; margin-left: 8px; color: var(--border-medium); }
+.pf-rec-pipeline__dot { width: 7px; height: 7px; border-radius: 50%; background: var(--border-medium); flex: 0 0 auto; }
+.pf-rec-pipeline li.is-done { color: var(--color-success); }
+.pf-rec-pipeline li.is-done .pf-rec-pipeline__dot { background: var(--color-success); }
+.pf-rec-pipeline li.is-current { color: var(--color-primary); font-weight: 600; }
+.pf-rec-pipeline li.is-current .pf-rec-pipeline__dot { background: var(--color-primary); box-shadow: 0 0 0 3px var(--color-primary-light); }
+
+/* Company relationship cards */
+.pf-rec-company-card { border: 1px solid var(--border-subtle); border-radius: var(--radius-md); background: var(--bg-surface); padding: 14px 16px; margin-bottom: 10px; }
+.pf-rec-company-card__head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.pf-rec-company-card__title { display: flex; align-items: center; gap: 10px; }
+.pf-rec-company-card__title h3 { margin: 0; font-family: var(--font-serif); font-size: 1.05rem; font-weight: 500; }
+.pf-rec-company-card__meta { margin: 2px 0 0; color: var(--text-muted); font-size: .78rem; }
+.pf-rec-company-card__actions { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.pf-rec-why { margin-top: 10px; border-top: 1px solid var(--border-soft); padding-top: 10px; }
+.pf-rec-why__title { margin: 0 0 6px; font-size: .7rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--text-muted); }
+.pf-rec-reasons { margin: 6px 0 0; padding-left: 18px; color: var(--text-secondary); font-size: .8rem; display: grid; gap: 3px; }
+.pf-rec-reasons li { margin: 0; }
+
+/* Decision buttons */
+.pf-rec-decision-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; align-items: center; }
+
+/* Proposal preview card (monospace-ish sheet like the spec) */
+.pf-rec-proposal { border: 1px solid var(--border-accent); border-radius: var(--radius-md); background: var(--color-primary-subtle); padding: 16px 18px; }
+.pf-rec-proposal h3 { margin: 0 0 4px; font-family: var(--font-serif); font-size: 1.2rem; }
+.pf-rec-proposal p { margin: 3px 0; font-size: .86rem; color: var(--text-secondary); }
+.pf-rec-proposal .pf-rec-provisional-note { margin-top: 10px; padding: 8px 10px; border-radius: var(--radius-sm); background: var(--color-warning-bg); color: var(--color-warning); font-size: .78rem; font-weight: 600; }
+
+/* Communication timeline */
+.pf-rec-timeline { display: grid; gap: 0; margin: 8px 0; }
+.pf-rec-timeline__item { display: grid; grid-template-columns: 84px 1fr; gap: 12px; padding: 10px 0; border-top: 1px solid var(--border-soft); }
+.pf-rec-timeline__item:first-child { border-top: 0; }
+.pf-rec-timeline__date { font-size: .74rem; color: var(--text-faint); font-weight: 600; padding-top: 2px; }
+.pf-rec-timeline__body { font-size: .86rem; color: var(--text-primary); }
+.pf-rec-timeline__body header { display: flex; align-items: center; gap: 8px; margin-bottom: 3px; flex-wrap: wrap; }
+.pf-rec-timeline__sender { font-weight: 700; font-size: .78rem; }
+.pf-rec-timeline__sender--university { color: var(--color-primary); }
+.pf-rec-timeline__sender--company { color: var(--color-sage); }
+.pf-rec-timeline__sender--system { color: var(--text-faint); }
+.pf-rec-timeline__text { white-space: pre-wrap; word-break: break-word; }
+.pf-rec-timeline__attachments { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 5px; }
+.pf-rec-timeline__attachments a { font-size: .74rem; color: var(--text-link); }
+
+/* AI summary block */
+.pf-rec-ai-summary { border: 1px solid var(--border-accent); border-radius: var(--radius-md); background: var(--color-primary-subtle); padding: 12px 14px; margin: 10px 0; }
+.pf-rec-ai-summary h4 { margin: 0 0 6px; font-size: .72rem; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--color-primary); }
+.pf-rec-ai-summary p { margin: 0 0 8px; font-size: .86rem; color: var(--text-primary); }
+.pf-rec-ai-summary__cols { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.pf-rec-ai-summary__cols h5 { margin: 0 0 4px; font-size: .72rem; text-transform: uppercase; letter-spacing: .05em; color: var(--text-muted); }
+.pf-rec-ai-summary__cols ul { margin: 0; padding-left: 18px; font-size: .8rem; color: var(--text-secondary); }
+@media (max-width: 720px) { .pf-rec-ai-summary__cols { grid-template-columns: 1fr; } }
+
+/* Match list */
+.pf-rec-match { border: 1px solid var(--border-subtle); border-radius: var(--radius-md); background: var(--bg-surface); padding: 12px 14px; margin-bottom: 8px; }
+.pf-rec-match__head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.pf-rec-match__head h4 { margin: 0; font-size: .92rem; }
+.pf-rec-match__pct { font-weight: 700; color: var(--color-primary); }
+.pf-rec-match__cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-top: 8px; font-size: .8rem; }
+.pf-rec-match__cols h5 { margin: 0 0 3px; font-size: .7rem; text-transform: uppercase; letter-spacing: .05em; color: var(--text-muted); }
+.pf-rec-match__cols ul { margin: 0; padding-left: 16px; color: var(--text-secondary); }
+
+/* Resume ranking rows */
+.pf-rec-resume-row { display: grid; grid-template-columns: 1fr 110px 64px; align-items: center; gap: 10px; padding: 8px 0; border-top: 1px solid var(--border-soft); font-size: .84rem; }
+.pf-rec-resume-row:first-of-type { border-top: 0; }
+.pf-rec-resume-row.is-recommended { font-weight: 600; }
+.pf-rec-resume-row small { display: block; color: var(--text-faint); font-weight: 400; font-size: .72rem; }
+
+/* Section sub-tabs on the company relationship page */
+.pf-rec-subnav { display: flex; gap: 4px; flex-wrap: wrap; margin: 0 0 14px; padding: 4px; border: 1px solid var(--border-subtle); border-radius: var(--radius-full); background: var(--bg-surface); width: fit-content; }
+.pf-rec-subnav button { border: 0; background: transparent; border-radius: var(--radius-full); padding: 7px 14px; font: inherit; font-size: .8rem; font-weight: 600; color: var(--text-muted); cursor: pointer; transition: background var(--transition-fast), color var(--transition-fast); }
+.pf-rec-subnav button:hover { color: var(--color-primary); }
+.pf-rec-subnav button.is-active { background: var(--color-primary); color: var(--text-on-primary); }
+
+/* Stat grid inside engagement detail */
+.pf-rec-facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; margin: 12px 0; }
+.pf-rec-fact { border: 1px solid var(--border-soft); border-radius: var(--radius-sm); padding: 10px 12px; background: var(--bg-subtle); }
+.pf-rec-fact b { display: block; font-size: .95rem; color: var(--text-primary); }
+.pf-rec-fact span { font-size: .72rem; color: var(--text-muted); }
+
+/* Company response mini-form */
+.pf-rec-respond { display: flex; gap: 8px; flex-wrap: wrap; align-items: flex-end; margin-top: 10px; padding: 12px; border: 1px dashed var(--border-medium); border-radius: var(--radius-md); background: var(--bg-page-warm); }
+.pf-rec-respond label { display: flex; flex-direction: column; gap: 4px; font-size: .76rem; font-weight: 600; color: var(--text-secondary); }
+.pf-rec-respond input, .pf-rec-respond textarea, .pf-rec-respond select { min-height: 38px; border: 1px solid var(--border-medium); border-radius: var(--radius-sm); padding: 0 10px; font: inherit; font-size: .84rem; background: var(--bg-surface); color: var(--text-primary); }
+.pf-rec-respond textarea { min-width: 240px; }
+
+/* Modal / drawer form leftovers reuse pf-admin-form; additions: */
+.pf-rec-form-hint { grid-column: 1 / -1; margin: 0; color: var(--text-muted); font-size: .76rem; }
+
+/* Resume policy mode cards */
+.pf-rec-mode-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
+.pf-rec-mode-card { display: grid; gap: 4px; border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 12px 14px; background: var(--bg-surface); cursor: pointer; transition: border-color var(--transition-fast), background var(--transition-fast); font-size: .8rem; color: var(--text-secondary); }
+.pf-rec-mode-card b { color: var(--text-primary); font-size: .86rem; }
+.pf-rec-mode-card input { position: absolute; opacity: 0; }
+.pf-rec-mode-card.is-selected { border-color: var(--color-primary); background: var(--color-primary-subtle); box-shadow: 0 0 0 3px var(--color-primary-light); }
+.pf-rec-mode-card:hover { border-color: var(--border-accent); }
+
+/* Bulk tailor bar + match selection */
+.pf-rec-bulk-bar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 10px 12px; border: 1px solid var(--border-accent); border-radius: var(--radius-md); background: var(--color-primary-subtle); margin: 8px 0 10px; }
+.pf-rec-bulk-bar__count { display: inline-flex; align-items: center; gap: 6px; font-size: .8rem; font-weight: 600; color: var(--text-secondary); cursor: pointer; }
+.pf-rec-bulk-bar__note { font-size: .78rem; color: var(--color-warning); font-weight: 600; }
+.pf-rec-bulk-bar__note--ok { color: var(--color-success); }
+.pf-rec-match__select { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+.pf-rec-match__select input { width: 15px; height: 15px; accent-color: var(--color-primary); }
+.pf-rec-match__select h4 { margin: 0; }
+
+/* User dossier modal (Users workspace details) */
+.pf-user-dossier__headline { margin: 10px 0 0; font-family: var(--font-serif); font-size: 1rem; color: var(--color-sage); }
+.pf-user-dossier__section { margin-top: 14px; }
+.pf-user-dossier__row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 7px 0; border-top: 1px solid var(--border-soft); font-size: .84rem; }
+.pf-user-dossier__row:first-of-type { border-top: 0; }
+.pf-user-dossier__row b { display: block; color: var(--text-primary); font-size: .86rem; }
+.pf-user-dossier__row span { display: block; color: var(--text-muted); font-size: .76rem; margin-top: 1px; }
+.pf-user-dossier__note { font-style: italic; }
+.pf-rec-chiprow { display: flex; gap: 6px; flex-wrap: wrap; }
+.pf-rec-chiprow span { border: 1px solid var(--border-accent); border-radius: var(--radius-full); padding: 3px 11px; background: var(--color-primary-subtle); color: var(--color-primary); font-size: .74rem; font-weight: 600; }

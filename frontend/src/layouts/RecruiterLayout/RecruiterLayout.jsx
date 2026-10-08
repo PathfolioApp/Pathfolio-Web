@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
-import { LayoutDashboard, BriefcaseBusiness, Users, GraduationCap, Building2, ShieldCheck } from 'lucide-react';
+import { LayoutDashboard, BriefcaseBusiness, Users, GraduationCap, Building2, ShieldCheck, CalendarRange } from 'lucide-react';
 import { PortalShell } from '../PortalShell';
 import { useAuth } from '../../app/providers/AuthProvider';
 
@@ -18,7 +18,8 @@ export function RecruiterLayout() {
   const navItems = [
     [LayoutDashboard, 'Overview', '/recruiter/overview'],
     [BriefcaseBusiness, 'My job posts', '/recruiter/jobs'],
-    [Users, 'Shared candidates', '/recruiter/candidates']
+    [Users, 'Shared candidates', '/recruiter/candidates'],
+    [CalendarRange, 'Recruitment', '/recruiter/recruitment']
   ];
 
   const go = path => {

@@ -1,0 +1,82 @@
+/* Recruiter hiring-history banner - extends the recruiter portal styles. */
+
+.pf-rec-history {
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  background: var(--bg-surface);
+  padding: 16px 18px;
+  margin-bottom: 16px;
+  box-shadow: var(--shadow-card);
+}
+
+.pf-rec-history--positive {
+  border-color: var(--color-success-border);
+  background: var(--color-success-bg);
+}
+
+.pf-rec-history__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.pf-rec-history__sentiment {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: .95rem;
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+.pf-rec-history--positive .pf-rec-history__sentiment { color: var(--color-success); }
+
+.pf-rec-history__company {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: .78rem;
+  color: var(--text-muted);
+}
+
+.pf-rec-history__stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 8px;
+}
+
+.pf-rec-history__stat {
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  background: var(--bg-surface);
+}
+
+.pf-rec-history__stat b {
+  display: block;
+  font-size: 1.2rem;
+  color: var(--color-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.pf-rec-history__stat span { font-size: .7rem; color: var(--text-muted); }
+
+.pf-rec-history__first { margin-top: 12px; }
+.pf-rec-history__first > p { margin: 0 0 8px; font-size: .84rem; color: var(--text-secondary); }
+
+.pf-rec-history__first-stats { display: flex; gap: 8px; flex-wrap: wrap; }
+.pf-rec-history__first-stats span {
+  border: 1px solid var(--border-accent);
+  border-radius: var(--radius-full);
+  padding: 4px 12px;
+  background: var(--color-primary-subtle);
+  font-size: .76rem;
+  color: var(--text-secondary);
+}
+.pf-rec-history__first-stats b { color: var(--color-primary); }
+
+.pf-rec-history__drives { display: grid; gap: 4px; margin-top: 12px; }
+.pf-rec-history__drive { font-size: .78rem; color: var(--text-muted); }

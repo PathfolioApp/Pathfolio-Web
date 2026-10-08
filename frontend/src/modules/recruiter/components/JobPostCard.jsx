@@ -53,7 +53,7 @@ export function JobPostCard({ job, onEdit, onSubmit, onViewApplications }) {
       <div className="pf-recruiter-job-actions">
         {job.status === 'published' ? 'Live for students' : job.status === 'pending_approval' ? 'Awaiting placement team review' : job.status === 'approved' ? 'Approved, the placement team will publish it' : ''}
         <div className="pf-recruiter-job-actions-cluster">
-          {/* Editable in every status — a live post can be fixed without closing it. */}
+          {/* Editable in every status - a live post can be fixed without closing it. */}
           <Button variant="secondary" size="sm" icon={Pencil} onClick={() => onEdit(job)}>Edit</Button>
           {['draft', 'rejected'].includes(job.status) && <Button size="sm" icon={Send} onClick={() => onSubmit(job)}>Submit for approval</Button>}
           {['pending_approval', 'approved', 'published', 'closed'].includes(job.status) && onViewApplications && (

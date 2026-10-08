@@ -64,7 +64,7 @@ function diagnoseDbError(error) {
     ],
     HANDSHAKE_NO_SSL_SUPPORT: [
       'The server refused TLS; some managed MySQL providers require it.',
-      'Fix: check the provider docs — an ssl config block may need to be added to the pool config.'
+      'Fix: check the provider docs - an ssl config block may need to be added to the pool config.'
     ],
     PROTOCOL_CONNECTION_LOST: [
       'The connection dropped during startup handshake.',
@@ -92,7 +92,7 @@ function reportDbFailure(scope, error, { host, port, database } = {}) {
     diagnosis.hints.forEach(line => console.error('  ' + line));
     if (diagnosis.errno) console.error(`  (driver errno: ${diagnosis.errno})`);
   } else {
-    log[scope].error('Unrecognized database error — full details:');
+    log[scope].error('Unrecognized database error - full details:');
     log.stack(error).forEach(line => log[scope].error(line));
   }
 }

@@ -459,7 +459,7 @@ export function ResumePage() {
             <div className="pf-snapshot-icon-wrapper is-indigo"><Gauge size={15} strokeWidth={2.2} /></div>
           </div>
           <div className="pf-snapshot-card-bottom">
-            <strong className="pf-snapshot-value">{libraryStats.analyzed ? `${libraryStats.average}%` : '—'}</strong>
+            <strong className="pf-snapshot-value">{libraryStats.analyzed ? `${libraryStats.average}%` : '-'}</strong>
             {libraryStats.analyzed ? (
               <span className={`pf-snapshot-badge ${libraryStats.average >= 75 ? 'is-good' : 'is-warn'}`}>
                 {libraryStats.average >= 75 ? 'ATS Ready' : 'Needs Review'}

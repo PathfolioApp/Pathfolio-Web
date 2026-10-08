@@ -524,7 +524,7 @@ export function StudentSearchWorkspace({ jobs }) {
             <h2 className="pf-student-results-header__title">
               Students
               <span className="pf-student-results-count">
-                {searched ? `${total} found` : '—'}
+                {searched ? `${total} found` : '-'}
               </span>
             </h2>
           </div>
@@ -779,7 +779,7 @@ export function StudentSearchWorkspace({ jobs }) {
       >
         {shareStep === 1 && (
           <div className="pf-share-wizard">
-            <p className="pf-share-wizard__step"><b>Step 1 of 3</b> — choose the recipient and context.</p>
+            <p className="pf-share-wizard__step"><b>Step 1 of 3</b> - choose the recipient and context.</p>
             <label>Recruiter *
               <select value={shareForm.recruiterId} onChange={updateShareForm('recruiterId')}>
                 <option value="">Select a recruiter...</option>
@@ -814,7 +814,7 @@ export function StudentSearchWorkspace({ jobs }) {
 
         {shareStep === 2 && (
           <div className="pf-share-wizard">
-            <p className="pf-share-wizard__step"><b>Step 2 of 3</b> — review candidate list before sharing.</p>
+            <p className="pf-share-wizard__step"><b>Step 2 of 3</b> - review candidate list before sharing.</p>
             <dl className="pf-share-wizard__summary">
               <div><dt>Recruiter</dt><dd>{selectedRecruiter?.fullName || '-'}</dd></div>
               <div><dt>Job</dt><dd>{selectedJob ? `${selectedJob.title} - ${selectedJob.companyName}` : 'No specific job'}</dd></div>

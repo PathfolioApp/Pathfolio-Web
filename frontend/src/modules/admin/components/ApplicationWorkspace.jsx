@@ -565,7 +565,7 @@ export function ApplicationWorkspace({
           </Button>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <span style={{ fontSize: '0.95rem', fontWeight: 600 }}>{selectedJob?.companyName}</span>
-            <span style={{ color: 'var(--text-muted)' }}>—</span>
+            <span style={{ color: 'var(--text-muted)' }}>·</span>
             <span style={{ fontSize: '0.95rem', fontWeight: 500 }}>{selectedJob?.title}</span>
             <StatusBadge status={selectedJob?.status} />
           </div>
@@ -1236,7 +1236,7 @@ export function ApplicationWorkspace({
               ) : (
                 recruiters.map(r => (
                   <option key={r.id} value={r.id}>
-                    {r.companyName ? `${r.companyName} — ` : ''}{r.name} ({r.email})
+                    {r.companyName ? `${r.companyName} - ` : ''}{r.name} ({r.email})
                   </option>
                 ))
               )}

@@ -1,18 +1,197 @@
+/* Professional audit log layout - extends the existing pf-admin-* system. */
+
+.pf-logs-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.pf-logs-header h2 {
+  margin: 2px 0;
+  font-family: var(--font-serif);
+  font-size: 1.3rem;
+  font-weight: 500;
+}
+
+.pf-logs-subtitle {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: .84rem;
+  max-width: 560px;
+}
+
+.pf-logs-header__actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+/* Summary stat strip */
+.pf-logs-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.pf-logs-stat {
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  background: var(--bg-subtle);
+  padding: 10px 12px;
+}
+
+.pf-logs-stat b {
+  display: block;
+  font-size: 1.15rem;
+  color: var(--color-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.pf-logs-stat span {
+  font-size: .72rem;
+  color: var(--text-muted);
+}
+
+/* Filters row */
 .pf-logs-filters {
   display: flex;
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
+  margin-bottom: 12px;
 }
 
 .pf-logs-filters form {
   display: contents;
 }
 
-.pf-log-row {
-  align-items: flex-start;
+.pf-logs-filters__grow {
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 180px;
 }
 
+/* Table-like rows: event | actor | when */
+.pf-logs-table__head,
+.pf-logs-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 200px 110px;
+  gap: 12px;
+  align-items: center;
+}
+
+.pf-logs-table__head {
+  padding: 0 4px 8px;
+  border-bottom: 1px solid var(--border-medium);
+  font-size: .7rem;
+  font-weight: 700;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.pf-logs-row {
+  padding: 10px 4px;
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.pf-logs-row:hover {
+  background: var(--color-primary-subtle);
+}
+
+.pf-logs-row__event {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  min-width: 0;
+}
+
+.pf-logs-row__icon {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--bg-subtle);
+  color: var(--color-primary);
+  flex-shrink: 0;
+}
+
+.pf-logs-row__icon--ai {
+  background: var(--color-sage-light);
+  color: var(--color-sage);
+}
+
+.pf-logs-row__body {
+  min-width: 0;
+}
+
+.pf-logs-row__title {
+  margin: 0;
+  font-size: .88rem;
+  color: var(--text-primary);
+}
+
+.pf-logs-row__label {
+  color: var(--text-secondary);
+  font-weight: 400;
+}
+
+.pf-logs-row__detail {
+  margin: 2px 0 4px;
+  font-size: .8rem;
+  color: var(--text-secondary);
+  overflow-wrap: anywhere;
+}
+
+.pf-logs-row__entity {
+  margin-top: 2px;
+}
+
+.pf-logs-row__actor {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: .82rem;
+  color: var(--text-secondary);
+  min-width: 0;
+}
+
+.pf-logs-row__avatar {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+  font-size: .72rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.pf-logs-row__when {
+  font-size: .78rem;
+  color: var(--text-muted);
+  text-align: right;
+  white-space: nowrap;
+}
+
+@media (max-width: 760px) {
+  .pf-logs-table__head { display: none; }
+  .pf-logs-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 6px;
+  }
+  .pf-logs-row__when { text-align: left; }
+}
+
+/* Legacy compat for anything still referencing pf-log-* */
+.pf-log-row { align-items: flex-start; }
 .pf-log-icon {
   display: grid;
   place-items: center;
@@ -23,29 +202,8 @@
   color: var(--color-primary);
   flex-shrink: 0;
 }
-
-.pf-log-body {
-  min-width: 0;
-}
-
-.pf-log-title {
-  margin: 0 0 2px;
-  font-size: 0.92rem;
-  color: var(--text-primary);
-}
-
-.pf-log-title span {
-  color: var(--text-secondary);
-}
-
-.pf-log-detail {
-  margin: 0 0 2px;
-  font-size: 0.84rem;
-  color: var(--text-secondary);
-}
-
-.pf-log-meta {
-  margin: 0;
-  font-size: 0.76rem;
-  color: var(--text-muted);
-}
+.pf-log-body { min-width: 0; }
+.pf-log-title { margin: 0 0 2px; font-size: 0.92rem; color: var(--text-primary); }
+.pf-log-title span { color: var(--text-secondary); }
+.pf-log-detail { margin: 0 0 2px; font-size: 0.84rem; color: var(--text-secondary); }
+.pf-log-meta { margin: 0; font-size: 0.76rem; color: var(--text-muted); }

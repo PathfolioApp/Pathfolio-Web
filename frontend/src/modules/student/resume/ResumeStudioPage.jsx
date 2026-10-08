@@ -1200,7 +1200,7 @@ function printable(data, template, isCompact = false, docTitle = '', condenseDes
     }
     /*
       MARGIN STRATEGY (dialog-proof):
-      - Left/Right: body padding — layout-level, permanent
+      - Left/Right: body padding - layout-level, permanent
       - Top on page 1: padding-top on the .page-wrap div
       - Top on page 2+: <thead> spacer that repeats on every page break (browser spec)
       - Bottom: padding-bottom on .page-wrap

@@ -7,6 +7,7 @@ async function request(path, options = {}) {
 
 export const adminApi = {
   users: () => request('/users'),
+  userDetail: id => request(`/users/${id}`),
   overview: () => request('/overview'),
   setUserBlocked: (id, blocked) => request(`/users/${id}/block`, { method: 'PATCH', body: JSON.stringify({ blocked }) }),
   deleteUser: id => request(`/users/${id}`, { method: 'DELETE' }),

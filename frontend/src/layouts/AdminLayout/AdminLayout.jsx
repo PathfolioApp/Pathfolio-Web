@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
-import { LayoutDashboard, BriefcaseBusiness, Building2, Users, UserRound, FileSearch, GraduationCap, ShieldCheck, Search, Share2, History } from 'lucide-react';
+import { LayoutDashboard, BriefcaseBusiness, Building2, Users, UserRound, FileSearch, GraduationCap, ShieldCheck, Search, Share2, History, Target } from 'lucide-react';
 import { PortalShell } from '../PortalShell';
 import { useAuth } from '../../app/providers/AuthProvider';
 
@@ -16,6 +16,7 @@ export function AdminLayout() {
   const navItems = [
     [LayoutDashboard, 'Overview', '/admin/overview'],
     { section: 'Placements & Drives' },
+    [Target, 'Recruitment', '/admin/recruitment'],
     [Building2, 'Companies', '/admin/companies'],
     [BriefcaseBusiness, 'Job posts', '/admin/jobs'],
     [Users, 'Applications', '/admin/applications'],

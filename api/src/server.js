@@ -11,6 +11,7 @@ const resumeStore = require('./modules/resumes/resumeStore');
 const recruiterShareService = require('./modules/recruiters/recruiterShare.service');
 const auditLogService = require('./shared/auditLog.service');
 const adminUserService = require('./modules/admin/adminUser.service');
+const recruitmentStore = require('./modules/admin/recruitmentStore');
 
 /**
  * Run one startup step and log its outcome with timing, so the console reads
@@ -55,6 +56,7 @@ async function start() {
     ['Admin content store', () => adminContentStore.initialize()],
     ['Resume store', () => resumeStore.initialize(studentStore.pool)],
     ['Recruiter shares', () => recruiterShareService.initialize()],
+    ['Recruitment intelligence store', () => recruitmentStore.initialize()],
     ['Audit log', () => auditLogService.initialize()]
   ];
 
@@ -96,7 +98,7 @@ async function start() {
    * Every Express handler is now promise-safe (see src/shared/asyncHandler.js),
    * so nothing should reach here from a request. This exists because Node's
    * default `--unhandled-rejections=throw` makes any escaped rejection a fatal
-   * crash, and a crashed API takes the Vite proxy with it — the user sees
+   * crash, and a crashed API takes the Vite proxy with it - the user sees
    * ECONNREFUSED on every route instead of one failed request. Logging and
    * continuing is correct for transient transport failures; the process is
    * still fully consistent because those promises touched no shared state.
@@ -110,7 +112,7 @@ async function start() {
     if (reason && reason.stack) log.startup.error(...log.stack(reason).slice(0, 4));
   });
 
-  // A real uncaught exception leaves unknown state, so this one still exits —
+  // A real uncaught exception leaves unknown state, so this one still exits
   // but only after a clear log line instead of a bare stack dump.
   process.on('uncaughtException', error => {
     log.startup.error('Uncaught exception; shutting down for a clean restart.', ...log.stack(error));

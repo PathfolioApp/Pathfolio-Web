@@ -61,3 +61,6 @@ coverage/
 tmp/
 temp/
 scratch/
+
+# Uploaded credential files (never commit)
+freellmapi-keys.env

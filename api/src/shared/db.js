@@ -5,7 +5,7 @@
  * ----------------------
  * Every store used to build its own pool with `mysql.createPool({ ... })` and
  * no resilience settings, and nothing classified driver errors. On this
- * deployment — a *remote, shared* MySQL at sg1.potenfyr.in — the server
+ * deployment - a *remote, shared* MySQL at sg1.potenfyr.in - the server
  * regularly drops pooled connections between requests:
  *
  *   Aborted_clients 257 / Connections 421   (SHOW GLOBAL STATUS)
@@ -71,7 +71,7 @@ async function withRetry(fn, { retries = 1, delayMs = 50, label = 'query' } = {}
     } catch (error) {
       attempt += 1;
       if (attempt > retries || !isTransientDbError(error)) throw error;
-      log.db.warn(`${label}: ${log.describeError(error)} — retrying on a fresh connection (attempt ${attempt}/${retries}).`);
+      log.db.warn(`${label}: ${log.describeError(error)} - retrying on a fresh connection (attempt ${attempt}/${retries}).`);
       await new Promise(resolve => setTimeout(resolve, delayMs));
     }
   }

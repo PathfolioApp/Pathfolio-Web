@@ -20,6 +20,9 @@ export function UserWorkspace({ users, saving, loading, reload, adminId }) {
   const [statusFilter, setStatusFilter] = useState('');
   const [visibleCount, setVisibleCount] = useState(USERS_PAGE_SIZE);
   const [viewingUser, setViewingUser] = useState(null);
+  const [viewingDetail, setViewingDetail] = useState(null);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [detailError, setDetailError] = useState('');
   const [confirmingBlock, setConfirmingBlock] = useState(null);
   const [confirmingDelete, setConfirmingDelete] = useState(null);
   const [actionError, setActionError] = useState('');
@@ -33,6 +36,21 @@ export function UserWorkspace({ users, saving, loading, reload, adminId }) {
     return `${user.fullName} ${user.email} ${user.rollNumber || ''} ${user.department}`.toLowerCase().includes(searchTerm.toLowerCase());
   });
   const visibleUsers = filteredUsers.slice(0, visibleCount);
+
+  const openDetails = async user => {
+    setViewingUser(user);
+    setViewingDetail(null);
+    setDetailError('');
+    setDetailLoading(true);
+    try {
+      const data = await adminApi.userDetail(user.id);
+      setViewingDetail(data.user || null);
+    } catch (err) {
+      setDetailError(err.message);
+    } finally {
+      setDetailLoading(false);
+    }
+  };
 
   const runAction = async action => {
     setActionError(''); setActionMessage('');
@@ -95,7 +113,7 @@ export function UserWorkspace({ users, saving, loading, reload, adminId }) {
               <RowMenu
                 label={`Actions for ${user.fullName}`}
                 items={[
-                  { label: 'Details', icon: Eye, onSelect: () => setViewingUser(user) },
+                  { label: 'Details', icon: Eye, onSelect: () => openDetails(user) },
                   ...(user.id !== adminId && user.role !== 'admin' ? [
                     { label: user.role === 'recruiter' ? 'Make student' : 'Make recruiter', icon: UserRound, onSelect: () => promoteUser(user), disabled: saving },
                     { label: user.blocked ? 'Unblock' : 'Block', icon: user.blocked ? CheckCircle2 : Ban, onSelect: () => setConfirmingBlock(user), disabled: saving },
@@ -116,23 +134,122 @@ export function UserWorkspace({ users, saving, loading, reload, adminId }) {
         )}
       </section>
 
-      <Modal isOpen={!!viewingUser} onClose={() => setViewingUser(null)} title="User details">
+      <Modal isOpen={!!viewingUser} onClose={() => setViewingUser(null)} title="User details" maxWidth={720}>
         {viewingUser && (
           <div className="pf-admin-user-details">
             <div className="pf-admin-user-details-head">
               {viewingUser.avatarUrl ? <img className="pf-admin-user-details-avatar" src={viewingUser.avatarUrl} alt="" /> : <span className="pf-admin-user-details-avatar pf-admin-user-details-avatar--fallback"><UserRound size={22} /></span>}
               <div><h3>{viewingUser.fullName}</h3><p className="pf-admin-eyebrow">{viewingUser.role} · joined {viewingUser.createdAt ? new Date(viewingUser.createdAt).toLocaleDateString() : 'recently'}</p></div>
             </div>
-            <dl>
-              <dt>Email</dt><dd>{viewingUser.email}</dd>
-              <dt>Phone</dt><dd>{viewingUser.phone || '-'}</dd>
-              <dt>Roll number</dt><dd>{viewingUser.rollNumber || 'Not specified'}</dd>
-              <dt>Department</dt><dd>{viewingUser.department || 'Not specified'}</dd>
-              <dt>Batch</dt><dd>{viewingUser.batchYear || 'Not specified'}</dd>
-              <dt>Achievements</dt><dd>{viewingUser.achievementsCount ?? 0}</dd>
-              <dt>Interests</dt><dd>{viewingUser.interestsCount ?? 0}</dd>
-              <dt>Status</dt><dd>{viewingUser.blocked ? 'Blocked' : 'Active'} · onboarding {viewingUser.onboarding?.completed ? 'completed' : 'in progress'}</dd>
-            </dl>
+
+            {detailLoading && <p className="pf-admin-help">Loading full record…</p>}
+            {detailError && <div className="pf-admin-error" role="alert">{detailError}</div>}
+
+            {viewingDetail && (
+              <>
+                {viewingDetail.headline && <p className="pf-user-dossier__headline">{viewingDetail.headline}</p>}
+
+                <div className="pf-rec-facts">
+                  <div className="pf-rec-fact"><b>{viewingDetail.cgpa ?? '-'}</b><span>CGPA</span></div>
+                  <div className="pf-rec-fact"><b>{viewingDetail.applicationsCount}</b><span>applications</span></div>
+                  <div className="pf-rec-fact"><b>{viewingDetail.selectedCount}</b><span>selected/offers</span></div>
+                  <div className="pf-rec-fact"><b>{viewingDetail.resumeCount}</b><span>resumes{viewingDetail.defaultResume ? ` · default set` : ''}</span></div>
+                  <div className="pf-rec-fact"><b>{viewingDetail.recruiterActivity.length}</b><span>recruiter shares</span></div>
+                  {viewingDetail.publicProfileEnabled && <div className="pf-rec-fact"><b>{viewingDetail.publicProfileViews}</b><span>public profile views</span></div>}
+                </div>
+
+                <dl>
+                  <dt>Email</dt><dd>{viewingDetail.email}</dd>
+                  <dt>Phone</dt><dd>{viewingDetail.phone || 'Not provided'}</dd>
+                  <dt>Roll number</dt><dd>{viewingDetail.rollNumber || 'Not specified'}</dd>
+                  <dt>Department</dt><dd>{viewingDetail.department || 'Not specified'}</dd>
+                  <dt>Batch</dt><dd>{viewingDetail.batchYear || 'Not specified'}</dd>
+                  <dt>CGPA</dt><dd>{viewingDetail.cgpa ?? 'Not on record'}</dd>
+                  {viewingDetail.activeBacklogs !== null && <dt>Active backlogs</dt>}
+                  {viewingDetail.activeBacklogs !== null && <dd>{viewingDetail.activeBacklogs}</dd>}
+                  {viewingDetail.tenthPercentage !== null && <dt>10th score</dt>}
+                  {viewingDetail.tenthPercentage !== null && <dd>{viewingDetail.tenthPercentage}%</dd>}
+                  {viewingDetail.twelfthPercentage !== null && <dt>12th score</dt>}
+                  {viewingDetail.twelfthPercentage !== null && <dd>{viewingDetail.twelfthPercentage}%</dd>}
+                  <dt>Resumes</dt><dd>{viewingDetail.resumeCount ? `${viewingDetail.resumeCount} (${viewingDetail.resumeCategories.join(', ') || 'uncategorised'})` : 'None uploaded'}</dd>
+                  <dt>Status</dt><dd>{viewingDetail.blocked ? 'Blocked' : 'Active'} · onboarding {viewingDetail.onboardingCompleted ? 'completed' : 'in progress'}</dd>
+                  {viewingDetail.social?.linkedin && <dt>LinkedIn</dt>}
+                  {viewingDetail.social?.linkedin && <dd><a href={viewingDetail.social.linkedin} target="_blank" rel="noreferrer">{viewingDetail.social.linkedin}</a></dd>}
+                </dl>
+
+                {viewingDetail.topSkills.length > 0 && (
+                  <div className="pf-user-dossier__section">
+                    <p className="pf-rec-why__title">Skills &amp; interests</p>
+                    <div className="pf-rec-chiprow">{viewingDetail.topSkills.map((skill, index) => <span key={index}>{skill}</span>)}</div>
+                  </div>
+                )}
+
+                {viewingDetail.applicationHistory.length > 0 && (
+                  <div className="pf-user-dossier__section">
+                    <p className="pf-rec-why__title">Placement &amp; application history</p>
+                    {viewingDetail.applicationHistory.map(application => (
+                      <div className="pf-user-dossier__row" key={application.id}>
+                        <div>
+                          <b>{application.jobTitle}</b>
+                          <span>{application.companyName}{application.companyName ? ' · ' : ''}applied {application.appliedAt ? new Date(application.appliedAt).toLocaleDateString() : '-'}</span>
+                        </div>
+                        <StatusBadge status={application.status} />
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {viewingDetail.recruiterActivity.length > 0 && (
+                  <div className="pf-user-dossier__section">
+                    <p className="pf-rec-why__title">Shared with companies</p>
+                    {viewingDetail.recruiterActivity.map(entry => (
+                      <div className="pf-user-dossier__row" key={entry.shareId}>
+                        <div>
+                          <b>{entry.jobTitle || 'Candidate shortlist'}</b>
+                          <span>
+                            shared {entry.sharedAt ? new Date(entry.sharedAt).toLocaleDateString() : '-'}
+                            {entry.viewedAt ? ` · viewed by company ${new Date(entry.viewedAt).toLocaleDateString()}` : ' · not yet viewed'}
+                            {entry.feedback ? ` · feedback: ${entry.feedback.status || 'note'}` : ''}
+                          </span>
+                          {entry.feedback?.note && <span className="pf-user-dossier__note">"{entry.feedback.note}"</span>}
+                        </div>
+                        <StatusBadge status={entry.status} />
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {(viewingDetail.recentProjects.length > 0 || viewingDetail.recentInternships.length > 0 || viewingDetail.recentAchievements.length > 0) && (
+                  <div className="pf-user-dossier__section">
+                    <p className="pf-rec-why__title">Recent portfolio activity</p>
+                    {viewingDetail.recentInternships.map((internship, index) => (
+                      <div className="pf-user-dossier__row" key={`i-${index}`}>
+                        <div><b>{internship.role}</b><span>{internship.company}{internship.currentlyWorking ? ' · ongoing' : ''}</span></div>
+                      </div>
+                    ))}
+                    {viewingDetail.recentProjects.map((project, index) => (
+                      <div className="pf-user-dossier__row" key={`p-${index}`}>
+                        <div><b>{project.name}</b><span>{project.technologies.join(', ')}</span></div>
+                      </div>
+                    ))}
+                    {viewingDetail.recentAchievements.map((achievement, index) => (
+                      <div className="pf-user-dossier__row" key={`a-${index}`}>
+                        <div><b>{achievement.title}</b><span>{achievement.category}{achievement.year ? ` · ${achievement.year}` : ''}</span></div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
+            {!detailLoading && !viewingDetail && !detailError && (
+              <dl>
+                <dt>Email</dt><dd>{viewingUser.email}</dd>
+                <dt>Phone</dt><dd>{viewingUser.phone || '-'}</dd>
+                <dt>Roll number</dt><dd>{viewingUser.rollNumber || 'Not specified'}</dd>
+                <dt>Department</dt><dd>{viewingUser.department || 'Not specified'}</dd>
+                <dt>Batch</dt><dd>{viewingUser.batchYear || 'Not specified'}</dd>
+              </dl>
+            )}
             {viewingUser.email && <a className="pf-admin-user-mail" href={`mailto:${viewingUser.email}`}><Mail size={15} />Email {viewingUser.fullName.split(' ')[0]}</a>}
           </div>
         )}

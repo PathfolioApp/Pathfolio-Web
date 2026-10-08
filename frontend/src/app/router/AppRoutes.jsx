@@ -6,6 +6,7 @@ import { RequireAuth, RequireRole, GuestRoute, OnboardingRoute, OnboardingComple
 import { LandingPage } from '../../modules/public/pages/LandingPage';
 import { PrivacyPolicyPage, TermsPage, CookiePolicyPage } from '../../modules/public/pages/PolicyPages';
 import { NotFoundPage } from '../../modules/public/pages/NotFoundPage';
+import { PublicProfilePage } from '../../modules/public/pages/PublicProfilePage';
 
 import { SignInPage } from '../../modules/auth/pages/SignInPage';
 import { ForgotPasswordPage } from '../../modules/auth/pages/ForgotPasswordPage';
@@ -53,6 +54,7 @@ export function AppRoutes() {
       <Routes>
       {/* Public */}
       <Route path="/" element={<LandingPage />} />
+      <Route path="/p/:token" element={<PublicProfilePage />} />
       <Route path="/privacy" element={<PrivacyPolicyPage />} />
       <Route path="/terms" element={<TermsPage />} />
       <Route path="/cookies" element={<CookiePolicyPage />} />

@@ -45,5 +45,14 @@ module.exports = {
   },
   geminiApiKey: process.env.GEMINI_API_KEY?.trim() || null,
   groqApiKey: process.env.GROQ_API_KEY?.trim() || null,
-  groqModel: process.env.GROQ_MODEL?.trim() || 'llama-3.3-70b-versatile'
+  groqModel: process.env.GROQ_MODEL?.trim() || 'llama-3.3-70b-versatile',
+  // Generic AI provider for the recruitment intelligence features. Defaults to
+  // reusing the free Gemini key when AI_* variables are not set, so no new paid
+  // dependency is introduced. provider 'none' disables every AI call.
+  ai: {
+    provider: (process.env.AI_PROVIDER || 'auto').trim().toLowerCase(), // auto | gemini | groq | openai-compatible | none
+    apiKey: (process.env.AI_API_KEY || '').trim() || null,
+    model: (process.env.AI_MODEL || '').trim() || null,
+    baseUrl: (process.env.AI_BASE_URL || '').trim().replace(/\/+$/, '') || null
+  }
 };

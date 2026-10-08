@@ -12,7 +12,7 @@ export function JobPostList({ jobs, jobsLoading, onEdit, onSubmit, onViewApplica
         <EmptyState
           icon={BriefcaseBusiness}
           title="No job posts yet"
-          text="Create your first opportunity — it goes live for students once the placement team reviews and publishes it."
+          text="Create your first opportunity - it goes live for students once the placement team reviews and publishes it."
         />
       )}
       <div className="pf-recruiter-jobs pf-recruiter-jobs--rows">

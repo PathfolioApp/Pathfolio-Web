@@ -119,7 +119,7 @@ class AdminContentService {
    * Edit a job post. Allowed for every status (draft, pending_approval,
    * approved, published, closed, rejected): the placement team may need to fix
    * a typo on a live post without unpublishing it. Saving NEVER changes the
-   * post's status or clears its publish/review bookkeeping — only an explicit
+   * post's status or clears its publish/review bookkeeping - only an explicit
    * publish/unpublish/review action does. `updated_at`/`updated_by` are
    * stamped for the "Edited ..." indicator and audit trail.
    */

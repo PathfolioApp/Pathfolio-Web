@@ -12,7 +12,8 @@
     "verify:async": "node scripts/verify-async-safety.js",
     "admin:promote": "node scripts/promote-admin.js",
     "recruiter:promote": "node scripts/promote-recruiter.js",
-    "test:tnp": "node scripts/tnp-smoke-test.js"
+    "test:tnp": "node scripts/tnp-smoke-test.js",
+    "test:recruitment": "node scripts/recruitment-smoke-test.js"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1142.0",

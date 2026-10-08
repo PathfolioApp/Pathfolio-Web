@@ -20,6 +20,7 @@ router.get('/me', (req, res) => {
 });
 
 router.get('/users', (req, res) => send(res, async () => ({ users: await users.list() })));
+router.get('/users/:id', (req, res) => send(res, async () => ({ user: await users.getDetail(req.params.id) })));
 router.get('/overview', (req, res) => send(res, async () => {
   const [userOverview, jobs, companies, applications] = await Promise.all([
     users.overview(),

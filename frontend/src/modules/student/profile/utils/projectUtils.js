@@ -46,9 +46,9 @@ export function formatDateMonthYear(dateStr) {
  * Formats the full project timeline string cleanly without redundancies.
  * Examples:
  * - Same month: "Sep 2026 (1 mo)"
- * - Same year:  "Jun — Aug 2026 (3 mos)"
- * - Cross year: "Nov 2025 — Feb 2026 (4 mos)"
- * - Active:     "Sep 2026 — Present (1 mo)"
+ * - Same year:  "Jun - Aug 2026 (3 mos)"
+ * - Cross year: "Nov 2025 - Feb 2026 (4 mos)"
+ * - Active:     "Sep 2026 - Present (1 mo)"
  */
 export function formatProjectTimeline(startDateStr, endDateStr, currentlyWorking) {
   if (!startDateStr && !endDateStr) return '';
@@ -67,7 +67,7 @@ export function formatProjectTimeline(startDateStr, endDateStr, currentlyWorking
   const durationSuffix = duration ? ` (${duration})` : '';
 
   if (currentlyWorking) {
-    return `${startMonth} ${startYear} — Present${durationSuffix}`;
+    return `${startMonth} ${startYear} - Present${durationSuffix}`;
   }
 
   if (!endDateStr) {
@@ -76,7 +76,7 @@ export function formatProjectTimeline(startDateStr, endDateStr, currentlyWorking
 
   const end = new Date(endDateStr);
   if (isNaN(end.getTime())) {
-    return `${startMonth} ${startYear} — ${endDateStr}${durationSuffix}`;
+    return `${startMonth} ${startYear} - ${endDateStr}${durationSuffix}`;
   }
 
   const endMonth = end.toLocaleDateString('en-US', { month: 'short' });
@@ -89,11 +89,11 @@ export function formatProjectTimeline(startDateStr, endDateStr, currentlyWorking
 
   // If in the same year:
   if (startYear === endYear) {
-    return `${startMonth} — ${endMonth} ${endYear}${durationSuffix}`;
+    return `${startMonth} - ${endMonth} ${endYear}${durationSuffix}`;
   }
 
   // Cross-year:
-  return `${startMonth} ${startYear} — ${endMonth} ${endYear}${durationSuffix}`;
+  return `${startMonth} ${startYear} - ${endMonth} ${endYear}${durationSuffix}`;
 }
 
 /**

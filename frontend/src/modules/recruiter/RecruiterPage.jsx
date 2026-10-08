@@ -5,11 +5,12 @@ import { recruiterApi } from './recruiterApi';
 import { PageHeader } from '../../components/ui/PageHeader';
 import { OverviewCards } from '../../components/ui/StatCard';
 import { SharedCandidates } from './components/SharedCandidates';
+import { RecruitmentInbox } from './components/RecruitmentInbox';
 import { JobPostList } from './components/JobPostList';
 import { JobPostComposer } from './components/JobPostComposer';
 import './RecruiterPage.css';
 
-const SECTION_META = { overview: 'Overview', jobs: 'My job posts', candidates: 'Shared candidates' };
+const SECTION_META = { overview: 'Overview', jobs: 'My job posts', candidates: 'Shared candidates', recruitment: 'Recruitment' };
 
 /**
  * RecruiterPage, recruiter portal container.
@@ -124,6 +125,8 @@ export function RecruiterPage() {
       )}
 
       {tab === 'candidates' && <SharedCandidates />}
+
+      {tab === 'recruitment' && <RecruitmentInbox />}
 
       <JobPostComposer
         open={composerOpen}

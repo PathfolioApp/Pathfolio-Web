@@ -4,10 +4,87 @@ const auth = require('../auth/auth.service');
 const auditLog = require('../../shared/auditLog.service');
 
 const clean = value => String(value || '').trim();
-const publicUser = student => ({ id: student.id, fullName: student.personal?.fullName || '', email: student.personal?.email || '', phone: student.personal?.phone || '', dateOfBirth: student.personal?.dateOfBirth || '', avatarUrl: student.personal?.avatarUrl || '', department: student.academic?.department || '', batchYear: student.academic?.batchYear || '', rollNumber: student.academic?.rollNumber || '', role: student.isAdmin ? 'admin' : student.isRecruiter ? 'recruiter' : 'student', status: student.status || 'active', blocked: Boolean(student.blocked), achievementsCount: (student.achievements || []).length, internshipsCount: (student.internships || []).length, interestsCount: ((student.interests?.hobbies || []).length + (student.interests?.passions || []).length), createdAt: student.createdAt, onboarding: student.onboarding || {} });
+const publicUser = student => ({ id: student.id, fullName: student.personal?.fullName || '', email: student.personal?.email || '', phone: student.personal?.phone || '', dateOfBirth: student.personal?.dateOfBirth || '', avatarUrl: student.personal?.avatarUrl || '', department: student.academic?.department || '', batchYear: student.academic?.batchYear || '', rollNumber: student.academic?.rollNumber || student.rollNumber || '', cgpa: student.academic?.cgpa ?? null, activeBacklogs: student.academic?.activeBacklogs ?? null, role: student.isAdmin ? 'admin' : student.isRecruiter ? 'recruiter' : 'student', status: student.status || 'active', blocked: Boolean(student.blocked), achievementsCount: (student.achievements || []).length, internshipsCount: (student.internships || []).length, projectsCount: (student.projects || []).length, interestsCount: ((student.interests?.hobbies || []).length + (student.interests?.passions || []).length), createdAt: student.createdAt, updatedAt: student.updatedAt, onboarding: student.onboarding || {} });
 
 class AdminUserService {
   async list() { return (await studentStore.listStudents()).map(publicUser).sort((a, b) => a.fullName.localeCompare(b.fullName)); }
+
+  /**
+   * Full per-user dossier for the admin Users workspace: identity, academics,
+   * portfolio counts, placement/outcome history, resume library, recruiter
+   * linkage, and share/feedback activity. Aggregates existing stores; reads
+   * only, no new tables.
+   */
+  async getDetail(id) {
+    const student = await studentStore.getStudentById(id);
+    if (!student) { const error = new Error('User not found.'); error.statusCode = 404; throw error; }
+    const base = publicUser(student);
+    const adminContentStore = require('./adminContentStore');
+    const resumeStore = require('../resumes/resumeStore');
+    const [applications, resumes, shares] = await Promise.all([
+      adminContentStore.listApplications().catch(() => []),
+      resumeStore.list(id).catch(() => []),
+      require('../recruiters/recruiterShare.service').listShares().catch(() => [])
+    ]);
+    const myApplications = applications.filter(application => application.studentId === id);
+    const jobPosts = await adminContentStore.listJobPosts().catch(() => []);
+    const jobById = new Map(jobPosts.map(job => [job.id, job]));
+
+    // Applications with role/company context and outcome per application.
+    const applicationHistory = myApplications.map(application => {
+      const job = jobById.get(application.jobPostId);
+      return {
+        id: application.id,
+        jobTitle: job?.title || 'Removed post',
+        companyName: job?.companyName || '',
+        status: application.status,
+        appliedAt: application.createdAt,
+        updatedBy: application.updatedAt
+      };
+    });
+    const selected = applicationHistory.filter(application => ['selected', 'placed'].includes(application.status));
+
+    // Shares this student appears in (legacy shortlists) with company feedback.
+    const recruiterActivity = shares
+      .filter(share => share.studentIds?.includes(id))
+      .map(share => {
+        const feedback = (share.recruiterFeedback || []).find(entry => entry.studentId === id);
+        return {
+          shareId: share.id,
+          jobTitle: share.jobTitle || null,
+          status: share.status,
+          sharedAt: share.createdAt,
+          viewedAt: share.recruiterViewedAt || null,
+          feedback: feedback ? { status: feedback.status, note: feedback.feedback, at: feedback.at } : null
+        };
+      });
+
+    return {
+      ...base,
+      social: student.social || { linkedin: '', links: [] },
+      headline: student.personal?.headline || '',
+      location: student.personal?.location || '',
+      tenthPercentage: student.academic?.tenthPercentage ?? null,
+      twelfthPercentage: student.academic?.twelfthPercentage ?? null,
+      onboardingCompleted: student.onboarding?.completed !== false,
+      publicProfileEnabled: Boolean(student.profileSettings?.publicShare?.tokenHash && !student.profileSettings.publicShare.revoked),
+      publicProfileViews: Number(student.profileSettings?.publicShare?.viewCount || 0),
+      resumeCount: resumes.length,
+      defaultResume: resumes.find(resume => resume.isDefault)?.filename || null,
+      resumeCategories: [...new Set(resumes.map(resume => resume.category).filter(Boolean))],
+      applicationsCount: applicationHistory.length,
+      selectedCount: selected.length,
+      applicationHistory: applicationHistory.slice(0, 20),
+      recruiterActivity: recruiterActivity.slice(0, 20),
+      recentAchievements: (student.achievements || []).slice(0, 5).map(achievement => ({ title: achievement.title, category: achievement.category, year: achievement.year })),
+      recentProjects: (student.projects || []).slice(0, 5).map(project => ({ name: project.projectName, technologies: (project.technologies || []).slice(0, 5) })),
+      recentInternships: (student.internships || []).slice(0, 5).map(internship => ({ role: internship.role, company: internship.companyName, currentlyWorking: internship.currentlyWorking })),
+      topSkills: [...(student.interests?.passions || []), ...(student.interests?.hobbies || [])]
+        .map(item => typeof item === 'string' ? item : item?.name)
+        .filter(Boolean)
+        .slice(0, 10)
+    };
+  }
 
   async overview() {
     const users = await this.list();

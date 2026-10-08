@@ -53,7 +53,11 @@ class RecruiterShareService {
   }
 
   async saveShare(share) {
-    const record = { ...share, id: share.id || `share_${Date.now()}_${crypto.randomBytes(3).toString('hex')}`, updatedAt: new Date().toISOString() };
+    // createdAt/updatedAt MUST always be valid Dates: an undefined timestamp
+    // serialises to 'Invalid date' and MySQL rejects the insert with
+    // "Incorrect datetime value: '0000-00-00 00:00:00'".
+    const now = new Date().toISOString();
+    const record = { status: 'shared', recruiterFeedback: [], studentIds: [], ...share, id: share.id || `share_${Date.now()}_${crypto.randomBytes(3).toString('hex')}`, createdAt: share.createdAt || now, updatedAt: now };
     if (this.pool) {
       await this.pool.execute(
         `INSERT INTO recruiter_shares (id,recruiter_id,job_post_id,note,status,student_ids,created_by,created_at,updated_at,recruiter_viewed_at,recruiter_feedback) VALUES (?,?,?,?,?,?,?,?,?,?,?)

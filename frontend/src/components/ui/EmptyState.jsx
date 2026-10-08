@@ -3,7 +3,7 @@ import './EmptyState.css';
 
 /**
  * Shared empty state: centered icon, one line of copy, and an optional
- * helpful action button — replaces lone paragraphs in boxes.
+ * helpful action button - replaces lone paragraphs in boxes.
  */
 export function EmptyState({ icon: Icon, title, text, action, className = '' }) {
   return (

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Users, FileText, ThumbsUp, MessageSquare, Building2, GraduationCap } from 'lucide-react';
 import { recruiterApi } from '../recruiterApi';
+import { recruiterRecruitmentApi } from '../recruitmentApi';
 import { EmptyState } from '../../../components/ui/EmptyState';
 import { StatusBadge } from '../../../components/ui/Badge';
 import './SharedCandidates.css';
@@ -10,6 +11,15 @@ const proficiencyLabel = value => {
   return labels[value] || value;
 };
 
+// Structured company feedback options (requirement #15).
+const FEEDBACK_OPTIONS = [
+  ['interested', 'Interested'],
+  ['shortlisted', 'Shortlisted'],
+  ['rejected', 'Rejected'],
+  ['interview_requested', 'Interview requested'],
+  ['needs_more_info', 'Needs more information']
+];
+
 /**
  * Recruiter-facing list of candidate shortlists shared by the placement team.
  * Only students explicitly shared with this recruiter appear here, there is
@@ -17,6 +27,7 @@ const proficiencyLabel = value => {
  */
 export function SharedCandidates() {
   const [shares, setShares] = useState([]);
+  const [myResumes, setMyResumes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [expanded, setExpanded] = useState(null);
@@ -37,6 +48,15 @@ export function SharedCandidates() {
   };
 
   useEffect(() => { load(); }, []);
+  // Resumes are needed only for student-controlled selection; loaded lazily
+  // through the student resume API (recruiter accounts ARE student rows here).
+  useEffect(() => {
+    if (shares.some(share => (share.students || []).some(student => student.resumeSelectionPending))) {
+      import('../../student/resume/resumeApi').then(module => {
+        module.resumeApi.list().then(data => setMyResumes(Array.isArray(data) ? data : [])).catch(() => setMyResumes([]));
+      }).catch(() => setMyResumes([]));
+    }
+  }, [shares]);
 
   const openShare = async share => {
     if (expanded === share.id) return setExpanded(null);
@@ -62,6 +82,17 @@ export function SharedCandidates() {
     } finally {
       setSavingFeedback(false);
     }
+  };
+
+  const selectResume = async (shareId, studentId, resumeId) => {
+    setError('');
+    try {
+      await recruiterRecruitmentApi.selectResume(shareId, resumeId);
+      setShares(prev => prev.map(item => (item.id === shareId ? {
+        ...item,
+        students: (item.students || []).map(student => (student.id === studentId ? { ...student, resumeUrl: `/api/resumes/${resumeId}/file?mode=view`, resumeSelectionPending: false } : student))
+      } : item)));
+    } catch (err) { setError(err.message); }
   };
 
   const feedbackFor = (share, studentId) => (share.feedback || []).find(item => item.studentId === studentId);
@@ -125,6 +156,17 @@ export function SharedCandidates() {
                         )}
                       </div>
 
+                      {/* Student-controlled policy: the student picks which resume to submit. */}
+                      {student.resumeSelectionPending && (
+                        <div className="pf-shared-student__feedback" style={{ borderColor: 'var(--color-warning)', background: 'var(--color-warning-bg)' }}>
+                          <span className="pf-shared-student__feedback-existing"><FileText size={13} /> Choose which of your resumes to submit:</span>
+                          <select value="" onChange={event => event.target.value && selectResume(share.id, student.id, event.target.value)}>
+                            <option value="">Select a resume…</option>
+                            {myResumes.map(resume => <option key={resume.id} value={resume.id}>{resume.filename}{resume.category ? ` (${resume.category})` : ''}</option>)}
+                          </select>
+                        </div>
+                      )}
+
                       {student.interests?.passions?.length > 0 && (
                         <div className="pf-shared-student__tags">
                           {student.interests.passions.map(item => (
@@ -148,6 +190,14 @@ export function SharedCandidates() {
                             <ThumbsUp size={13} /> Recorded: {existing.status || 'note'}{existing.feedback ? `, “${existing.feedback}”` : ''}
                           </span>
                         )}
+                        <select
+                          value={draft.status || ''}
+                          onChange={e => setFeedbackDraft(prev => ({ ...prev, [`${share.id}:${student.id}`]: { ...draft, status: e.target.value || null } }))}
+                          aria-label="Feedback type"
+                        >
+                          <option value="">Feedback type…</option>
+                          {FEEDBACK_OPTIONS.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+                        </select>
                         <input
                           type="text"
                           placeholder="Add feedback for the placement team (optional)…"

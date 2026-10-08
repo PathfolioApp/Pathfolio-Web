@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation, useParams, useNavigate } from 'react-router-dom';
-import { BriefcaseBusiness, Building2, FileSearch, LayoutDashboard, UserPlus, Users, Search, Share2, History, Plus, Upload, ShieldCheck } from 'lucide-react';
+import { BriefcaseBusiness, Building2, FileSearch, LayoutDashboard, UserPlus, Users, Search, Share2, History, Plus, Upload, ShieldCheck, Target } from 'lucide-react';
 import { useAuth } from '../../app/providers/AuthProvider';
 import { PageHeader } from '../../components/ui/PageHeader';
 import { OverviewCards } from '../../components/ui/StatCard';
@@ -15,6 +15,8 @@ import { JDWorkspace } from './components/JDWorkspace';
 import { StudentSearchWorkspace } from './components/StudentSearchWorkspace';
 import { SharesWorkspace } from './components/SharesWorkspace';
 import { LogsWorkspace } from './components/LogsWorkspace';
+import { RecruitmentWorkspace } from './components/RecruitmentWorkspace';
+import { CompanyRelationshipPage } from './components/CompanyRelationshipPage';
 import './AdminPage.css';
 
 const emptyCompany = { name: '', website: '', description: '', logoUrl: '', logoPublicId: '' };
@@ -32,6 +34,7 @@ const SECTION_META = {
   shares: { icon: Share2, label: 'Candidate shares' },
   companies: { icon: Building2, label: 'Companies' },
   applications: { icon: Users, label: 'Applications' },
+  recruitment: { icon: Target, label: 'Recruitment' },
   policy: { icon: ShieldCheck, label: 'Placement policy' },
   users: { icon: UserPlus, label: 'Users' },
   logs: { icon: History, label: 'Logs' },
@@ -69,6 +72,9 @@ export function AdminPage() {
   const [loading, setLoading] = useState(true); const [saving, setSaving] = useState(false); const [error, setError] = useState('');
 
   const update = (setter, field) => event => setter(value => ({ ...value, [field]: event.target.value }));
+
+  // Company relationship page lives under the recruitment tab via ?company=<id>.
+  const relationshipCompanyId = new URLSearchParams(location.search).get('company') || '';
 
   const loadBase = async () => {
     setLoading(true); setError('');
@@ -111,13 +117,15 @@ export function AdminPage() {
   }, [tab]);
   useEffect(() => { if (tab === 'users') loadUsers(); }, [tab]);
   useEffect(() => {
-    if (location.hash) {
-      const rawHash = location.hash.replace(/^#/, '');
-      if (TAB_IDS.includes(rawHash)) {
-        navigate(`/admin/${rawHash}`, { replace: true });
-      } else {
-        navigate('/admin/overview', { replace: true });
-      }
+    if (!location.hash) return;
+    const rawHash = location.hash.replace(/^#/, '');
+    if (rawHash.startsWith('recruitment/company/')) {
+      // Deep link: /admin/recruitment?company=<id>#recruitment/company/<id>
+      navigate(`/admin/recruitment?company=${encodeURIComponent(rawHash.split('/')[2] || '')}`, { replace: true });
+    } else if (TAB_IDS.includes(rawHash)) {
+      navigate(`/admin/${rawHash}`, { replace: true });
+    } else {
+      navigate('/admin/overview', { replace: true });
     }
   }, [location.hash, navigate]);
   useEffect(() => { loadOverview(); }, []);
@@ -255,6 +263,7 @@ export function AdminPage() {
             { label: 'Companies', value: overview.companies?.length ?? 0, hint: `${overview.recentSignups} new users this week` }
           ]} />
           <div className="pf-admin-quick-links">
+            <button onClick={() => navigate('/admin/recruitment')}><Target size={17} /><span>Recruitment intelligence - plan outreach</span></button>
             <button onClick={() => navigate('/admin/jobs')}><BriefcaseBusiness size={17} /><span>Review & publish job posts</span></button>
             <button onClick={() => navigate('/admin/students')}><Search size={17} /><span>Search & share students</span></button>
             <button onClick={() => navigate('/admin/applications')}><Users size={17} /><span>Review applications</span></button>
@@ -313,6 +322,12 @@ export function AdminPage() {
       {tab === 'students' && <StudentSearchWorkspace jobs={jobs} />}
       {tab === 'shares' && <SharesWorkspace />}
       {tab === 'logs' && <LogsWorkspace />}
+      {tab === 'recruitment' && (
+        relationshipCompanyId
+          ? <CompanyRelationshipPage companyId={relationshipCompanyId} onBack={() => navigate('/admin/recruitment')} />
+          : <RecruitmentWorkspace companies={companies} />
+      )}
+      {tab === 'recruitment-settings' && <PlacementPolicyWorkspace />}
       {tab === 'applications' && (
         <ApplicationWorkspace
           companies={companies}

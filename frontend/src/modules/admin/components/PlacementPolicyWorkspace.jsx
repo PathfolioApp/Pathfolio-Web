@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import {
   ShieldCheck, Save, RotateCcw, Plus, Trash2,
-  CheckCircle2, XCircle, AlertTriangle, Sparkles, Layers
+  CheckCircle2, XCircle, AlertTriangle, Sparkles, Layers, FileCheck2
 } from 'lucide-react';
 import { Button } from '../../../components/ui/Button';
 import { EmptyState } from '../../../components/ui/EmptyState';
 import { adminApi } from '../adminApi';
+import { recruitmentApi } from '../recruitmentApi';
 import './PlacementPolicyWorkspace.css';
 
 const DEFAULT_POLICY = {
@@ -29,9 +30,48 @@ export function PlacementPolicyWorkspace() {
   const [simPlacedCtc, setSimPlacedCtc] = useState('6.0');
   const [simTargetCtc, setSimTargetCtc] = useState('10.0');
 
+  // Recruitment policy (resume selection + company access defaults), loaded
+  // from the same placement_policy record so ONE page governs everything.
+  const RESUME_MODES = [
+    ['student_controlled', 'A · Student controlled', 'The student chooses which of their resumes is submitted.'],
+    ['university_controlled', 'B · University controlled', 'The placement team selects/approves the resume for every share.'],
+    ['ai_university', 'C · AI recommended + approval', 'AI ranks resumes against the role; the placement team approves.']
+  ];
+  const ACCESS_LEVELS = [
+    ['summary', 'Candidate summary only'],
+    ['profile', 'Student profile'],
+    ['resume', 'Profile + resume'],
+    ['full', 'Full candidate information']
+  ];
+  const [resumeMode, setResumeMode] = useState('university_controlled');
+  const [accessLevel, setAccessLevel] = useState('profile');
+  const [recruitmentSaving, setRecruitmentSaving] = useState(false);
+  const [recruitmentMsg, setRecruitmentMsg] = useState('');
+
   useEffect(() => {
     loadPolicy();
+    recruitmentApi.settings()
+      .then(data => {
+        setResumeMode(data.settings?.resumePolicyMode || 'university_controlled');
+        setAccessLevel(data.settings?.defaultAccessLevel || 'profile');
+      })
+      .catch(() => {});
   }, []);
+
+  const saveRecruitmentPolicy = async () => {
+    setRecruitmentSaving(true); setRecruitmentMsg('');
+    try {
+      const data = await recruitmentApi.updateSettings({ resumePolicyMode: resumeMode, defaultAccessLevel: accessLevel });
+      setResumeMode(data.settings.resumePolicyMode);
+      setAccessLevel(data.settings.defaultAccessLevel);
+      setRecruitmentMsg('Recruitment policy saved.');
+      setTimeout(() => setRecruitmentMsg(''), 4000);
+    } catch (err) {
+      setRecruitmentMsg(err.message || 'Failed to save recruitment policy.');
+    } finally {
+      setRecruitmentSaving(false);
+    }
+  };
 
   const loadPolicy = async () => {
     setLoading(true);
@@ -305,6 +345,46 @@ export function PlacementPolicyWorkspace() {
               </div>
             </div>
           ))}
+        </div>
+      </div>
+
+      {/* Recruitment Policy (resume selection + company access) */}
+      <div className="pf-policy-card">
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
+          <h3 className="pf-policy-card-title">
+            <FileCheck2 size={18} /> Recruitment Policy - Resume Selection &amp; Company Access
+          </h3>
+          <Button variant="primary" size="sm" onClick={saveRecruitmentPolicy} loading={recruitmentSaving} icon={Save}>Save</Button>
+        </div>
+        <p style={{ margin: '0 0 12px 0', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+          Governs how candidate resumes are chosen when sharing students with companies, and what companies are allowed to see. Applies to new shares; existing shares keep the policy they were created under.
+        </p>
+        {recruitmentMsg && (
+          <div className={recruitmentMsg.includes('Failed') ? 'pf-admin-error' : 'pf-admin-success'} style={{ marginBottom: 10 }}>{recruitmentMsg}</div>
+        )}
+
+        <div className="pf-rec-mode-grid">
+          {RESUME_MODES.map(([id, title, text]) => (
+            <label key={id} className={`pf-rec-mode-card ${resumeMode === id ? 'is-selected' : ''}`}>
+              <input type="radio" name="resumePolicyMode" value={id} checked={resumeMode === id} onChange={() => setResumeMode(id)} />
+              <b>{title}</b>
+              <span>{text}</span>
+            </label>
+          ))}
+        </div>
+
+        <div className="pf-policy-field" style={{ marginTop: 14, maxWidth: 360 }}>
+          <label htmlFor="default-access">Default company access level</label>
+          <select
+            id="default-access"
+            className="pf-policy-select"
+            value={accessLevel}
+            onChange={e => setAccessLevel(e.target.value)}
+            style={{ width: '100%', minHeight: 40, border: '1px solid var(--border-medium)', borderRadius: 'var(--radius-sm)', padding: '0 10px', background: 'var(--bg-surface)', color: 'var(--text-primary)', font: 'inherit' }}
+          >
+            {ACCESS_LEVELS.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+          </select>
+          <small>Companies only ever see the level the placement team permits; every resume access is logged and revocable per share.</small>
         </div>
       </div>
 

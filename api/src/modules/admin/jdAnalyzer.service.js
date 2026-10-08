@@ -526,3 +526,8 @@ class JDAnalyzerService {
 }
 
 module.exports = new JDAnalyzerService();
+// Public helpers reused by the recruitment priority engine so both features
+// share one skill taxonomy and student-text projection (no duplicate logic).
+module.exports.detectSkillsPublic = detectSkills;
+module.exports.detectDomainsPublic = detectDomains;
+module.exports.studentSkillTextPublic = studentSkillText;

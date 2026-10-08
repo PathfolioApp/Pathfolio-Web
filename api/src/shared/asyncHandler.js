@@ -26,7 +26,7 @@
  * `wrapRouter` rewrites every registered handler in place so it forwards a
  * returned promise's rejection to `next(err)`, which routes it to the existing
  * `errorHandler` middleware. Handlers keep their original signature and
- * behaviour — sync throws, `next()` calls and response writes are untouched —
+ * behaviour - sync throws, `next()` calls and response writes are untouched
  * so no route needs to change.
  */
 

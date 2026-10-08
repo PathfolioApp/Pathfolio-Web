@@ -8,7 +8,7 @@ const { isTransientDbError } = require('./db');
  * The explicit try/catch matters: this middleware runs on *every* authenticated
  * request, so it is the most likely place for a database socket to be recycled
  * mid-flight. Reporting 503 ("try again") for a transport blip keeps the
- * difference honest — a 401 would log the user out for a server-side hiccup.
+ * difference honest - a 401 would log the user out for a server-side hiccup.
  */
 module.exports = async (req, res, next) => {
   const token = (req.headers.cookie || '').split(';').map(v => v.trim()).find(v => v.startsWith('pf_session='))?.slice(11);

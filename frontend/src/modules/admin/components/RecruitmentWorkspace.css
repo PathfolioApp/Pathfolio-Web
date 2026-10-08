@@ -1,0 +1,2 @@
+/* RecruitmentWorkspace-specific tweaks (base styles live in RecruitmentUI.css) */
+.pf-rec-detail-grid { display: grid; gap: 16px; }
