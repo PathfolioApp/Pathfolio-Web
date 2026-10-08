@@ -403,6 +403,14 @@ class RecruitmentStore {
       jobPostId: null,
       engagementId: null,
       resumeId: null,
+      // Nullable column values must be JS null, never undefined: mysql2 rejects
+      // undefined bind parameters outright.
+      companyResponse: null,
+      companyResponseNote: null,
+      revokedBy: null,
+      respondedAt: null,
+      revokedAt: null,
+      accessCount: 0,
       ...share,
       id: share.id || this.makeId('rcs'),
       updatedAt: nowIso(),

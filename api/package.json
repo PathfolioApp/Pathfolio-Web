@@ -14,7 +14,8 @@
     "recruiter:promote": "node scripts/promote-recruiter.js",
     "test:tnp": "node scripts/tnp-smoke-test.js",
     "test:recruitment": "node scripts/recruitment-smoke-test.js",
-    "seed:demo": "node scripts/seed-demo.js"
+    "seed:demo": "node scripts/seed-demo.js",
+    "seed:recruiter": "node scripts/seed-recruiter-demo.js"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1142.0",
