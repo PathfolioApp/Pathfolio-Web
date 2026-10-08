@@ -17,6 +17,7 @@ import { SharesWorkspace } from './components/SharesWorkspace';
 import { LogsWorkspace } from './components/LogsWorkspace';
 import { RecruitmentWorkspace } from './components/RecruitmentWorkspace';
 import { CompanyRelationshipPage } from './components/CompanyRelationshipPage';
+import { TabFade } from '../../components/ui/TabFade';
 import './AdminPage.css';
 
 const emptyCompany = { name: '', website: '', description: '', logoUrl: '', logoPublicId: '' };
@@ -254,6 +255,7 @@ export function AdminPage() {
         }
       />
 
+      <TabFade tabKey={tab}>
       {tab === 'overview' && overview && (
         <>
           <OverviewCards cards={[
@@ -353,6 +355,7 @@ export function AdminPage() {
         </>
       )}
       {tab === 'jd' && <JDWorkspace />}
+      </TabFade>
     </main>
   );
 }

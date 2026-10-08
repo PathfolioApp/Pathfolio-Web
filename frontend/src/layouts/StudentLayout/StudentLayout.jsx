@@ -3,6 +3,7 @@ import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { LayoutDashboard, User, BookOpen, Briefcase, FileText, Settings, GraduationCap, Building2, ShieldCheck } from 'lucide-react';
 import { PortalShell } from '../PortalShell';
 import { useAuth } from '../../app/providers/AuthProvider';
+import { TabFade } from '../../components/ui/TabFade';
 
 /**
  * StudentLayout, navigation and chrome for the student portal.
@@ -12,6 +13,7 @@ import { useAuth } from '../../app/providers/AuthProvider';
  */
 export function StudentLayout() {
   const { student } = useAuth();
+  const location = useLocation();
 
   const navItems = [
     [LayoutDashboard, 'Dashboard', '/dashboard'],
@@ -24,7 +26,9 @@ export function StudentLayout() {
 
   return (
     <PortalShell navItems={navItems} portalLinks={<PortalSwitcher student={student} />}>
-      <Outlet />
+      <TabFade tabKey={location.pathname}>
+        <Outlet />
+      </TabFade>
     </PortalShell>
   );
 }

@@ -66,16 +66,54 @@ class AdminUserService {
       location: student.personal?.location || '',
       tenthPercentage: student.academic?.tenthPercentage ?? null,
       twelfthPercentage: student.academic?.twelfthPercentage ?? null,
+      historicalBacklogs: student.academic?.historicalBacklogs ?? null,
+      gapYears: student.academic?.gapYears ?? null,
       onboardingCompleted: student.onboarding?.completed !== false,
+      onboardingCompletedAt: student.onboarding?.completedAt || null,
       publicProfileEnabled: Boolean(student.profileSettings?.publicShare?.tokenHash && !student.profileSettings.publicShare.revoked),
       publicProfileViews: Number(student.profileSettings?.publicShare?.viewCount || 0),
       resumeCount: resumes.length,
       defaultResume: resumes.find(resume => resume.isDefault)?.filename || null,
       resumeCategories: [...new Set(resumes.map(resume => resume.category).filter(Boolean))],
+      resumeList: resumes.slice(0, 15).map(resume => ({ id: resume.id, filename: resume.filename, category: resume.category, isDefault: resume.isDefault, tags: (resume.tags || []).slice(0, 6), uploadedAt: resume.uploadedAt, analysisScore: resume.analysis?.score ?? null })),
       applicationsCount: applicationHistory.length,
       selectedCount: selected.length,
       applicationHistory: applicationHistory.slice(0, 20),
       recruiterActivity: recruiterActivity.slice(0, 20),
+      // Complete structured record of everything the student entered.
+      structuredInterests: {
+        passions: (student.interests?.passions || []).map(item => typeof item === 'string' ? { name: item } : { name: item.name, proficiency: item.proficiency || null, reason: item.reason || '' }),
+        hobbies: (student.interests?.hobbies || []).map(item => typeof item === 'string' ? { name: item } : { name: item.name, proficiency: item.proficiency || null, reason: item.reason || '' })
+      },
+      semesterRecords: (student.academic?.semesters || []).map(semester => ({
+        id: semester.id, semester: semester.semester, sgpa: semester.sgpa ?? null, cgpa: semester.cgpa ?? null,
+        academicYear: semester.academicYear || '', hasTranscript: Boolean(semester.transcript?.filename), transcriptName: semester.transcript?.filename || null
+      })),
+      documentsOnFile: {
+        tenthMarksheet: Boolean(student.academic?.tenthMarksheet?.filename || student.academic?.tenth_marksheet?.filename),
+        twelfthMarksheet: Boolean(student.academic?.twelfthMarksheet?.filename || student.academic?.twelfth_marksheet?.filename)
+      },
+      familyContext: {
+        // Consent state is shown to the admin so sensitive data handling stays auditable.
+        recorded: Boolean(student.familyContext?.details),
+        consentGiven: Boolean(student.familyContext?.consentGiven),
+        details: student.familyContext?.details || ''
+      },
+      profileVisibility: student.profileSettings?.visibility || 'private',
+      fieldVisibility: student.profileSettings?.fieldVisibility || {},
+      allAchievements: (student.achievements || []).map(achievement => ({ id: achievement.id, title: achievement.title, category: achievement.category, description: achievement.description, year: achievement.year })),
+      allProjects: (student.projects || []).map(project => ({
+        id: project.id, name: project.projectName, type: project.projectType, description: project.description,
+        technologies: project.technologies || [], startDate: project.startDate, endDate: project.endDate,
+        currentlyWorking: Boolean(project.currentlyWorking), projectUrl: project.projectUrl, repoUrl: project.repoUrl,
+        featured: Boolean(project.featured), hasDocument: Boolean(project.document?.filename || project.documentUrl), contributions: (project.contributions || []).slice(0, 8)
+      })),
+      allInternships: (student.internships || []).map(internship => ({
+        id: internship.id, role: internship.role, company: internship.companyName, description: internship.description,
+        skills: internship.skills || [], location: internship.location, workMode: internship.workMode,
+        startDate: internship.startDate, endDate: internship.endDate, currentlyWorking: Boolean(internship.currentlyWorking),
+        hasCertificate: Boolean(internship.certificate?.filename || internship.certificateUrl), responsibilities: (internship.responsibilities || []).slice(0, 8)
+      })),
       recentAchievements: (student.achievements || []).slice(0, 5).map(achievement => ({ title: achievement.title, category: achievement.category, year: achievement.year })),
       recentProjects: (student.projects || []).slice(0, 5).map(project => ({ name: project.projectName, technologies: (project.technologies || []).slice(0, 5) })),
       recentInternships: (student.internships || []).slice(0, 5).map(internship => ({ role: internship.role, company: internship.companyName, currentlyWorking: internship.currentlyWorking })),

@@ -147,3 +147,14 @@
 .pf-user-dossier__note { font-style: italic; }
 .pf-rec-chiprow { display: flex; gap: 6px; flex-wrap: wrap; }
 .pf-rec-chiprow span { border: 1px solid var(--border-accent); border-radius: var(--radius-full); padding: 3px 11px; background: var(--color-primary-subtle); color: var(--color-primary); font-size: .74rem; font-weight: 600; }
+
+/* Full-record dossier additions */
+.pf-user-dossier__plain { margin: 4px 0; font-size: .8rem; color: var(--text-secondary); }
+.pf-user-dossier__score { font-size: .78rem; font-weight: 700; color: var(--color-primary); white-space: nowrap; }
+.pf-user-dossier__doc { display: inline-block; margin-top: 3px; font-size: .72rem; font-weight: 600; color: var(--color-sage); }
+.pf-user-dossier__links { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 3px; }
+.pf-user-dossier__links a { color: var(--text-link); font-size: .76rem; text-decoration: none; }
+.pf-user-dossier__links a:hover { text-decoration: underline; }
+.pf-user-dossier__links span { font-size: .76rem; color: var(--text-faint); }
+.pf-user-dossier__section--sensitive { border: 1px dashed var(--color-warning); border-radius: var(--radius-sm); padding: 10px 12px; background: var(--color-warning-bg); }
+.pf-user-dossier__row span.pf-user-dossier__note { display: block; color: var(--text-secondary); font-style: italic; }

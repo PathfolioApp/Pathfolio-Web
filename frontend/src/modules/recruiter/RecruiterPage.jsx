@@ -6,6 +6,7 @@ import { PageHeader } from '../../components/ui/PageHeader';
 import { OverviewCards } from '../../components/ui/StatCard';
 import { SharedCandidates } from './components/SharedCandidates';
 import { RecruitmentInbox } from './components/RecruitmentInbox';
+import { TabFade } from '../../components/ui/TabFade';
 import { JobPostList } from './components/JobPostList';
 import { JobPostComposer } from './components/JobPostComposer';
 import './RecruiterPage.css';
@@ -97,6 +98,7 @@ export function RecruiterPage() {
         )}
       />
 
+      <TabFade tabKey={tab}>
       {tab === 'overview' && overview && (
         <>
           <OverviewCards cards={[
@@ -127,6 +129,7 @@ export function RecruiterPage() {
       {tab === 'candidates' && <SharedCandidates />}
 
       {tab === 'recruitment' && <RecruitmentInbox />}
+      </TabFade>
 
       <JobPostComposer
         open={composerOpen}

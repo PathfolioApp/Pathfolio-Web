@@ -10,6 +10,7 @@ import { Drawer } from '../../../components/ui/Drawer';
 import { Modal } from '../../../components/ui/Modal';
 import { EmptyState } from '../../../components/ui/EmptyState';
 import { StatusBadge } from '../../../components/ui/Badge';
+import { TabFade } from '../../../components/ui/TabFade';
 import { Input, PanelHeading, Empty } from '../utils/adminHelpers';
 import {
   EngagementStatusBadge, RecommendationBadge, ScoreBreakdown, ScoreChip,
@@ -37,9 +38,11 @@ export function RecruitmentWorkspace({ companies }) {
           <button key={id} type="button" className={view === id ? 'is-active' : ''} onClick={() => setView(id)}>{label}</button>
         ))}
       </div>
-      {view === 'recommendations' && <RecommendationsView companies={companies} onEngagementCreated={() => setView('engagements')} />}
-      {view === 'engagements' && <EngagementsView companies={companies} />}
-      {view === 'dashboard' && <DashboardView />}
+      <TabFade tabKey={view}>
+        {view === 'recommendations' && <RecommendationsView companies={companies} onEngagementCreated={() => setView('engagements')} />}
+        {view === 'engagements' && <EngagementsView companies={companies} />}
+        {view === 'dashboard' && <DashboardView />}
+      </TabFade>
     </section>
   );
 }

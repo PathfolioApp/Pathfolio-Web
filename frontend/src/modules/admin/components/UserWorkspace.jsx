@@ -239,6 +239,120 @@ export function UserWorkspace({ users, saving, loading, reload, adminId }) {
                     ))}
                   </div>
                 )}
+
+                {/* Full record: everything the student entered */}
+                {(viewingDetail.semesterRecords?.length > 0 || viewingDetail.documentsOnFile?.tenthMarksheet || viewingDetail.documentsOnFile?.twelfthMarksheet) && (
+                  <div className="pf-user-dossier__section">
+                    <p className="pf-rec-why__title">Academic record</p>
+                    {viewingDetail.documentsOnFile?.tenthMarksheet && <p className="pf-user-dossier__plain">10th marksheet on file</p>}
+                    {viewingDetail.documentsOnFile?.twelfthMarksheet && <p className="pf-user-dossier__plain">12th marksheet on file</p>}
+                    {viewingDetail.semesterRecords.map(semester => (
+                      <div className="pf-user-dossier__row" key={semester.id}>
+                        <div><b>Semester {semester.semester}</b><span>{semester.academicYear || 'year not recorded'}</span></div>
+                        <span className="pf-user-dossier__score">SGPA {semester.sgpa ?? '-'}{semester.hasTranscript ? ' · transcript' : ''}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {(viewingDetail.structuredInterests?.passions?.length > 0 || viewingDetail.structuredInterests?.hobbies?.length > 0) && (
+                  <div className="pf-user-dossier__section">
+                    <p className="pf-rec-why__title">Interests in detail</p>
+                    {['passions', 'hobbies'].map(group => viewingDetail.structuredInterests[group]?.map((interest, index) => (
+                      <div className="pf-user-dossier__row" key={`${group}-${index}`}>
+                        <div><b>{interest.name}</b>{interest.reason && <span>{interest.reason}</span>}</div>
+                        {interest.proficiency && <span className="pf-user-dossier__score">{interest.proficiency}</span>}
+                      </div>
+                    )))}
+                  </div>
+                )}
+
+                {viewingDetail.allInternships?.length > 0 && (
+                  <div className="pf-user-dossier__section">
+                    <p className="pf-rec-why__title">All internships &amp; experience</p>
+                    {viewingDetail.allInternships.map(internship => (
+                      <div className="pf-user-dossier__row" key={internship.id || internship.role}>
+                        <div>
+                          <b>{internship.role} at {internship.company}</b>
+                          <span>{[internship.location, internship.workMode, internship.startDate, internship.currentlyWorking ? 'ongoing' : internship.endDate].filter(Boolean).join(' · ')}</span>
+                          {internship.skills?.length > 0 && <span>{internship.skills.join(', ')}</span>}
+                          {internship.description && <span className="pf-user-dossier__note">{internship.description}</span>}
+                          {internship.responsibilities?.map((item, index) => <span key={index}>- {item}</span>)}
+                          {internship.hasCertificate && <span className="pf-user-dossier__doc">Certificate on file</span>}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {viewingDetail.allProjects?.length > 0 && (
+                  <div className="pf-user-dossier__section">
+                    <p className="pf-rec-why__title">All projects</p>
+                    {viewingDetail.allProjects.map(project => (
+                      <div className="pf-user-dossier__row" key={project.id || project.name}>
+                        <div>
+                          <b>{project.name}{project.featured ? ' ★' : ''}</b>
+                          <span>{[project.type, project.startDate, project.currentlyWorking ? 'ongoing' : project.endDate].filter(Boolean).join(' · ')}</span>
+                          {project.technologies?.length > 0 && <span>{project.technologies.join(', ')}</span>}
+                          {project.description && <span className="pf-user-dossier__note">{project.description}</span>}
+                          {project.contributions?.map((item, index) => <span key={index}>- {item}</span>)}
+                          <span className="pf-user-dossier__links">
+                            {project.projectUrl && <a href={project.projectUrl} target="_blank" rel="noreferrer">live</a>}
+                            {project.repoUrl && <a href={project.repoUrl} target="_blank" rel="noreferrer">repo</a>}
+                            {project.hasDocument && <span>document on file</span>}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {viewingDetail.allAchievements?.length > 0 && (
+                  <div className="pf-user-dossier__section">
+                    <p className="pf-rec-why__title">All achievements</p>
+                    {viewingDetail.allAchievements.map(achievement => (
+                      <div className="pf-user-dossier__row" key={achievement.id || achievement.title}>
+                        <div>
+                          <b>{achievement.title}</b>
+                          <span>{[achievement.category, achievement.year].filter(Boolean).join(' · ')}</span>
+                          {achievement.description && <span className="pf-user-dossier__note">{achievement.description}</span>}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {viewingDetail.resumeList?.length > 0 && (
+                  <div className="pf-user-dossier__section">
+                    <p className="pf-rec-why__title">Resume library</p>
+                    {viewingDetail.resumeList.map(resume => (
+                      <div className="pf-user-dossier__row" key={resume.id}>
+                        <div>
+                          <b>{resume.filename}{resume.isDefault ? ' · default' : ''}</b>
+                          <span>{resume.category}{resume.tags?.length ? ` · ${resume.tags.join(', ')}` : ''} · uploaded {resume.uploadedAt ? new Date(resume.uploadedAt).toLocaleDateString() : '-'}</span>
+                        </div>
+                        {resume.analysisScore !== null && resume.analysisScore !== undefined && <span className="pf-user-dossier__score">{resume.analysisScore}%</span>}
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {viewingDetail.familyContext?.recorded && (
+                  <div className="pf-user-dossier__section pf-user-dossier__section--sensitive">
+                    <p className="pf-rec-why__title">Family context (consent {viewingDetail.familyContext.consentGiven ? 'given' : 'not recorded'})</p>
+                    <p className="pf-user-dossier__note">{viewingDetail.familyContext.details}</p>
+                  </div>
+                )}
+
+                {viewingDetail.social?.links?.length > 0 && (
+                  <div className="pf-user-dossier__section">
+                    <p className="pf-rec-why__title">Links</p>
+                    <div className="pf-user-dossier__links">
+                      {viewingDetail.social.linkedin && <a href={viewingDetail.social.linkedin} target="_blank" rel="noreferrer">LinkedIn</a>}
+                      {viewingDetail.social.links.map((link, index) => <a key={index} href={link} target="_blank" rel="noreferrer">{link.replace(/^https?:\/\//, '').slice(0, 40)}</a>)}
+                    </div>
+                  </div>
+                )}
               </>
             )}
             {!detailLoading && !viewingDetail && !detailError && (
