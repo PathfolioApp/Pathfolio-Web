@@ -18,10 +18,21 @@ export function ConsentBanner() {
 
   useEffect(() => {
     let decision = null;
-    try { decision = window.localStorage.getItem(STORAGE_KEY); } catch { /* storage unavailable */ }
+    try { decision = window.localStorage.getItem(STORAGE_KEY); } catch { /* storage unavailable (blocked or embedded browser) */ }
     if (!decision) {
-      const timer = setTimeout(() => setVisible(true), 900);
-      return () => clearTimeout(timer);
+      // Storage blocked: the server-side record is the fallback so returning
+      // visitors are not re-prompted on every visit.
+      consentApi.get()
+        .then(data => {
+          const stored = data?.consent?.choice || data?.choice;
+          if (stored) {
+            try { window.localStorage.setItem(STORAGE_KEY, stored); } catch { /* ignore */ }
+            return;
+          }
+          setTimeout(() => setVisible(true), 900);
+        })
+        .catch(() => { setVisible(true); });
+      return undefined;
     }
     // Inform the API of the stored choice so server-side behaviour matches.
     consentApi.set(decision).catch(() => {});
@@ -30,7 +41,7 @@ export function ConsentBanner() {
 
   const decide = async choice => {
     setSaving(choice);
-    try { window.localStorage.setItem(STORAGE_KEY, choice); } catch { /* storage unavailable */ }
+    try { window.localStorage.setItem(STORAGE_KEY, choice); } catch { /* storage unavailable; the API record below still persists it */ }
     try { await consentApi.set(choice); } catch { /* non-critical */ }
     setVisible(false);
   };

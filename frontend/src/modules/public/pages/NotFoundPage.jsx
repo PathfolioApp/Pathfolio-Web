@@ -28,8 +28,12 @@ export function NotFoundPage() {
           </div>
           <span className="editorial-eyebrow">404 • Not Found</span>
           <h1 style={{ fontSize: '2.25rem', marginBottom: '12px' }}>Page not found</h1>
-          <p style={{ color: 'var(--text-secondary)', marginBottom: '32px' }}>
-            The destination you are looking for does not exist in this release of PathfolioApp.
+          <p style={{
+            color: 'var(--text-secondary)', marginBottom: '32px',
+            border: '1px dashed var(--border-subtle, #ddd)', borderRadius: 10,
+            padding: '10px 14px', fontWeight: 600
+          }}>
+            The address <code>{window.location.pathname}</code> does not exist in this release of PathfolioApp.
           </p>
           <Button variant="primary" size="md" onClick={() => navigate('/')}>
             Return to Landing Page

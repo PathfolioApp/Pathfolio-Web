@@ -42,7 +42,25 @@ import '../styles/InternshipStyles.css';
 import '../styles/ProjectStyles.css';
 import '../styles/SocialStyles.css';
 
-const Tags = ({ values, empty }) => values?.length ? <div className="pf-tags">{values.map(value => <span key={value}>{value}</span>)}</div> : <p className="pf-empty">{empty}</p>;
+// Interests arrive in two shapes across the app's history: legacy plain
+// strings and the canonical onboarding objects {name, proficiency, reason}.
+// Render both safely; never let an unexpected shape crash the page.
+const interestLabel = value => {
+  if (typeof value === 'string') return value;
+  if (value && typeof value === 'object') return value.name || value.title || '';
+  return String(value ?? '');
+};
+
+const Tags = ({ values, empty }) => {
+  if (!values?.length) return <p className="pf-empty">{empty}</p>;
+  const labels = values.map(interestLabel).filter(Boolean);
+  if (!labels.length) return <p className="pf-empty">{empty}</p>;
+  return (
+    <div className="pf-tags">
+      {labels.map((label, index) => <span key={`${label}-${index}`}>{label}</span>)}
+    </div>
+  );
+};
 const displayValue = value => value === undefined || value === '' ? 'Not added yet' : value;
 
 function formatDuration(startDateStr, endDateStr, currentlyWorking) {

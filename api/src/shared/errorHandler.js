@@ -28,7 +28,11 @@ function errorHandler(err, req, res, next) {
 
   const message = transientDb
     ? 'The service is briefly unreachable. Please retry in a moment.'
-    : err.message || 'An unexpected error occurred on the server.';
+    : err.statusCode && err.statusCode < 500
+      // Curated domain errors (validation, authz, not-found) keep their copy.
+      ? (err.message || 'The request could not be completed.')
+      // Unexpected 5xx: details stay in the log; internals never reach the UI.
+      : (process.env.NODE_ENV === 'development' ? (err.message || 'An unexpected error occurred on the server.') : 'An unexpected error occurred on the server. Please try again.');
   res.status(statusCode).json({
     success: false,
     message,

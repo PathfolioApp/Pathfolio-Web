@@ -35,7 +35,9 @@ app.use(apiKeyAuth);
 app.use(cors({
   origin: (origin, callback) => {
     if (!origin || config.clientOrigins.includes(origin)) return callback(null, true);
-    return callback(new Error(`Origin ${origin} is not allowed by PathfolioApp.`));
+    // A structured 403 (not a thrown error) so browsers render a real response
+    // instead of surfacing a raw config string in the app's UI.
+    return callback(null, false);
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],

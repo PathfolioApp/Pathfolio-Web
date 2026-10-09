@@ -9,16 +9,20 @@ export function SignOutButton({ className, children }) {
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
+  const [signOutError, setSignOutError] = useState('');
 
   const confirmSignOut = async () => {
     setIsSigningOut(true);
+    setSignOutError('');
     try {
       await logout();
       navigate('/');
     } catch (err) {
+      // The session may already be gone server-side; surface the failure
+      // instead of silently leaving the user on a half-signed-out state.
       console.error(err);
+      setSignOutError('Sign out failed on the server. Please try again.');
       setIsSigningOut(false);
-      setIsOpen(false);
     }
   };
 
@@ -44,6 +48,7 @@ export function SignOutButton({ className, children }) {
         }
       >
         <p>You will need to sign in again to access your academic record and journey.</p>
+        {signOutError && <p role="alert" style={{ color: 'var(--danger, #a33)', marginTop: 8 }}>{signOutError}</p>}
       </Modal>
     </>
   );

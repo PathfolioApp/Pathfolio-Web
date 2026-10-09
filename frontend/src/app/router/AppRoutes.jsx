@@ -1,7 +1,8 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, lazy, Suspense } from 'react';
 import { Route, Routes, useLocation, Navigate } from 'react-router-dom';
 import { useAuth } from '../providers/AuthProvider';
 import { RequireAuth, RequireRole, GuestRoute, OnboardingRoute, OnboardingCompleteRoute } from './guards';
+import { LoadingScreen } from './guards';
 
 import { LandingPage } from '../../modules/public/pages/LandingPage';
 import { PrivacyPolicyPage, TermsPage, CookiePolicyPage } from '../../modules/public/pages/PolicyPages';
@@ -15,23 +16,26 @@ import { CompletionPage } from '../../modules/auth/pages/CompletionPage';
 import { PendingVerificationPage } from '../../modules/auth/pages/PendingVerificationPage';
 
 import { StudentLayout } from '../../layouts/StudentLayout/StudentLayout';
-import { DashboardPage } from '../../modules/student/dashboard/DashboardPage';
-import { StoryPage } from '../../modules/student/story/StoryPage';
-import { ProfilePage } from '../../modules/student/profile/pages/ProfilePage';
-import { ProfileEditPage } from '../../modules/student/profile/pages/ProfileEditPage';
-import { ProfileSettingsPage } from '../../modules/student/settings/pages/ProfileSettingsPage';
-import { SettingsPage } from '../../modules/student/settings/pages/SettingsPage';
-import { SecurityPage, PrivacyPage } from '../../modules/student/settings/pages/SecurityPage';
-import { PlacementPage } from '../../modules/student/placements/PlacementPage';
-import { ResumePage } from '../../modules/student/resume/ResumePage';
-import { ResumeDetailsPage } from '../../modules/student/resume/ResumeDetailsPage';
-import { ResumeStudioPage } from '../../modules/student/resume/ResumeStudioPage';
-
 import { RecruiterLayout } from '../../layouts/RecruiterLayout/RecruiterLayout';
 import { AdminLayout } from '../../layouts/AdminLayout/AdminLayout';
-import { RecruiterPage } from '../../modules/recruiter/RecruiterPage';
-import { AdminPage } from '../../modules/admin/AdminPage';
 import { AuthLayout } from '../../layouts/AuthLayout/AuthLayout';
+
+// Portal pages are code-split: the landing page and sign-in stay instant while
+// each workspace's JS loads on first navigation (main bundle ~844KB before).
+const DashboardPage = lazy(() => import('../../modules/student/dashboard/DashboardPage').then(m => ({ default: m.DashboardPage })));
+const StoryPage = lazy(() => import('../../modules/student/story/StoryPage').then(m => ({ default: m.StoryPage })));
+const ProfilePage = lazy(() => import('../../modules/student/profile/pages/ProfilePage').then(m => ({ default: m.ProfilePage })));
+const ProfileEditPage = lazy(() => import('../../modules/student/profile/pages/ProfileEditPage').then(m => ({ default: m.ProfileEditPage })));
+const ProfileSettingsPage = lazy(() => import('../../modules/student/settings/pages/ProfileSettingsPage').then(m => ({ default: m.ProfileSettingsPage })));
+const SettingsPage = lazy(() => import('../../modules/student/settings/pages/SettingsPage').then(m => ({ default: m.SettingsPage })));
+const SecurityPageLazy = lazy(() => import('../../modules/student/settings/pages/SecurityPage').then(m => ({ default: m.SecurityPage })));
+const PrivacyPageLazy = lazy(() => import('../../modules/student/settings/pages/SecurityPage').then(m => ({ default: m.PrivacyPage })));
+const PlacementPage = lazy(() => import('../../modules/student/placements/PlacementPage').then(m => ({ default: m.PlacementPage })));
+const ResumePage = lazy(() => import('../../modules/student/resume/ResumePage').then(m => ({ default: m.ResumePage })));
+const ResumeDetailsPage = lazy(() => import('../../modules/student/resume/ResumeDetailsPage').then(m => ({ default: m.ResumeDetailsPage })));
+const ResumeStudioPage = lazy(() => import('../../modules/student/resume/ResumeStudioPage').then(m => ({ default: m.ResumeStudioPage })));
+const RecruiterPage = lazy(() => import('../../modules/recruiter/RecruiterPage').then(m => ({ default: m.RecruiterPage })));
+const AdminPage = lazy(() => import('../../modules/admin/AdminPage').then(m => ({ default: m.AdminPage })));
 
 function ScrollToTop() {
   const { pathname, hash } = useLocation();
@@ -61,6 +65,10 @@ export function AppRoutes() {
 
       {/* Authentication & onboarding */}
       <Route path="/signin" element={<GuestRoute><AuthLayout><SignInPage /></AuthLayout></GuestRoute>} />
+      {/* Legacy/aliased URLs kept working with permanent redirects (deep links
+          from old bookmarks, docs and handouts must not dead-end). */}
+      <Route path="/login" element={<Navigate to="/signin" replace />} />
+      <Route path="/placements" element={<Navigate to="/placement" replace />} />
       <Route path="/forgot-password" element={<GuestRoute><AuthLayout><ForgotPasswordPage /></AuthLayout></GuestRoute>} />
       <Route path="/onboarding" element={<OnboardingRoute><OnboardingPage /></OnboardingRoute>} />
       <Route path="/onboarding/pending-verification" element={<PendingVerificationPage />} />
@@ -68,32 +76,32 @@ export function AppRoutes() {
 
       {/* Student portal (role: any signed-in user) */}
       <Route element={<RequireAuth><StudentLayout /></RequireAuth>}>
-        <Route path="/dashboard" element={<DashboardPage />} />
-        <Route path="/story" element={<StoryPage />} />
-        <Route path="/profile" element={<ProfilePage />} />
-        <Route path="/profile/edit" element={<ProfileEditPage />} />
-        <Route path="/profile/settings" element={<ProfileSettingsPage />} />
-        <Route path="/settings" element={<SettingsPage />} />
-        <Route path="/settings/security" element={<SecurityPage />} />
-        <Route path="/settings/privacy" element={<PrivacyPage />} />
-        <Route path="/placement" element={<PlacementPage />} />
-        <Route path="/resume" element={<ResumePage />} />
-        <Route path="/resumes" element={<ResumePage />} />
-        <Route path="/resume/studio" element={<ResumeStudioPage />} />
-        <Route path="/resume/:resumeId" element={<ResumeDetailsPage />} />
-        <Route path="/resume/:resumeId/studio" element={<ResumeStudioPage />} />
+        <Route path="/dashboard" element={<Suspense fallback={<LoadingScreen />}><DashboardPage /></Suspense>} />
+        <Route path="/story" element={<Suspense fallback={<LoadingScreen />}><StoryPage /></Suspense>} />
+        <Route path="/profile" element={<Suspense fallback={<LoadingScreen />}><ProfilePage /></Suspense>} />
+        <Route path="/profile/edit" element={<Suspense fallback={<LoadingScreen />}><ProfileEditPage /></Suspense>} />
+        <Route path="/profile/settings" element={<Suspense fallback={<LoadingScreen />}><ProfileSettingsPage /></Suspense>} />
+        <Route path="/settings" element={<Suspense fallback={<LoadingScreen />}><SettingsPage /></Suspense>} />
+        <Route path="/settings/security" element={<Suspense fallback={<LoadingScreen />}><SecurityPageLazy /></Suspense>} />
+        <Route path="/settings/privacy" element={<Suspense fallback={<LoadingScreen />}><PrivacyPageLazy /></Suspense>} />
+        <Route path="/placement" element={<Suspense fallback={<LoadingScreen />}><PlacementPage /></Suspense>} />
+        <Route path="/resume" element={<Suspense fallback={<LoadingScreen />}><ResumePage /></Suspense>} />
+        <Route path="/resumes" element={<Suspense fallback={<LoadingScreen />}><ResumePage /></Suspense>} />
+        <Route path="/resume/studio" element={<Suspense fallback={<LoadingScreen />}><ResumeStudioPage /></Suspense>} />
+        <Route path="/resume/:resumeId" element={<Suspense fallback={<LoadingScreen />}><ResumeDetailsPage /></Suspense>} />
+        <Route path="/resume/:resumeId/studio" element={<Suspense fallback={<LoadingScreen />}><ResumeStudioPage /></Suspense>} />
       </Route>
 
         {/* Recruiter portal (role: recruiter or admin) */}
         <Route path="/recruiter" element={<RequireRole role="recruiter"><RecruiterLayout /></RequireRole>}>
           <Route index element={<Navigate to="/recruiter/overview" replace />} />
-          <Route path=":tab" element={<RecruiterPage />} />
+          <Route path=":tab" element={<Suspense fallback={<LoadingScreen />}><RecruiterPage /></Suspense>} />
         </Route>
 
         {/* Admin portal (role: admin only) */}
         <Route path="/admin" element={<RequireRole role="admin"><AdminLayout /></RequireRole>}>
           <Route index element={<Navigate to="/admin/overview" replace />} />
-          <Route path=":tab" element={<AdminPage />} />
+          <Route path=":tab" element={<Suspense fallback={<LoadingScreen />}><AdminPage /></Suspense>} />
         </Route>
 
         <Route path="*" element={loading ? null : <NotFoundPage />} />

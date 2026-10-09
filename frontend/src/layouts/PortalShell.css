@@ -5,9 +5,9 @@
 .pf-dashboard-brand:hover .pf-brand__name { color: var(--color-primary); }
 .pf-mobile-dashboard-brand { display: none; }
 .pf-dashboard-side nav, .pf-mobile-nav__panel nav { display: grid; gap: 2px; }
-.pf-dashboard-side nav button, .pf-mobile-nav__panel nav button { border: 0; background: transparent; color: var(--text-secondary); text-align: left; padding: 7.5px 11px; border-radius: var(--radius-md); display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: .86rem; transition: background var(--transition-fast), color var(--transition-fast); }
-.pf-dashboard-side nav button:hover, .pf-mobile-nav__panel nav button:hover { background: var(--bg-subtle); color: var(--text-primary); }
-.pf-dashboard-side nav button.active, .pf-mobile-nav__panel nav button.active { background: var(--color-primary-light); color: var(--color-primary); font-weight: 700; }
+.pf-dashboard-side nav button, .pf-dashboard-side nav a, .pf-mobile-nav__panel nav button, .pf-mobile-nav__panel nav a { border: 0; background: transparent; color: var(--text-secondary); text-align: left; padding: 7.5px 11px; border-radius: var(--radius-md); display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: .86rem; transition: background var(--transition-fast), color var(--transition-fast); text-decoration: none; }
+.pf-dashboard-side nav button:hover, .pf-dashboard-side nav a:hover, .pf-mobile-nav__panel nav button:hover, .pf-mobile-nav__panel nav a:hover { background: var(--bg-subtle); color: var(--text-primary); }
+.pf-dashboard-side nav button.active, .pf-dashboard-side nav a.active, .pf-mobile-nav__panel nav button.active, .pf-mobile-nav__panel nav a.active { background: var(--color-primary-light); color: var(--color-primary); font-weight: 700; }
 .pf-nav-group-header { margin-top: 10px; padding: 6px 10px 3px; color: var(--text-muted); font-size: .63rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
 .pf-dashboard-side small { margin-left: auto; color: #9ca49a; font-size: .68rem; }
 .pf-dashboard-side .pf-side-signout { margin-top: 6px; color: #87504a; display: flex; align-items: center; gap: 9px; padding: 8px 11px; border: 0; border-radius: 8px; background: transparent; text-align: left; font: inherit; font-size: .86rem; cursor: pointer; }

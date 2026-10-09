@@ -35,10 +35,11 @@ const OnboardingContext = createContext(null);
 export function OnboardingProvider({ children }) {
   const navigate = useNavigate();
 
-  // Load from sessionStorage if available
+  // Load from localStorage if available. The onboarding draft survives tab
+  // closes (sessionStorage lost it), so an interrupted signup can resume.
   const [formData, setFormData] = useState(() => {
     try {
-      const saved = sessionStorage.getItem(STORAGE_KEY);
+      const saved = localStorage.getItem(STORAGE_KEY);
       if (!saved) return initialFormData;
       // Existing drafts can predate newly added onboarding fields. Merge every
       // nested group so resuming an older draft never crashes a new stage.
@@ -69,12 +70,12 @@ export function OnboardingProvider({ children }) {
   // Result of the early email/roll-number duplicate check (step 2).
   const [emailCheck, setEmailCheck] = useState(null);
 
-  // Sync to sessionStorage
+  // Sync to localStorage
   useEffect(() => {
     try {
-      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(formData));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(formData));
     } catch (e) {
-      console.warn('Failed to save onboarding state to sessionStorage', e);
+      console.warn('Failed to save onboarding state to localStorage', e);
     }
   }, [formData]);
 
@@ -328,7 +329,7 @@ export function OnboardingProvider({ children }) {
 
       // Strict mode: registration is held until the emailed link is opened.
       if (regResponse.pendingVerification) {
-        sessionStorage.removeItem(STORAGE_KEY);
+        localStorage.removeItem(STORAGE_KEY);
         sessionStorage.setItem('pathfolio_verification_email', regResponse.email || payload.personal.email);
         window.location.href = '/onboarding/pending-verification';
         return;
@@ -347,7 +348,7 @@ export function OnboardingProvider({ children }) {
       };
 
       setCompletedStudent(completedData);
-      sessionStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem(STORAGE_KEY);
       sessionStorage.setItem('pathfolio_completed_student', JSON.stringify(completedData));
 
       // Update auth context by triggering a full page reload to /onboarding/complete
@@ -368,7 +369,7 @@ export function OnboardingProvider({ children }) {
     setSubmitError(null);
     setCompletedStudent(null);
     setEmailCheck(null);
-    sessionStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(STORAGE_KEY);
     sessionStorage.removeItem('pathfolio_completed_student');
   };
 

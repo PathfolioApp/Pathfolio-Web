@@ -15,7 +15,8 @@
     "start:frontend": "pnpm --dir frontend run preview",
     "prod": "pnpm run install:all && pnpm run build && concurrently --kill-others \"pnpm run start:api\" \"pnpm run start:frontend\"",
     "start:prod": "pnpm run install:all && pnpm run build && concurrently --kill-others \"pnpm run start:api\" \"pnpm run start:frontend\"",
-    "preview": "pnpm --dir frontend run preview"
+    "preview": "pnpm --dir frontend run preview",
+    "check:copy": "node scripts/check-copy.js"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"

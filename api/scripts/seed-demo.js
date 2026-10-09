@@ -38,10 +38,10 @@ const COMPANIES = [
 
 const STUDENTS = [
   {
-    fullName: 'Aarav Sharma', roll: '2105001', department: 'Computer Science & Engineering', batch: '2027', cgpa: 8.9,
+    fullName: 'Aarav Sharma', roll: '2105001', phone: '+91 90000 10001', dob: '2004-08-15', department: 'Computer Science & Engineering', batch: '2027', cgpa: 8.9,
     tenth: 92, twelfth: 89, backlogs: 0,
-    passions: [{ name: 'Python', proficiency: 'advanced', reason: 'Built multiple backend services with Django and FastAPI' }, { name: 'SQL', proficiency: 'advanced', reason: 'Designed schemas for three production projects' }, { name: 'AWS', proficiency: 'intermediate', reason: 'Deployed projects on EC2 and S3' }],
-    hobbies: [{ name: 'Docker', proficiency: 'intermediate', reason: 'Containers all course projects' }, { name: 'REST APIs', proficiency: 'advanced', reason: '' }],
+    passions: [{ name: 'Backend Systems', proficiency: 'advanced', reason: 'Built multiple backend services with Django and FastAPI' }, { name: 'Database Design', proficiency: 'advanced', reason: 'Designed schemas for three production projects' }, { name: 'Cloud Infrastructure', proficiency: 'intermediate', reason: 'Deployed projects on EC2 and S3' }],
+    hobbies: [{ name: 'Home Labbing', proficiency: 'intermediate', reason: 'Runs a self-hosted server cluster' }, { name: 'Technical Writing', proficiency: 'advanced', reason: 'Publishes API design notes on a personal blog' }],
     projects: [
       { name: 'CampusFlow', type: 'Academic', tech: ['Python', 'Django', 'PostgreSQL', 'Docker'], desc: 'Attendance and grade management platform used by two departments.', contributions: ['Designed the REST API with role-based access', 'Cut report generation time by 70% with cached queries'], url: 'https://github.com/aarav/campusflow' },
       { name: 'QueueLess', type: 'Hackathon', tech: ['FastAPI', 'Redis', 'React'], desc: 'Tokenless queue management app, won 2nd place at HackKIIT 2025.', contributions: ['Built the real-time queue engine with Redis streams'] }
@@ -57,10 +57,10 @@ const STUDENTS = [
     linkedin: 'https://linkedin.com/in/aarav-sharma-demo'
   },
   {
-    fullName: 'Diya Patel', roll: '2105002', department: 'Computer Science & Engineering', batch: '2027', cgpa: 9.2,
+    fullName: 'Diya Patel', roll: '2105002', phone: '+91 90000 10002', dob: '2004-03-22', department: 'Computer Science & Engineering', batch: '2027', cgpa: 9.2,
     tenth: 95, twelfth: 93, backlogs: 0,
-    passions: [{ name: 'React', proficiency: 'expert', reason: 'Shipped four production frontends' }, { name: 'TypeScript', proficiency: 'advanced', reason: '' }, { name: 'UI/UX Design', proficiency: 'intermediate', reason: 'Ran the design club for two semesters' }],
-    hobbies: [{ name: 'Tailwind CSS', proficiency: 'advanced', reason: '' }, { name: 'Figma', proficiency: 'advanced', reason: 'Daily design tool' }],
+    passions: [{ name: 'Frontend Engineering', proficiency: 'expert', reason: 'Shipped four production frontends' }, { name: 'Design Systems', proficiency: 'advanced', reason: 'Led the campus design club for two semesters' }, { name: 'UI/UX Design', proficiency: 'intermediate', reason: 'Ran usability sessions for student apps' }],
+    hobbies: [{ name: 'Photography', proficiency: 'advanced', reason: 'Campus event photographer' }, { name: 'Sketching', proficiency: 'advanced', reason: 'Daily design tool for concept boards' }],
     projects: [
       { name: 'MediTrack', type: 'Client / Freelance', tech: ['React', 'TypeScript', 'Supabase'], desc: 'Medication reminder PWA for a local clinic with 200+ patients.', contributions: ['Designed the full UI system', 'Implemented offline-first sync'] },
       { name: 'Palette Engine', type: 'Personal', tech: ['React', 'Vite'], desc: 'Color palette generator with accessibility contrast checking.', url: 'https://palette.demo.dev' }
@@ -76,10 +76,10 @@ const STUDENTS = [
     linkedin: 'https://linkedin.com/in/diya-patel-demo'
   },
   {
-    fullName: 'Rohan Verma', roll: '2105003', department: 'Electronics & Communication Engineering', batch: '2027', cgpa: 7.8,
+    fullName: 'Rohan Verma', roll: '2105003', phone: '+91 90000 10003', dob: '2004-11-02', department: 'Electronics & Communication Engineering', batch: '2027', cgpa: 7.8,
     tenth: 85, twelfth: 82, backlogs: 1,
-    passions: [{ name: 'Machine Learning', proficiency: 'intermediate', reason: 'Two coursework projects in computer vision' }, { name: 'Python', proficiency: 'advanced', reason: '' }],
-    hobbies: [{ name: 'OpenCV', proficiency: 'intermediate', reason: '' }, { name: 'Raspberry Pi', proficiency: 'beginner', reason: 'Home automation tinkering' }],
+    passions: [{ name: 'Machine Learning', proficiency: 'intermediate', reason: 'Two coursework projects in computer vision' }, { name: 'Embedded Systems', proficiency: 'advanced', reason: 'Family of self-built IoT devices' }],
+    hobbies: [{ name: 'Robotics', proficiency: 'intermediate', reason: 'Campus robotics club build team' }, { name: 'Home Automation', proficiency: 'beginner', reason: 'Tinkers with Raspberry Pi hubs' }],
     projects: [
       { name: 'SignReader', type: 'Research', tech: ['Python', 'OpenCV', 'TensorFlow'], desc: 'Real-time sign language recognition reaching 87% accuracy on a 40-gesture set.', contributions: ['Collected and labelled the training dataset', 'Optimized inference to 24 FPS on CPU'] }
     ],
@@ -89,10 +89,10 @@ const STUDENTS = [
     linkedin: ''
   },
   {
-    fullName: 'Sneha Iyer', roll: '2105004', department: 'Computer Science & Engineering', batch: '2027', cgpa: 8.4,
+    fullName: 'Sneha Iyer', roll: '2105004', phone: '+91 90000 10004', dob: '2004-06-30', department: 'Computer Science & Engineering', batch: '2027', cgpa: 8.4,
     tenth: 90, twelfth: 88, backlogs: 0,
-    passions: [{ name: 'Java', proficiency: 'advanced', reason: 'Strong DSA foundation, 400+ problems solved' }, { name: 'Spring Boot', proficiency: 'intermediate', reason: '' }],
-    hobbies: [{ name: 'SQL', proficiency: 'advanced', reason: '' }, { name: 'Git', proficiency: 'advanced', reason: 'Maintains three open-source repos' }],
+    passions: [{ name: 'Software Architecture', proficiency: 'advanced', reason: 'Leads design reviews for team projects' }, { name: 'Distributed Systems', proficiency: 'intermediate', reason: 'Built a course-projects load balancer' }],
+    hobbies: [{ name: 'Competitive Programming', proficiency: 'advanced', reason: '400+ problems solved across judges' }, { name: 'Open Source', proficiency: 'advanced', reason: 'Maintains three community repos' }],
     projects: [
       { name: 'Library API', type: 'Academic', tech: ['Java', 'Spring Boot', 'MySQL'], desc: 'Microservice library management backend with full test coverage.', url: 'https://github.com/sneha/library-api' }
     ],
@@ -155,7 +155,8 @@ async function main() {
     try {
       created = (await call('POST', '/api/admin/users', {
         fullName: student.fullName, email, password: 'Student#2026', role: 'student',
-        department: student.department, batchYear: student.batch, rollNumber: student.roll
+        department: student.department, batchYear: student.batch, rollNumber: student.roll,
+        phone: student.phone || '', dateOfBirth: student.dob || ''
       })).user;
     } catch (error) {
       console.log(`Student ${student.fullName} skipped: ${error.message}`);
