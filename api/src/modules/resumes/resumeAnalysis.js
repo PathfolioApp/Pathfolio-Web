@@ -232,6 +232,7 @@ async function groqParseResume(text) {
   
   const models = [
     config.groqModel,
+    'openai/gpt-oss-120b',
     'llama-3.3-70b-versatile',
     'llama-3.1-8b-instant'
   ].filter(Boolean);
