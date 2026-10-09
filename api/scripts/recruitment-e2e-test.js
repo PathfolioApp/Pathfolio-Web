@@ -3,10 +3,13 @@
 const BASE = 'http://localhost:5199';
 let cookie = '';
 
+// Load api/.env so requests carry the API key the target server requires.
+require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });
+
 async function call(method, path, body) {
   const response = await fetch(`${BASE}${path}`, {
     method,
-    headers: { 'Content-Type': 'application/json', ...(cookie ? { Cookie: cookie } : {}) },
+    headers: { 'Content-Type': 'application/json', ...(process.env.API_KEY ? { 'X-API-Key': process.env.API_KEY } : {}), ...(cookie ? { Cookie: cookie } : {}) },
     body: body ? JSON.stringify(body) : undefined
   });
   const setCookie = response.headers.get('set-cookie');

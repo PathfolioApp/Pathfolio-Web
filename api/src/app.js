@@ -5,6 +5,7 @@ const config = require('./config');
 const errorHandler = require('./shared/errorHandler');
 const { wrapRouter } = require('./shared/asyncHandler');
 const log = require('./shared/logger');
+const apiKeyAuth = require('./shared/apiKeyAuth');
 
 // Domain modules, each owns its routes, controllers, services, and data access.
 const onboardingRoutes = require('./modules/onboarding/onboarding.routes');
@@ -26,6 +27,11 @@ const opportunityRoutes = require('./modules/applications/opportunity.routes');
 const app = express();
 
 // Middleware
+// Application-level API authentication: machine clients must present the
+// shared key (X-API-Key or Authorization: Bearer) when API_KEY is configured.
+// Transparent when unset, so local/volatile development needs no key.
+app.use(apiKeyAuth);
+
 app.use(cors({
   origin: (origin, callback) => {
     if (!origin || config.clientOrigins.includes(origin)) return callback(null, true);
@@ -33,7 +39,7 @@ app.use(cors({
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-API-Key']
 }));
 
 app.use(express.json({ limit: '1mb' }));

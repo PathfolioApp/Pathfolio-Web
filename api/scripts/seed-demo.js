@@ -8,13 +8,15 @@
  * Requires the API running in volatile mode (USE_DATABASE=false) or a live DB.
  */
 const path = require('path');
+// Load api/.env so requests carry the API key the target server requires.
+require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
 const BASE = process.env.SEED_API_BASE || 'http://localhost:5199';
 let cookie = '';
 
 async function call(method, apiPath, body) {
   const response = await fetch(`${BASE}${apiPath}`, {
     method,
-    headers: { 'Content-Type': 'application/json', ...(cookie ? { Cookie: cookie } : {}) },
+    headers: { 'Content-Type': 'application/json', ...(process.env.API_KEY ? { 'X-API-Key': process.env.API_KEY } : {}), ...(cookie ? { Cookie: cookie } : {}) },
     body: body ? JSON.stringify(body) : undefined
   });
   const setCookie = response.headers.get('set-cookie');

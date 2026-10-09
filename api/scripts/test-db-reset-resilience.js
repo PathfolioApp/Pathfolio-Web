@@ -26,7 +26,7 @@ const BASE = `http://127.0.0.1:${PORT}`;
 const econnreset = () => Object.assign(new Error('read ECONNRESET'), { code: 'ECONNRESET', errno: -4077, syscall: 'read' });
 
 const get = async (path, headers = {}) => {
-  const res = await fetch(`${BASE}${path}`, { headers });
+  const res = await fetch(`${BASE}${path}`, { headers: { ...(process.env.API_KEY ? { 'X-API-Key': process.env.API_KEY } : {}), ...headers } });
   return { status: res.status, body: await res.json() };
 };
 

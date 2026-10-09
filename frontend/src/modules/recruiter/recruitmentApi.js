@@ -1,6 +1,8 @@
 // Recruiter-side Recruitment Intelligence API (company response & candidates).
+import { apiUrl, apiHeaders } from '../../app/services/apiClient.js';
+
 async function request(path, options = {}) {
-  const response = await fetch(`/api/recruiter/recruitment${path}`, { ...options, credentials: 'include', headers: { 'Content-Type': 'application/json', ...(options.headers || {}) } });
+  const response = await fetch(apiUrl(`/api/recruiter/recruitment${path}`), { ...options, credentials: 'include', headers: apiHeaders({ 'Content-Type': 'application/json', ...(options.headers || {}) }) });
   const data = await response.json().catch(() => ({}));
   if (!response.ok || data.success === false) throw new Error(data.message || 'Unable to complete this action.');
   return data;

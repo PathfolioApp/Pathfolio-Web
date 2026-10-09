@@ -14,6 +14,17 @@ module.exports = {
   allowedDomains: ['kiit.ac.in'],
   db: { host: process.env.DB_HOST, port: Number(process.env.DB_PORT || 3306), name: process.env.DB_NAME, user: process.env.DB_USER, password: process.env.DB_PASSWORD },
   sessionSecret: process.env.SESSION_SECRET,
+  // Shared API keys that machine clients (the separate frontend, curl, other
+  // services) must present via `X-API-Key` or `Authorization: Bearer <key>`.
+  // Empty list = gate disabled (local development); comma-separate multiple.
+  apiKeys: (process.env.API_KEY || process.env.API_KEYS || '').split(',').map(k => k.trim()).filter(Boolean),
+  // Session cookie flags. SameSite must be 'none' + SESSION_COOKIE_SECURE=true
+  // when the frontend lives on a different site than the API (separate-host
+  // deployments), otherwise browsers drop the cross-site session cookie.
+  sessionCookie: {
+    sameSite: (process.env.SESSION_COOKIE_SAMESITE || 'lax').trim().toLowerCase(),
+    secure: parseBool(process.env.SESSION_COOKIE_SECURE, process.env.NODE_ENV === 'production')
+  },
   bootstrapAdminEmail: process.env.BOOTSTRAP_ADMIN_EMAIL?.trim().toLowerCase(),
   bootstrapAdminPassword: process.env.BOOTSTRAP_ADMIN_PASSWORD,
   bootstrapAdminName: process.env.BOOTSTRAP_ADMIN_NAME,

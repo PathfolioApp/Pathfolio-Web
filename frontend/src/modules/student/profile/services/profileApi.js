@@ -1,4 +1,6 @@
-async function request(path, options = {}) { const res = await fetch(path, { ...options, credentials: 'include', headers: { 'Content-Type': 'application/json', ...(options.headers || {}) } }); const data = await res.json().catch(() => ({})); if (!res.ok) throw new Error(data.message || 'Unable to save your changes.'); return data; }
+import { apiUrl, apiHeaders } from '../../../../app/services/apiClient.js';
+
+async function request(path, options = {}) { const res = await fetch(apiUrl(path), { ...options, credentials: 'include', headers: apiHeaders({ 'Content-Type': 'application/json', ...(options.headers || {}) }) }); const data = await res.json().catch(() => ({})); if (!res.ok) throw new Error(data.message || 'Unable to save your changes.'); return data; }
 export const profileApi = {
   get: () => request('/api/profile'),
   update: (section, data) => request(`/api/profile/${section}`, { method: 'PATCH', body: JSON.stringify(data) }),
@@ -35,9 +37,10 @@ export async function uploadAcademicDocument(file, type, semester) {
   formData.append('type', type);
   if (semester) formData.append('semester', semester);
 
-  const res = await fetch('/api/profile/academic/documents/upload', {
+  const res = await fetch(apiUrl('/api/profile/academic/documents/upload'), {
     method: 'POST',
     credentials: 'include',
+    headers: apiHeaders(),
     body: formData,
   });
 
@@ -77,9 +80,10 @@ export async function uploadCompanyLogo(file) {
 export async function uploadInternshipCertificate(internshipId, file) {
   const formData = new FormData();
   formData.append('file', file);
-  const res = await fetch(`/api/profile/internships/${internshipId}/certificate`, {
+  const res = await fetch(apiUrl(`/api/profile/internships/${internshipId}/certificate`), {
     method: 'POST',
     credentials: 'include',
+    headers: apiHeaders(),
     body: formData,
   });
   const data = await res.json().catch(() => ({}));
@@ -104,9 +108,10 @@ export async function uploadProjectThumbnail(file) {
 export async function uploadProjectDocument(projectId, file) {
   const formData = new FormData();
   formData.append('file', file);
-  const res = await fetch(`/api/profile/projects/${projectId}/document`, {
+  const res = await fetch(apiUrl(`/api/profile/projects/${projectId}/document`), {
     method: 'POST',
     credentials: 'include',
+    headers: apiHeaders(),
     body: formData,
   });
   const data = await res.json().catch(() => ({}));

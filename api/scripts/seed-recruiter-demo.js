@@ -26,7 +26,7 @@ let cookie = '';
 async function call(method, apiPath, body) {
   const response = await fetch(`${BASE}${apiPath}`, {
     method,
-    headers: { 'Content-Type': 'application/json', ...(cookie ? { Cookie: cookie } : {}) },
+    headers: { 'Content-Type': 'application/json', ...(process.env.API_KEY ? { 'X-API-Key': process.env.API_KEY } : {}), ...(cookie ? { Cookie: cookie } : {}) },
     body: body ? JSON.stringify(body) : undefined
   });
   const setCookie = response.headers.get('set-cookie');

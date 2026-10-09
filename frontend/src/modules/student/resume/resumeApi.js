@@ -1,8 +1,10 @@
+import { apiUrl, apiHeaders } from '../../../app/services/apiClient.js';
+
 async function request(path, options = {}) {
-  const res = await fetch(path, {
+  const res = await fetch(apiUrl(path), {
     ...options,
     credentials: 'include',
-    headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
+    headers: apiHeaders({ 'Content-Type': 'application/json', ...(options.headers || {}) }),
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data.message || 'An error occurred.');
@@ -43,9 +45,10 @@ export async function uploadResume(file, tags = [], category = 'General') {
   }
   formData.append('category', category);
 
-  const res = await fetch('/api/resumes/upload', {
+  const res = await fetch(apiUrl('/api/resumes/upload'), {
     method: 'POST',
     credentials: 'include',
+    headers: apiHeaders(),
     body: formData,
   });
 
@@ -57,7 +60,7 @@ export async function uploadResume(file, tags = [], category = 'General') {
 export async function replaceResume(id, file) {
   const formData = new FormData();
   formData.append('file', file);
-  const res = await fetch(`/api/resumes/${id}/file`, { method: 'PUT', credentials: 'include', body: formData });
+  const res = await fetch(apiUrl(`/api/resumes/${id}/file`), { method: 'PUT', credentials: 'include', headers: apiHeaders(), body: formData });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data.message || 'Unable to replace resume.');
   return data;

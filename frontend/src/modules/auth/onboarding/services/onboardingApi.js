@@ -1,6 +1,8 @@
+import { apiUrl, apiHeaders } from '../../../../app/services/apiClient.js';
+
 const API_BASE_URL = '/api/onboarding';
 async function request(url, options) {
-  const res = await fetch(url, { ...options, credentials: 'include', headers: { 'Content-Type': 'application/json', ...(options?.headers || {}) } });
+  const res = await fetch(apiUrl(url), { ...options, credentials: 'include', headers: apiHeaders({ 'Content-Type': 'application/json', ...(options?.headers || {}) }) });
   const data = await res.json().catch(() => ({}));
   if (!res.ok && res.status !== 202) throw new Error(data.message || 'Unable to reach PathfolioApp.');
   return data;

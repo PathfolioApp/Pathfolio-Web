@@ -3,6 +3,7 @@ import {
   CalendarRange, MessageSquare, Send, Sparkles, Users, Building2,
   CheckCircle2, XCircle, CalendarClock, ArrowLeft, TrendingUp, Award, Milestone, Eye
 } from 'lucide-react';
+import { apiUrl, apiHeaders } from '../../../app/services/apiClient.js';
 import { recruiterRecruitmentApi } from '../recruitmentApi';
 import { Button } from '../../../components/ui/Button';
 import { EmptyState } from '../../../components/ui/EmptyState';
@@ -22,7 +23,7 @@ function HistoryBanner() {
   const [history, setHistory] = useState(null);
 
   useEffect(() => {
-    fetch('/api/recruiter/recruitment/history', { credentials: 'include' })
+    fetch(apiUrl('/api/recruiter/recruitment/history'), { credentials: 'include', headers: apiHeaders() })
       .then(response => response.json())
       .then(data => setHistory(data.history || null))
       .catch(() => setHistory(null));

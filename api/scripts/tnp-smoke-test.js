@@ -11,7 +11,7 @@ const unique = Date.now().toString();
 const ids = { admin: `admin_${unique}`, student: `student_${unique}`, recruiter: `recruiter_${unique}` };
 
 async function request(baseUrl, path, options = {}, cookie) {
-  const headers = { 'Content-Type': 'application/json', ...(options.headers || {}) };
+  const headers = { 'Content-Type': 'application/json', ...(process.env.API_KEY ? { 'X-API-Key': process.env.API_KEY } : {}), ...(options.headers || {}) };
   if (cookie) headers.Cookie = cookie;
   const response = await fetch(`${baseUrl}${path}`, { ...options, headers });
   const body = await response.json().catch(() => ({}));

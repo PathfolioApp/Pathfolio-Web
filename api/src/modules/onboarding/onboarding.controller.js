@@ -1,5 +1,9 @@
 const onboardingService = require('./onboarding.service');
 const authService = require('../auth/auth.service');
+const config = require('../../config');
+// Session cookie flags are config-driven (see auth.routes.js) so the cookie
+// survives cross-site requests when the frontend is hosted separately.
+const sessionCookieOptions = { httpOnly: true, sameSite: config.sessionCookie.sameSite, secure: config.sessionCookie.secure, maxAge: 1000 * 60 * 60 * 24 * 7, path: '/' };
 
 class OnboardingController {
   /** Early duplicate/format check on the institutional email (step 1 of onboarding). */
@@ -32,7 +36,7 @@ class OnboardingController {
 
       const student = await require('../students/studentStore').getStudentById(result.id);
       const session = await authService.register(student);
-      res.cookie('pf_session', session.token, { httpOnly: true, sameSite: 'lax', secure: process.env.NODE_ENV === 'production', maxAge: 1000 * 60 * 60 * 24 * 7, path: '/' });
+      res.cookie('pf_session', session.token, sessionCookieOptions);
       return res.status(201).json({
         success: true,
         message: 'Onboarding profile registered successfully.',
@@ -53,7 +57,7 @@ class OnboardingController {
       if (result.success && result.student) {
         const student = await require('../students/studentStore').getStudentById(result.student.id);
         const session = await authService.register(student);
-        res.cookie('pf_session', session.token, { httpOnly: true, sameSite: 'lax', secure: process.env.NODE_ENV === 'production', maxAge: 1000 * 60 * 60 * 24 * 7, path: '/' });
+        res.cookie('pf_session', session.token, sessionCookieOptions);
       }
       return res.status(result.success ? 200 : 400).json(result);
     } catch (error) {

@@ -6,8 +6,10 @@ import { useAuth } from '../../../../app/providers/AuthProvider';
 import { Button } from '../../../../components/ui/Button';
 import '../../../../modules/student/profile/styles/ProfilePages.css';
 
+import { apiUrl, apiHeaders } from '../../../../app/services/apiClient.js';
+
 async function shareRequest(path, options = {}) {
-  const response = await fetch(`/api/public-profile${path}`, { ...options, credentials: 'include', headers: { 'Content-Type': 'application/json', ...(options.headers || {}) } });
+  const response = await fetch(apiUrl(`/api/public-profile${path}`), { ...options, credentials: 'include', headers: apiHeaders({ 'Content-Type': 'application/json', ...(options.headers || {}) }) });
   const data = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(data.message || 'Unable to update your public link.');
   return data;

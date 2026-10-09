@@ -3,8 +3,10 @@ import { Award, BriefcaseBusiness, Compass, ExternalLink, FolderGit2, Graduation
 import { Link } from 'react-router-dom';
 import './PublicProfilePage.css';
 
+import { apiUrl, apiHeaders } from '../../../app/services/apiClient.js';
+
 async function fetchProfile(token) {
-  const response = await fetch(`/api/public-profile/p/${token}`);
+  const response = await fetch(apiUrl(`/api/public-profile/p/${token}`), { headers: apiHeaders() });
   const data = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(data.message || 'This profile is not available.');
   return data;

@@ -1,5 +1,9 @@
 const assert = require('node:assert/strict');
 
+// Load api/.env so the requests below carry the same API key the server
+// requires when API_KEY is configured (no-op in volatile/keyless runs).
+require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });
+
 const baseUrl = process.env.API_URL || 'http://localhost:5000/api';
 const uniqueId = Date.now().toString();
 const rollNumber = `2024T${uniqueId.slice(-6)}`;
@@ -9,7 +13,7 @@ const newPassword = 'NewTestPassword123';
 let cookie = '';
 
 async function request(path, options = {}, includeCookie = true) {
-  const headers = { 'Content-Type': 'application/json', ...(options.headers || {}) };
+  const headers = { 'Content-Type': 'application/json', ...(process.env.API_KEY ? { 'X-API-Key': process.env.API_KEY } : {}), ...(options.headers || {}) };
   if (includeCookie && cookie) headers.Cookie = cookie;
 
   const response = await fetch(`${baseUrl}${path}`, { ...options, headers });

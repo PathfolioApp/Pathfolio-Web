@@ -1,8 +1,11 @@
 const express = require('express');
 const auth = require('./auth.service');
 const store = require('../students/studentStore');
+const config = require('../../config');
 const router = express.Router();
-const cookieOptions = { httpOnly: true, sameSite: 'lax', secure: process.env.NODE_ENV === 'production', maxAge: 1000 * 60 * 60 * 24 * 7, path: '/' };
+// Flags come from config so separate-host deployments can set SameSite=None;
+// secure via SESSION_COOKIE_* without touching code.
+const cookieOptions = { httpOnly: true, sameSite: config.sessionCookie.sameSite, secure: config.sessionCookie.secure, maxAge: 1000 * 60 * 60 * 24 * 7, path: '/' };
 const tokenFrom = req => (req.headers.cookie || '').split(';').map(v => v.trim()).find(v => v.startsWith('pf_session='))?.slice('pf_session='.length);
 
 router.post('/login', async (req, res) => { try { const { student, token } = await auth.login(req.body.email, req.body.password); res.cookie('pf_session', token, cookieOptions).json({ success: true, student }); } catch (e) { res.status(401).json({ success: false, message: e.message }); } });
