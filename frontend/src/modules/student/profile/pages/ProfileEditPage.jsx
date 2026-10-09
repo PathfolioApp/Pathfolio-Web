@@ -23,6 +23,9 @@ import '../styles/ProjectStyles.css';
 import '../styles/SocialStyles.css';
 
 const split = value => value.split(',').map(item => item.trim()).filter(Boolean);
+// Interest entries arrive as either legacy strings or onboarding objects
+// {name, proficiency, reason}; the tag inputs work with plain names.
+const interestLabels = list => (list || []).map(item => typeof item === 'string' ? item : item?.name || '').filter(Boolean);
 const cleanDescription = value => String(value || '').replace(/\*\*(.*?)\*\*/g, '$1');
 
 const formatSize = (bytes) => {
@@ -1347,8 +1350,8 @@ export function ProfileEditPage() {
     </Modal>
 
     <EditSection id="interests" title="Hobbies & passions" note="Use commas to add or remove tags. Custom interests are welcome." onSave={() => save('interests', interests)} saving={savingSection === 'interests'}>
-      <label>Hobbies <span className="pf-required-star">*</span><input value={interests.hobbies.join(', ')} onChange={event => setInterests({ ...interests, hobbies: split(event.target.value) })} /></label>
-      <label>Passions / interests <span className="pf-required-star">*</span><input value={interests.passions.join(', ')} onChange={event => setInterests({ ...interests, passions: split(event.target.value) })} /></label>
+      <label>Hobbies <span className="pf-required-star">*</span><input value={interestLabels(interests.hobbies).join(', ')} onChange={event => setInterests({ ...interests, hobbies: split(event.target.value) })} /></label>
+      <label>Passions / interests <span className="pf-required-star">*</span><input value={interestLabels(interests.passions).join(', ')} onChange={event => setInterests({ ...interests, passions: split(event.target.value) })} /></label>
     </EditSection>
 
     <EditSection title="Personal / family context" note="Optional sensitive information. It is saved only with your explicit consent." onSave={() => save('family-context', family)} saving={savingSection === 'family-context'}>

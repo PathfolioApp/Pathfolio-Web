@@ -968,7 +968,7 @@ export function ResumePage() {
         isOpen={isTailorModalOpen}
         onClose={() => setIsTailorModalOpen(false)}
         onSuccess={() => {
-          loadResumes();
+          load();
         }}
       />
 
