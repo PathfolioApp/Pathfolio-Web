@@ -12,6 +12,71 @@ import { useAuth } from '../../../app/providers/AuthProvider';
 import { JobApplyModal } from './JobApplyModal';
 import './PlacementPage.css';
 
+const STATUS_FLOW = ['applied', 'shortlisted', 'interview', 'selected'];
+const STATUS_LABEL = { applied: 'Applied', shortlisted: 'Shortlisted', interview: 'Interview', selected: 'Selected', rejected: 'Not selected' };
+
+/**
+ * Compact strip above the opportunity list: the student's own applications
+ * with an inline status timeline, plus cohort-safe aggregate stats.
+ */
+function MyApplicationsPanel() {
+  const [data, setData] = useState(null);
+  const [stats, setStats] = useState(null);
+  const [openId, setOpenId] = useState('');
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    let alive = true;
+    Promise.all([opportunitiesApi.getMine(), opportunitiesApi.getStats().catch(() => null)])
+      .then(([mine, stat]) => { if (alive) { setData(mine); setStats(stat && stat.stats); } })
+      .catch(err => { if (alive) setError(err.message); });
+    return () => { alive = false; };
+  }, []);
+
+  if (error) return null; // panel is additive; never block the opportunities list
+  const applications = (data && data.applications) || [];
+
+  return (
+    <section className="pf-mine-panel" aria-label="Your applications">
+      <div className="pf-mine-panel__stats">
+        <div><strong>{stats ? stats.me.applications : '-'}</strong><span>Your applications</span></div>
+        <div><strong>{stats ? stats.me.activeOpportunities : '-'}</strong><span>Live opportunities</span></div>
+        <div><strong>{stats ? stats.me.shortlisted : '-'}</strong><span>Shortlisted</span></div>
+        <div><strong>{stats ? stats.me.interviews : '-'}</strong><span>Interviews</span></div>
+        {stats && stats.cohort && (
+          <div><strong>{stats.cohort.offers}</strong><span>Offers across {stats.cohort.students} students</span></div>
+        )}
+      </div>
+      {applications.length > 0 && (
+        <ul className="pf-mine-panel__list">
+          {applications.slice(0, 4).map(app => (
+            <li key={app.id}>
+              <button type="button" className="pf-mine-panel__row" onClick={() => setOpenId(openId === app.id ? '' : app.id)} aria-expanded={openId === app.id}>
+                <span className="pf-mine-panel__job">{app.job ? app.job.title : 'Opportunity'}{app.job && app.job.companyName ? ` · ${app.job.companyName}` : ''}</span>
+                <span className={`pf-mine-panel__status is-${app.status}`}>{STATUS_LABEL[app.status] || app.status}</span>
+                <ChevronRight size={14} className={openId === app.id ? 'is-open' : ''} />
+              </button>
+              {openId === app.id && (
+                <ol className="pf-mine-panel__timeline">
+                  {(app.timeline || []).map((event, index) => (
+                    <li key={index} className="is-done">
+                      <span>{event.label}</span>
+                      <small>{new Date(event.at).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}</small>
+                    </li>
+                  ))}
+                  {STATUS_FLOW.filter(step => STATUS_FLOW.indexOf(app.status) >= 0 ? STATUS_FLOW.indexOf(step) > STATUS_FLOW.indexOf(app.status) : false).map(step => (
+                    <li key={step} className="is-pending"><span>{STATUS_LABEL[step]}</span></li>
+                  ))}
+                </ol>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+}
+
 const formatISTDate = dateString => {
   if (!dateString) return '';
   return new Intl.DateTimeFormat('en-IN', { timeZone: 'Asia/Kolkata', month: 'short', day: 'numeric', year: 'numeric' }).format(new Date(dateString));
@@ -91,9 +156,11 @@ export function PlacementPage() {
         <h1>Opportunities</h1>
         <p className="pf-placement-intro">Explore active job postings from hiring partners and track your application status & eligibility.</p>
       </header>
-      
+
       {error && <div className="pf-admin-error">{error}</div>}
-      
+
+      <MyApplicationsPanel />
+
       <section className="pf-placement-container">
         <div className="pf-placement-list">
           {loading ? (

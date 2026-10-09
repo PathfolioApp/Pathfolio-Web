@@ -73,7 +73,43 @@ router.get('/jobs/:id/applications', (req, res) => send(res, async () => { await
 // Shared candidates, only students an admin explicitly shared with this
 // recruiter. There is no route to search or list the broader student body.
 // ---------------------------------------------------------------------------
-router.get('/shared-candidates', (req, res) => send(res, async () => ({ shares: await shares.listForRecruiter(req.student.id) })));
+router.get('/shared-candidates', (req, res) => send(res, async () => {
+  const all = await shares.listForRecruiter(req.student.id);
+  // Optional filters: name/company/department/skill + minimum CGPA.
+  const q = String(req.query.search || '').toLowerCase().trim();
+  const minCgpa = req.query.minCgpa !== undefined && req.query.minCgpa !== '' && !Number.isNaN(Number(req.query.minCgpa)) ? Number(req.query.minCgpa) : null;
+  let filtered = all;
+  if (q || minCgpa !== null) {
+    filtered = all.filter(share => {
+      const students = share.students || share.candidates || [];
+      return students.some(student => {
+        const name = String(student.fullName || student.personal?.fullName || '').toLowerCase();
+        const dept = String(student.department || student.academic?.department || '').toLowerCase();
+        const cgpa = Number(student.cgpa ?? student.academic?.cgpa ?? -1);
+        const skills = [
+          ...(student.skills || []),
+          ...((student.interests?.passions || []).map(i => typeof i === 'string' ? i : i?.name || '')),
+          ...((student.interests?.hobbies || []).map(i => typeof i === 'string' ? i : i?.name || ''))
+        ].map(s => String(s).toLowerCase());
+        if (minCgpa !== null && (Number.isNaN(cgpa) || cgpa < minCgpa)) return false;
+        if (q && !(name.includes(q) || dept.includes(q) || skills.some(s => s.includes(q)))) return false;
+        return true;
+      });
+    }).map(share => ({
+      ...share,
+      students: (share.students || share.candidates || []).filter(student => {
+        const name = String(student.fullName || student.personal?.fullName || '').toLowerCase();
+        const dept = String(student.department || student.academic?.department || '').toLowerCase();
+        const cgpa = Number(student.cgpa ?? student.academic?.cgpa ?? -1);
+        const skills = [...(student.skills || []), ...((student.interests?.passions || []).map(i => typeof i === 'string' ? i : i?.name || '')), ...((student.interests?.hobbies || []).map(i => typeof i === 'string' ? i : i?.name || ''))].map(s => String(s).toLowerCase());
+        if (minCgpa !== null && (Number.isNaN(cgpa) || cgpa < minCgpa)) return false;
+        if (q && !(name.includes(q) || dept.includes(q) || skills.some(s => s.includes(q)))) return false;
+        return true;
+      })
+    }));
+  }
+  return { shares: filtered, total: all.length };
+}));
 router.get('/shared-candidates/:shareId', (req, res) => send(res, async () => ({ share: await shares.getForRecruiter(req.params.shareId, req.student.id) })));
 router.post('/shared-candidates/:shareId/feedback', (req, res) => send(res, async () => ({ share: await shares.recordFeedback(req.params.shareId, req.student.id, req.body) })));
 

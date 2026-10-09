@@ -35,6 +35,9 @@ function presentedKey(req) {
     const match = authorization.match(/^Bearer\s+(.+)$/i);
     if (match) return match[1].trim();
   }
+  // EventSource cannot set custom headers; the SSE stream legitimately passes
+  // the key as a query parameter (see notification.routes.js sseKeyGate).
+  if (typeof req.query.apiKey === 'string' && req.query.apiKey.trim()) return req.query.apiKey.trim();
   return null;
 }
 

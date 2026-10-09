@@ -11,7 +11,7 @@ const TEMPLATES = [
   { id: 'editorial', name: 'Editorial', note: 'Polished for product and design' },
 ];
 
-const safe = value => String(value || '').replace(/[&<>\"]/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '\"': '&quot;' }[character]));
+const safe = value => String(value || '').replace(/[&<>"]/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[character]));
 const list = value => Array.isArray(value) ? value : [];
 
 function profileData(student) {

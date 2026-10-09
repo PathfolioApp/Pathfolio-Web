@@ -1812,6 +1812,7 @@ function ResumeStudioInner() {
   const [isRenaming, setIsRenaming] = useState(false);
   const [renameVal, setRenameVal] = useState('');
   const [renaming, setRenaming] = useState(false);
+  const renameInputRef = useRef(null);
   const paperWrapRef = React.useRef(null);
   const saveDropdownRef = React.useRef(null);
   const [pageCount, setPageCount] = useState(1);
@@ -2302,7 +2303,7 @@ function ResumeStudioInner() {
         try {
           popup.focus();
           popup.print();
-        } catch (_) {}
+        } catch { /* print() can throw if the popup was closed */ }
       }, 350);
     } else {
       alert("Please allow popups to export the PDF.");

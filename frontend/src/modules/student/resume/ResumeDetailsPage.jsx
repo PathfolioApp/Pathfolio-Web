@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { AlertCircle, ArrowLeft, CheckCircle2, Download, Edit3, ExternalLink, FileText, Loader, Save, Star, UploadCloud, WandSparkles } from 'lucide-react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { replaceResume, resumeApi } from './resumeApi';
+import { apiUrl, apiHeaders } from '../../../app/services/apiClient.js';
 import { Button } from '../../../components/ui/Button';
 import { PdfIcon } from '../../../components/ui/PdfIcon';
 import { Preview, normalizeExtractedData } from './ResumeStudioPage';
@@ -78,6 +79,9 @@ export function ResumeDetailsPage() {
   const [analyzing, setAnalyzing] = useState(false);
   const [replacing, setReplacing] = useState(false);
   const [error, setError] = useState('');
+  // Blob URL for the authorized document preview (iframe requests cannot
+  // carry the X-API-Key header, so the file is fetched here instead).
+  const [fileObjectUrl, setFileObjectUrl] = useState('');
   const [tags, setTags] = useState([]);
   const [tagInput, setTagInput] = useState('');
   const [categories, setCategories] = useState([
@@ -111,6 +115,25 @@ export function ResumeDetailsPage() {
   };
 
   useEffect(() => { load(); }, [resumeId]);
+
+  // Fetch the document with the API key attached and serve it to the iframe
+  // from a blob URL (iframes cannot set custom request headers).
+  useEffect(() => {
+    let revoked = '';
+    setFileObjectUrl('');
+    if (!resume || !resume.filepath || !resume.fileUrl) return undefined;
+    (async () => {
+      try {
+        const res = await fetch(apiUrl(resume.fileUrl), { credentials: 'include', headers: apiHeaders() });
+        if (!res.ok) throw new Error('Document unavailable');
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        revoked = url;
+        setFileObjectUrl(url);
+      } catch { setError('Unable to load the document preview.'); }
+    })();
+    return () => { if (revoked) URL.revokeObjectURL(revoked); };
+  }, [resume?.id, resume?.filepath, resume?.fileUrl]);
 
   const updateDraft = (key, value) => setDraft(current => ({ ...current, [key]: value }));
   const updateRecord = (key, index, value) => setDraft(current => ({ ...current, [key]: (current[key] || []).map((item, itemIndex) => itemIndex === index ? value : item) }));
@@ -221,7 +244,22 @@ export function ResumeDetailsPage() {
           <UploadCloud size={15} /> {replacing ? 'Replacing...' : 'Replace'}
           <input type="file" accept="application/pdf" onChange={replace} disabled={replacing} hidden />
         </label>
-        <a className="pf-detail-download-btn" href={resume.downloadUrl} download={resume.filename}>
+        <a className="pf-detail-download-btn" href="#" onClick={event => {
+          event.preventDefault();
+          if (!resume.fileUrl) return;
+          (async () => {
+            try {
+              const res = await fetch(apiUrl(resume.downloadUrl), { credentials: 'include', headers: apiHeaders() });
+              if (!res.ok) throw new Error('unavailable');
+              const blob = await res.blob();
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = url; a.download = resume.filename || 'resume.pdf';
+              document.body.appendChild(a); a.click(); a.remove();
+              URL.revokeObjectURL(url);
+            } catch { setError('Unable to download the document.'); }
+          })();
+        }}>
           <Download size={15} /> Download PDF
         </a>
         <button type="button" className="pf-detail-more-btn" onClick={rename} title="Rename resume" aria-label="Rename resume">
@@ -232,7 +270,7 @@ export function ResumeDetailsPage() {
     {error && <div className="pf-detail-alert" role="alert"><AlertCircle size={15} />{error}</div>}
     <nav className="pf-detail-tabs" aria-label="Resume details"><button type="button" className={tab === 'overview' ? 'is-active' : ''} onClick={() => setSearchParams({ tab: 'overview' })}>Overview</button><button type="button" className={tab === 'analysis' ? 'is-active' : ''} onClick={() => setSearchParams({ tab: 'analysis' })}>Analysis</button><button type="button" className={tab === 'extracted' ? 'is-active' : ''} onClick={() => setSearchParams({ tab: 'extracted' })}>Extracted information</button></nav>
 
-    {tab === 'overview' && <div className="pf-detail-overview"><section className="pf-detail-document"><div className="pf-detail-document-head"><h2>Original document</h2>{resume.fileUrl && <a href={resume.fileUrl} target="_blank" rel="noreferrer"><ExternalLink size={14} /> Open document</a>}</div>
+    {tab === 'overview' && <div className="pf-detail-overview"><section className="pf-detail-document"><div className="pf-detail-document-head"><h2>Original document</h2>{resume.fileUrl && <a href="#" onClick={event => { event.preventDefault(); if (fileObjectUrl) window.open(fileObjectUrl, '_blank', 'noopener'); }}><ExternalLink size={14} /> Open document</a>}</div>
       {/* 
         CRITICAL: DO NOT MODIFY OR REMOVE THIS IFRAME / PREVIEW RENDER LOGIC.
         - Studio-generated resumes MUST be rendered using the live `<Preview>` component for CSS margin consistency.
@@ -243,8 +281,12 @@ export function ResumeDetailsPage() {
         <div className="pf-studio-paper-wrap" style={{ background: '#f0f2f0', padding: '24px', borderRadius: '8px', overflow: 'auto', maxHeight: '80vh' }}>
           <Preview data={normalizeExtractedData(resume.extractedData, null)} template="classic" />
         </div>
+      ) : fileObjectUrl ? (
+        /* The API requires the X-API-Key header, which an iframe cannot attach;
+           the document is fetched with credentials + key and served from a blob. */
+        <iframe src={`${fileObjectUrl}#toolbar=1&view=FitH`} title={resume.filename} />
       ) : (
-        <iframe src={`${resume.fileUrl}#toolbar=1&view=FitH`} title={resume.filename} />
+        <div className="pf-detail-empty"><p>Loading document…</p></div>
       )}
     </section><aside className="pf-detail-side"><div className="pf-detail-side-card"><span className="pf-detail-side-label">Resume status</span><strong>{resume.isDefault ? 'Primary resume' : 'Secondary resume'}</strong><p>{resume.isDefault ? 'Used automatically when you apply to a role.' : 'Available for role-specific applications.'}</p>{!resume.isDefault && <button type="button" onClick={setPrimary}><Star size={14} /> Set as primary</button>}</div><div className="pf-detail-side-card"><span className="pf-detail-side-label">Resume category</span><select value={resume.category || 'General'} onChange={handleCategoryChange} className="pf-detail-category-select" aria-label="Change resume category">{categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}</select><p>Target specialization or domain for this resume.</p></div><div className="pf-detail-side-card"><span className="pf-detail-side-label">Role tags</span><div className="pf-detail-tag-list">{tags.map(tag => <span key={tag}>{tag}<button type="button" onClick={() => saveTags(tags.filter(item => item !== tag))} aria-label={`Remove ${tag}`}>×</button></span>)}</div><form className="pf-detail-tag-form" onSubmit={addTag}><input value={tagInput} onChange={event => setTagInput(event.target.value)} placeholder="Add a role tag" maxLength={30} aria-label="New role tag" /><button type="submit">Add tag</button></form></div><div className="pf-detail-side-card"><span className="pf-detail-side-label">Resume analysis</span><strong>{analysis ? `${analysis.score}% ATS readiness` : 'Not analysed yet'}</strong><p>{analysis ? `Updated ${new Date(analysis.checkedAt).toLocaleString()}` : 'Check structure and content coverage.'}</p><button type="button" onClick={analysis ? () => setSearchParams({ tab: 'analysis' }) : runAnalysis} disabled={analyzing}>{analyzing ? 'Checking...' : analysis ? 'View analysis' : 'Check resume'}</button></div></aside></div>}
 

@@ -169,8 +169,20 @@ class AdminUserService {
     if (student.isAdmin) throw new Error('The bootstrap admin cannot be changed here.');
     student.isRecruiter = nextRole === 'recruiter';
     await studentStore.saveStudent(student);
-    await auditLog.record({ actorId: adminId, action: 'user.role', entityType: 'user', entityId: student.id, entityLabel: student.personal?.fullName || student.personal?.email, detail: `Role changed to ${nextRole}.` });
+    // Privilege changed: revoke every existing session so stale tokens (which
+    // may be held by other browsers) cannot ride the new role. The user simply
+    // signs in again on the device they are using.
+    await studentStore.deleteSessionsForUser(student.id);
+    await auditLog.record({ actorId: adminId, action: 'user.role', entityType: 'user', entityId: student.id, entityLabel: student.personal?.fullName || student.personal?.email, detail: `Role changed to ${nextRole}; all sessions revoked.` });
     return publicUser(student);
+  }
+
+  /** Sign the user out of every device (called from the user's own settings action). */
+  async revokeAllSessions(id, adminId) {
+    const student = await studentStore.getStudentById(id);
+    if (!student) { const error = new Error('User not found.'); error.statusCode = 404; throw error; }
+    await studentStore.deleteSessionsForUser(id);
+    await auditLog.record({ actorId: adminId, action: 'user.sessions.revoke', entityType: 'user', entityId: id, entityLabel: student.personal?.fullName || student.personal?.email, detail: 'User signed out of all devices.' });
   }
 
   async setBlocked(id, blocked, adminId) {

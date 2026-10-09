@@ -1,6 +1,7 @@
 import React,{useEffect,useRef,useState} from 'react';
 import { Bell, CheckCheck, X } from 'lucide-react';
 import { notificationApi } from '../../app/services/notificationApi';
+import { apiUrl } from '../../app/services/apiClient';
 import { Modal } from './Modal';
 import { Button } from './Button';
 import './NotificationPanel.css';
@@ -10,6 +11,24 @@ export function NotificationPanel(){
 	const ref=useRef();
 	const load=async()=>{setLoading(true);setError('');try{setData(await notificationApi.list())}catch(e){setError(e.message)}finally{setLoading(false)}};
 	useEffect(()=>{if(open)load()},[open]);
+	// Live updates: SSE stream pushes a refresh signal whenever any notification
+	// is created for this user. EventSource cannot send the X-API-Key header,
+	// so the key rides in the query string (the stream is auth-cookie protected
+	// and carries no data of its own). Falls back silently to the on-open
+	// polling the panel always had (e.g. on Vercel serverless where streams
+	// cannot persist).
+	useEffect(()=>{
+		let source; let closed=false; let retryTimer;
+		const connect=()=>{
+			const key=(import.meta.env.VITE_API_KEY||'').trim();
+			const url=apiUrl('/api/notifications/stream')+(key?`?apiKey=${encodeURIComponent(key)}`:'');
+			try{ source=new EventSource(url,{ withCredentials:true }); }catch{ return; }
+			source.addEventListener('notification',()=>{ load().catch(()=>{}); });
+			source.onerror=()=>{ source.close(); if(!closed){ retryTimer=setTimeout(connect,30_000); } };
+		};
+		connect();
+		return()=>{ closed=true; clearTimeout(retryTimer); source&&source.close(); };
+	},[]);
 	useEffect(()=>{const close=e=>{if(ref.current&&!ref.current.contains(e.target))setOpen(false)};document.addEventListener('mousedown',close);return()=>document.removeEventListener('mousedown',close)},[]);
 	const read=async id=>{try{setData(await notificationApi.markRead(id))}catch(e){setError(e.message)}};
 	const clearAll=async()=>{setClearing(true);setError('');try{setData(await notificationApi.clearAll());setConfirming(false)}catch(e){setError(e.message)}finally{setClearing(false)}};

@@ -928,3 +928,25 @@
   line-height: 1.45;
 }
 
+
+/* My Applications strip (timeline + cohort-safe stats) */
+.pf-mine-panel { margin: 0 0 22px; border: 1px solid var(--border-subtle); border-radius: var(--radius-md); background: var(--bg-surface); padding: 14px 18px; }
+.pf-mine-panel__stats { display: flex; flex-wrap: wrap; gap: 26px; }
+.pf-mine-panel__stats > div { display: flex; flex-direction: column; }
+.pf-mine-panel__stats strong { font-size: 1.35rem; color: var(--color-primary); }
+.pf-mine-panel__stats span { font-size: 0.74rem; color: var(--text-muted); }
+.pf-mine-panel__list { list-style: none; margin: 12px 0 0; padding: 0; border-top: 1px solid var(--border-subtle); }
+.pf-mine-panel__row { width: 100%; display: flex; align-items: center; gap: 10px; padding: 10px 2px; border: 0; background: transparent; cursor: pointer; font: inherit; color: inherit; text-align: left; }
+.pf-mine-panel__job { flex: 1; font-weight: 600; font-size: 0.9rem; }
+.pf-mine-panel__status { font-size: 0.76rem; font-weight: 700; padding: 2px 9px; border-radius: 999px; background: var(--bg-subtle); color: var(--text-secondary); }
+.pf-mine-panel__status.is-shortlisted { background: #e8f0e4; color: #4a6b3f; }
+.pf-mine-panel__status.is-interview { background: #eaeef6; color: #3c5a8c; }
+.pf-mine-panel__status.is-selected { background: #e2f0e6; color: #2c6b3f; }
+.pf-mine-panel__status.is-rejected { background: #f6e8e8; color: #8c3c3c; }
+.pf-mine-panel__row svg { transition: transform 160ms ease; color: var(--text-muted); }
+.pf-mine-panel__row svg.is-open { transform: rotate(90deg); }
+.pf-mine-panel__timeline { list-style: none; margin: 0 0 10px; padding: 4px 0 0 14px; display: grid; gap: 6px; }
+.pf-mine-panel__timeline li { display: flex; justify-content: space-between; align-items: baseline; font-size: 0.85rem; color: var(--text-secondary); border-left: 2px solid var(--border-subtle); padding-left: 12px; }
+.pf-mine-panel__timeline li.is-done { color: var(--text-primary); border-left-color: var(--color-primary); }
+.pf-mine-panel__timeline li.is-pending { opacity: 0.55; }
+.pf-mine-panel__timeline small { color: var(--text-muted); font-size: 0.72rem; }

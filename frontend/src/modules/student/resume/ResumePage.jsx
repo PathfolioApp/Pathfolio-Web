@@ -7,6 +7,7 @@ import {
   CircleDashed, AlertCircle, Target, Loader, RefreshCw, Compass, Briefcase
 } from 'lucide-react';
 import { resumeApi, uploadResume } from './resumeApi';
+import { apiUrl, apiHeaders } from '../../../app/services/apiClient.js';
 import { Button } from '../../../components/ui/Button';
 import { PdfIcon } from '../../../components/ui/PdfIcon';
 import AiToast from '../../../components/ui/AiToast';
@@ -739,9 +740,25 @@ export function ResumePage() {
                         </button>
                       )}
                       <a
-                        href={resume.downloadUrl}
+                        href="#"
                         download={resume.filename}
-                        onClick={() => setOpenMenu(null)}
+                        onClick={event => {
+                          event.preventDefault();
+                          setOpenMenu(null);
+                          if (!resume.downloadUrl) return;
+                          (async () => {
+                            try {
+                              const res = await fetch(apiUrl(resume.downloadUrl), { credentials: 'include', headers: apiHeaders() });
+                              if (!res.ok) throw new Error('unavailable');
+                              const blob = await res.blob();
+                              const url = URL.createObjectURL(blob);
+                              const a = document.createElement('a');
+                              a.href = url; a.download = resume.filename || 'resume.pdf';
+                              document.body.appendChild(a); a.click(); a.remove();
+                              URL.revokeObjectURL(url);
+                            } catch { setError('Unable to download the resume.'); }
+                          })();
+                        }}
                       >
                         <Download size={14} /> Download PDF
                       </a>
