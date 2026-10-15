@@ -71,10 +71,10 @@ async function start() {
   const bootstrapAdmin = await adminUserService.ensureBootstrapAdmin(config);
   if (bootstrapAdmin) log.startup.info(`Bootstrap admin ready for ${bootstrapAdmin.email}`);
 
-  const server = app.listen(config.port, () => {
+  const server = app.listen(config.port, config.host, () => {
     log.startup.info('──────────────────────────────────────────────');
     log.startup.info('PathfolioApp Backend API');
-    log.startup.info(`Health:      http://localhost:${config.port}/api/health`);
+    log.startup.info(`Health:      http://${config.host}:${config.port}/api/health`);
     log.startup.info(`Environment: ${config.nodeEnv}`);
     log.startup.info(`Port:        ${config.port}`);
     log.startup.info('──────────────────────────────────────────────');

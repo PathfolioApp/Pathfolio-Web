@@ -24,6 +24,7 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [react()],
     server: {
+      host: env.VITE_HOST || '127.0.0.1',
       port: Number(env.VITE_PORT || 5173),
       open: false,
       proxy: {
@@ -59,6 +60,10 @@ export default defineConfig(({ mode }) => {
           }
         }
       }
+    },
+    preview: {
+      host: env.VITE_HOST || '127.0.0.1',
+      port: Number(env.VITE_PORT || 5173)
     }
   };
 });

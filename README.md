@@ -237,9 +237,10 @@ npm run start:frontend # Frontend, production preview
 
 | Variable | Purpose |
 | --- | --- |
+| `HOST` | API bind address (default `0.0.0.0`) |
 | `PORT` | API port (default 5000) |
 | `NODE_ENV` | `development` / `production` |
-| `CLIENT_ORIGIN` | Allowed CORS origins, comma-separated |
+| `CLIENT_ORIGIN` | Allowed frontend origins, comma-separated |
 | `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD` | MySQL connection |
 | `USE_DATABASE` | Force DB mode in development (`true`) |
 | `SESSION_SECRET` | Session secret (for production hardening) |
@@ -251,6 +252,21 @@ npm run start:frontend # Frontend, production preview
 | `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET`, `R2_ENDPOINT`, `R2_PUBLIC_URL` | Resume & document storage |
 
 Without database configuration, the API runs in development-only volatile mode. Production requires the database (`databaseConfigured` check on boot).
+
+### Frontend host and API address
+
+The frontend reads these values from `frontend/.env`:
+
+| Variable | Purpose |
+| --- | --- |
+| `VITE_HOST` | Vite bind address (use `0.0.0.0` for external access) |
+| `VITE_PORT` | Frontend port |
+| `VITE_API_BASE_URL` | API URL embedded in the frontend production bundle |
+| `VITE_API_PROXY_TARGET` | API target used by the Vite proxy |
+
+For the production host in this deployment, use `http://139.99.121.67:25613`
+for the frontend and `http://139.99.121.67:25569` for the API. Keep
+`api/.env` `CLIENT_ORIGIN` aligned with the frontend URL.
 
 ---
 

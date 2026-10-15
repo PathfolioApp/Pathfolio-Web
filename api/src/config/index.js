@@ -7,6 +7,7 @@ const parseBool = (value, fallback = false) => {
 };
 
 module.exports = {
+  host: process.env.HOST || '0.0.0.0',
   port: process.env.PORT || 5000,
   nodeEnv: process.env.NODE_ENV || 'development',
   clientOrigins: (process.env.CLIENT_ORIGIN || 'http://localhost:5173').split(',').map(origin => origin.trim()).filter(Boolean),
