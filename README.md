@@ -228,7 +228,7 @@ npm run start:prod
 npm run dev:api      # Backend, development (port 5000)
 npm run start:api    # Backend, production mode
 npm run dev:frontend # Frontend, Vite dev server
-npm run start:frontend # Frontend, production preview
+npm run start:frontend # Frontend, production preview (uses VITE_HOST/VITE_PORT)
 ```
 
 ---
