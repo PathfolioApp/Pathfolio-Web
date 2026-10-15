@@ -5,6 +5,10 @@ import react from '@vitejs/plugin-react';
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
   const apiTarget = env.VITE_API_PROXY_TARGET || 'http://localhost:5000';
+  const allowedHosts = (env.VITE_ALLOWED_HOSTS || 'sg1.potenfyr.in')
+    .split(',')
+    .map(host => host.trim())
+    .filter(Boolean);
 
   // The API being unreachable is a normal dev state (still starting, crashed,
   // or simply not running). Log it as a short, friendly notice — once per
@@ -26,6 +30,7 @@ export default defineConfig(({ mode }) => {
     server: {
       host: env.VITE_HOST || '127.0.0.1',
       port: Number(env.VITE_PORT || 5173),
+      allowedHosts,
       open: false,
       proxy: {
         '/api': {
@@ -63,7 +68,8 @@ export default defineConfig(({ mode }) => {
     },
     preview: {
       host: env.VITE_HOST || '127.0.0.1',
-      port: Number(env.VITE_PORT || 5173)
+      port: Number(env.VITE_PORT || 5173),
+      allowedHosts
     }
   };
 });
