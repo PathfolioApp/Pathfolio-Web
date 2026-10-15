@@ -240,7 +240,7 @@ npm run start:frontend # Frontend, production preview
 | `HOST` | API bind address (default `0.0.0.0`) |
 | `PORT` | API port (default 5000) |
 | `NODE_ENV` | `development` / `production` |
-| `CLIENT_ORIGIN` | Allowed frontend origins, comma-separated |
+| `CLIENT_ORIGIN` | Allowed exact frontend origins, comma-separated, including scheme and port |
 | `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD` | MySQL connection |
 | `USE_DATABASE` | Force DB mode in development (`true`) |
 | `SESSION_SECRET` | Session secret (for production hardening) |
