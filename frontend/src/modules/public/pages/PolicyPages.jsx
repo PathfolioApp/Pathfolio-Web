@@ -13,6 +13,7 @@ const policyContent = {
     sections: [
       ['What we collect', 'We collect the profile, academic, interest, achievement, and account information you choose to provide. We also process session and notification information needed to keep the service secure and useful.'],
       ['How we use it', 'We use your information to provide onboarding, profile, story, placement, notification, and account features. We do not use optional personal context beyond the consent you provide.'],
+      ['Optional AI summaries', 'When you choose to generate a Story summary, selected saved academic, project, internship, milestone, and interest details, including your name, are sent to the configured external AI service (such as Gemini or Groq). Contact details, date of birth, and personal or family context are excluded from this feature. Generated summaries are saved to your account and reused; profile changes mark older summaries as outdated. AI wording may contain mistakes, so review it before sharing. Viewing a saved Story summary does not trigger AI generation.'],
       ['Your choices', 'You can update your profile, manage sharing controls, and request changes to your information through the application. Contact the PathfolioApp team if you need help accessing or deleting your record.']
     ]
   },

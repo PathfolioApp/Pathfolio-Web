@@ -5,6 +5,8 @@ const parseBool = (value, fallback = false) => {
   if (value === undefined || value === null || value === '') return fallback;
   return ['true', '1', 'yes', 'on'].includes(String(value).trim().toLowerCase());
 };
+const boundedInt = (value, fallback, min, max) => Number.isFinite(Number(value)) && String(value ?? '').trim() !== ''
+  ? Math.max(min, Math.min(max, Math.floor(Number(value)))) : fallback;
 
 module.exports = {
   host: process.env.HOST || '0.0.0.0',
@@ -57,10 +59,18 @@ module.exports = {
   },
   geminiApiKey: process.env.GEMINI_API_KEY?.trim() || null,
   groqApiKey: process.env.GROQ_API_KEY?.trim() || null,
-  groqModel: process.env.GROQ_MODEL?.trim() || 'llama-3.3-70b-versatile',
+  groqModel: process.env.GROQ_MODEL?.trim() || 'openai/gpt-oss-120b',
   // Generic AI provider for the recruitment intelligence features. Defaults to
   // reusing the free Gemini key when AI_* variables are not set, so no new paid
   // dependency is introduced. provider 'none' disables every AI call.
+  storyAi: {
+    dailyPerStudent: boundedInt(process.env.STORY_AI_DAILY_PER_STUDENT, 5, 1, 50),
+    dailyCampus: boundedInt(process.env.STORY_AI_DAILY_CAMPUS, 1000, 1, 1000000),
+    concurrency: boundedInt(process.env.STORY_AI_CONCURRENCY, 4, 1, 100),
+    cooldownSeconds: boundedInt(process.env.STORY_AI_COOLDOWN_SECONDS, 60, 10, 86400),
+    deadlineMs: boundedInt(process.env.STORY_AI_DEADLINE_MS, 20000, 1000, 20000),
+    geminiModels: (process.env.STORY_AI_GEMINI_MODELS || 'gemini-3.5-flash-lite').split(',').map(v => v.trim()).filter(Boolean).slice(0, 2)
+  },
   ai: {
     provider: (process.env.AI_PROVIDER || 'auto').trim().toLowerCase(), // auto | gemini | groq | openai-compatible | none
     apiKey: (process.env.AI_API_KEY || '').trim() || null,

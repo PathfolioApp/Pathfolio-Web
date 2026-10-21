@@ -10,7 +10,7 @@
  *   remaining a single greppable line per event for production log drains.
  *
  * Every line looks like:
- *   2026-09-29T18:31:02.441Z [info ] [api   ] Server listening on port 5000
+ *   2026-09-30T00:01:02.441+05:30 [info ] [api   ] Server listening on port 5000
  */
 
 const LEVELS = { debug: 10, info: 20, warn: 30, error: 40 };
@@ -36,9 +36,9 @@ function padScope(scope) {
 }
 
 function write(stream, level, scope, args) {
-  const timestamp = new Date().toISOString();
+  const timestamp = new Date(Date.now() + 330 * 60 * 1000).toISOString().replace('Z', '+05:30');
   const tag = `[${level.padEnd(5, ' ')}]`;
-  stream(tag, timestamp, `[${padScope(scope)}]`, ...args);
+  stream(timestamp, tag, `[${padScope(scope)}]`, ...args);
 }
 
 function makeScope(scope) {

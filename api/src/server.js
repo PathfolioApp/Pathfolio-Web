@@ -6,6 +6,7 @@ const { closeAllPools, isTransientDbError } = require('./shared/db');
 
 // Domain-owned data stores (initialize schema / connections).
 const studentStore = require('./modules/students/studentStore');
+const storyStore = require('./modules/students/storyStore');
 const adminContentStore = require('./modules/admin/adminContentStore');
 const resumeStore = require('./modules/resumes/resumeStore');
 const recruiterShareService = require('./modules/recruiters/recruiterShare.service');
@@ -53,6 +54,7 @@ async function start() {
 
   const steps = [
     ['Student store', () => studentStore.initialize()],
+    ['Story summary store', () => storyStore.initialize()],
     ['Admin content store', () => adminContentStore.initialize()],
     ['Resume store', () => resumeStore.initialize(studentStore.pool)],
     ['Recruiter shares', () => recruiterShareService.initialize()],

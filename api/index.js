@@ -5,6 +5,7 @@
  */
 const app = require('./src/app');
 const store = require('./src/modules/students/studentStore');
+const storyStore = require('./src/modules/students/storyStore');
 const adminContentStore = require('./src/modules/admin/adminContentStore');
 const recruiterShareService = require('./src/modules/recruiters/recruiterShare.service');
 const auditLogService = require('./src/shared/auditLog.service');
@@ -16,6 +17,7 @@ async function initialize() {
   if (!ready) {
     ready = (async () => {
       await store.initialize();
+      await storyStore.initialize();
       await adminContentStore.initialize();
       await recruiterShareService.initialize();
       await auditLogService.initialize();

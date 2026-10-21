@@ -77,6 +77,7 @@ export function AppRoutes() {
       {/* Student portal (role: any signed-in user) */}
       <Route element={<RequireAuth><StudentLayout /></RequireAuth>}>
         <Route path="/dashboard" element={<Suspense fallback={<LoadingScreen />}><DashboardPage /></Suspense>} />
+        <Route path="/story/demo" element={<Navigate to="/story" replace />} />
         <Route path="/story" element={<Suspense fallback={<LoadingScreen />}><StoryPage /></Suspense>} />
         <Route path="/profile" element={<Suspense fallback={<LoadingScreen />}><ProfilePage /></Suspense>} />
         <Route path="/profile/edit" element={<Suspense fallback={<LoadingScreen />}><ProfileEditPage /></Suspense>} />
