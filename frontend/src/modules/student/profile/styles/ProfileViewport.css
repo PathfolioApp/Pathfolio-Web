@@ -1,0 +1,174 @@
+/* Responsive adjustments for the read-only /profile view. Shared edit styles,
+   colours, typography and card decoration are intentionally retained. */
+.pf-profile-view {
+  width: 100%;
+  min-width: 0;
+  padding-inline: 0;
+  container-type: inline-size;
+  container-name: profile-view;
+}
+
+.pf-profile-view .pf-profile-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.pf-profile-view .pf-profile-grid > section,
+.pf-profile-view .pf-profile-hero,
+.pf-profile-view .pf-profile-hero-left,
+.pf-profile-view .pf-profile-hero-right,
+.pf-profile-view .pf-title-group,
+.pf-profile-view .pf-info-row,
+.pf-profile-view .pf-internship-card,
+.pf-profile-view .pf-project-carousel-wrapper,
+.pf-profile-view .pf-project-card__content {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.pf-profile-view .pf-title-row-enhanced { flex-wrap: wrap; gap: 12px 16px; }
+.pf-profile-view .pf-title-with-icon { min-width: 0; max-width: 100%; }
+.pf-profile-view .pf-title-with-icon > span { min-width: 0; overflow-wrap: anywhere; }
+.pf-profile-view .pf-count-pill { flex-shrink: 0; }
+.pf-profile-view .pf-section-link { white-space: normal; min-height: 44px; display: inline-flex; align-items: center; }
+.pf-profile-view .pf-info-row { gap: 12px; }
+.pf-profile-view .pf-info-label { flex: 0 1 42%; min-width: 0; }
+.pf-profile-view .pf-info-value { flex: 1 1 0; min-width: 0; display: block; overflow-wrap: anywhere; }
+.pf-profile-view .pf-verified-icon { display: inline; margin-left: 5px; vertical-align: middle; }
+.pf-profile-view .pf-profile-eyebrow-row { flex-wrap: wrap; }
+.pf-profile-view .pf-profile-subtext > span { min-width: 0; overflow-wrap: anywhere; }
+.pf-profile-view .pf-hero-social-row { max-width: 100%; }
+.pf-profile-view .pf-hero-social-pill,
+.pf-profile-view .pf-hero-add-social-btn { max-width: 100%; min-height: 44px; }
+.pf-profile-view .pf-hero-social-pill > span { min-width: 0; overflow-wrap: anywhere; }
+.pf-profile-view .pf-hero-social-pill svg { flex-shrink: 0; }
+.pf-profile-view .pf-hero-edit-btn { min-height: 44px; justify-content: center; }
+.pf-profile-view .pf-completeness-info { flex-wrap: wrap; }
+
+.pf-profile-view .pf-schooling-showcase { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.pf-profile-view .pf-schooling-subcard { min-width: 0; }
+.pf-profile-view .pf-schooling-subcard__header { gap: 10px; flex-wrap: wrap; }
+.pf-profile-view .pf-transcripts-table-wrapper { min-width: 0; max-width: 100%; overflow-x: auto; overscroll-behavior-inline: contain; }
+.pf-profile-view .pf-transcripts-table { min-width: 540px; }
+.pf-profile-view .pf-eligibility-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.pf-profile-view .pf-eligibility-grid > div { min-width: 0; }
+.pf-profile-view .pf-social-grid { grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); }
+.pf-profile-view .pf-social-card { min-width: 0; }
+.pf-profile-view .pf-social-card__action { flex-shrink: 0; }
+
+.pf-profile-view .pf-profile-empty-row { gap: 14px; flex-wrap: wrap; }
+.pf-profile-view .pf-profile-empty-row > p { min-width: 0; flex: 1 1 220px; }
+.pf-profile-view .pf-resume-inner-card { min-width: 0; }
+.pf-profile-view .pf-resume-inner-left { max-width: 100%; }
+.pf-profile-view .pf-resume-btn-group { flex-wrap: wrap; }
+.pf-profile-view .pf-resume-meta > span { min-width: 0; max-width: 100%; }
+.pf-profile-view .pf-profile-resume-tags { flex-wrap: wrap; }
+.pf-profile-view .pf-resume-tag-pill,
+.pf-profile-view .pf-tags > span,
+.pf-profile-view .pf-internship-tag,
+.pf-profile-view .pf-project-tag { max-width: 100%; overflow-wrap: anywhere; }
+.pf-profile-view .pf-internship-card__header,
+.pf-profile-view .pf-internship-card__footer,
+.pf-profile-view .pf-project-card__header,
+.pf-profile-view .pf-project-card__footer { flex-wrap: wrap; gap: 12px; }
+.pf-profile-view .pf-internship-card__identity { max-width: 100%; }
+.pf-profile-view .pf-internship-card__badges,
+.pf-profile-view .pf-project-header-actions,
+.pf-profile-view .pf-project-links-group { flex-wrap: wrap; }
+.pf-profile-view .pf-internship-meta-item,
+.pf-profile-view .pf-project-meta-item { min-width: 0; }
+.pf-profile-view .pf-internship-meta-item svg,
+.pf-profile-view .pf-project-meta-item svg { flex-shrink: 0; }
+.pf-profile-view .pf-project-card--carousel { min-width: 0; }
+.pf-profile-view .pf-project-carousel-track { max-width: 100%; overscroll-behavior-inline: contain; }
+.pf-profile-view .pf-carousel-dots { flex-wrap: wrap; max-width: 100%; }
+.pf-profile-view .pf-expand-btn { max-width: 100%; }
+.pf-profile-view .pf-btn-subtle,
+.pf-profile-view .pf-btn-primary-pill,
+.pf-profile-view .pf-doc-btn,
+.pf-profile-view .pf-details-btn,
+.pf-profile-view .pf-expand-btn { min-height: 44px; white-space: normal; }
+.pf-profile-view .pf-carousel-nav-btn { width: 44px; height: 44px; }
+.pf-profile-view .pf-btn-subtle svg,
+.pf-profile-view .pf-doc-btn svg,
+.pf-profile-view .pf-details-btn svg,
+.pf-profile-view .pf-expand-btn svg { flex-shrink: 0; }
+
+/* Use available content width, including the space lost to the desktop sidebar. */
+@container profile-view (max-width: 980px) {
+  .pf-profile-view .pf-profile-hero { flex-direction: column; align-items: stretch; gap: 18px; }
+  .pf-profile-view .pf-profile-hero-right { justify-content: space-between; flex-wrap: wrap; padding-top: 16px; border-top: 1px solid #e1e7e0; }
+  .pf-profile-view .pf-profile-completeness-card { border-right: none; padding-right: 0; align-items: flex-start; }
+  .pf-profile-view .pf-profile-grid { grid-template-columns: minmax(0, 1fr); }
+  .pf-profile-view .pf-profile-wide { grid-column: 1 / -1; }
+  .pf-profile-view .pf-resume-inner-card { flex-wrap: wrap; }
+  .pf-profile-view .pf-resume-inner-left { flex-basis: 100%; }
+  .pf-profile-view .pf-resume-btn-group { width: 100%; justify-content: flex-end; }
+}
+
+@container profile-view (max-width: 720px) {
+  .pf-profile-view .pf-schooling-showcase { grid-template-columns: minmax(0, 1fr); }
+  .pf-profile-view .pf-eligibility-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .pf-profile-view .pf-project-card--carousel,
+  .pf-profile-view .pf-project-carousel-track--few .pf-project-card--carousel { flex: 0 0 calc(90% - 8px); min-width: 0; }
+  .pf-profile-view .pf-project-carousel-track[data-project-count="1"] .pf-project-card--carousel { flex-basis: 100%; }
+  .pf-profile-view .pf-project-card__media { height: auto; aspect-ratio: 16 / 10; }
+}
+
+@container profile-view (max-width: 540px) {
+  .pf-profile-view .pf-profile-hero,
+  .pf-profile-view .pf-profile-grid > section { padding: 20px 16px; }
+  .pf-profile-view .pf-profile-grid { gap: 16px; }
+  .pf-profile-view .pf-profile-hero-left { align-items: flex-start; gap: 14px; }
+  .pf-profile-view .pf-profile-avatar-wrapper { width: 60px; height: 60px; }
+  .pf-profile-view .pf-profile-avatar-fallback { font-size: 1.3rem; }
+  .pf-profile-view .pf-profile-name { font-size: clamp(1.5rem, 6cqi, 1.95rem); }
+  .pf-profile-view .pf-profile-subtext { gap: 4px; }
+  .pf-profile-view .pf-profile-subtext > span { flex-basis: 100%; }
+  .pf-profile-view .pf-profile-subtext > .pf-dot { display: none; }
+  .pf-profile-view .pf-profile-hero-right { gap: 14px; }
+  .pf-profile-view .pf-hero-social-row { gap: 6px; }
+  .pf-profile-view .pf-title-row-enhanced { gap: 6px 12px; }
+  .pf-profile-view .pf-project-header-actions { gap: 10px; width: 100%; justify-content: space-between; }
+  .pf-profile-view .pf-schooling-subcard { padding: 16px; }
+  .pf-profile-view .pf-resume-inner-card { padding: 14px; }
+  .pf-profile-view .pf-resume-btn-group { justify-content: stretch; }
+  .pf-profile-view .pf-resume-btn-group > a { flex: 1 1 auto; }
+  .pf-profile-view .pf-eligibility-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .pf-profile-view .pf-internship-card { padding: 16px; }
+  .pf-profile-view .pf-project-card { padding: 14px; }
+  .pf-profile-view .pf-project-card__header { flex-direction: column; align-items: stretch; }
+  .pf-profile-view .pf-project-links-group { justify-content: flex-start; }
+}
+
+@container profile-view (max-width: 400px) {
+  .pf-profile-view .pf-profile-hero-left { flex-direction: column; }
+  .pf-profile-view .pf-profile-hero-right { flex-direction: column; align-items: stretch; }
+  .pf-profile-view .pf-profile-completeness-card { align-items: stretch; }
+  .pf-profile-view .pf-completeness-bar { width: 100%; }
+  .pf-profile-view .pf-info-row { flex-direction: column; align-items: stretch; gap: 4px; }
+  .pf-profile-view .pf-info-value { text-align: left; }
+  .pf-profile-view .pf-profile-empty-row > a { width: 100%; }
+}
+
+@media (max-width: 640px) {
+  .pf-profile-view { padding-top: 24px; padding-bottom: 40px; }
+  /* Detail dialogs are portalled; the explicit class scopes them to /profile. */
+  .pf-profile-detail-viewport .pf-modal-header,
+  .pf-profile-detail-viewport .pf-modal-body,
+  .pf-profile-detail-viewport .pf-modal-footer { padding: 16px; }
+  .pf-profile-detail-viewport .pf-project-detail-hero { flex-direction: column; gap: 14px; }
+  .pf-profile-detail-viewport .pf-detail-hero { gap: 12px; min-width: 0; }
+  .pf-profile-detail-viewport .pf-cert-uploader-box { flex-wrap: wrap; gap: 12px; }
+  .pf-profile-detail-viewport .pf-cert-file-info { min-width: 0; max-width: 100%; }
+  .pf-profile-detail-viewport .pf-cert-filename { max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
+  .pf-profile-detail-viewport .pf-modal-close { min-width: 44px; min-height: 44px; flex-shrink: 0; }
+  .pf-profile-detail-viewport .pf-doc-btn,
+  .pf-profile-detail-viewport .pf-company-link,
+  .pf-profile-detail-viewport .pf-secondary { min-height: 44px; white-space: normal; }
+}
+
+.pf-profile-view .pf-project-pill,
+.pf-profile-detail-viewport .pf-project-pill {
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}

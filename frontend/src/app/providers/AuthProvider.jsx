@@ -1,10 +1,8 @@
-import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
+import React, { createContext, useContext, useEffect, useRef, useState, useCallback } from 'react';
 import { authApi } from '../services/authApi';
 
-// Session cache: /api/auth/me was previously re-fetched by every explicit
-// refresh() call (profile saves, portal switches), producing bursts of
-// identical requests in a single session. A short TTL keeps those cheap;
-// login/logout always bypass it.
+// Initial session reads can share a short-lived request. Explicit refreshes
+// (including those after profile saves) must fetch fresh student data.
 const ME_CACHE_TTL_MS = 60_000;
 
 const AuthContext = createContext(null);
@@ -14,32 +12,29 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
   const meCacheRef = useRef({ at: 0, promise: null });
 
-  const refresh = async () => {
+  const refresh = useCallback(async ({ force = true } = {}) => {
     const cache = meCacheRef.current;
     const now = Date.now();
-    if (cache.promise && now - cache.at < ME_CACHE_TTL_MS) {
-      const data = await cache.promise;
-      setStudent(data.student);
-      return data.student;
+    const useCached = !force && cache.promise && now - cache.at < ME_CACHE_TTL_MS;
+    if (!useCached) {
+      cache.at = now;
+      cache.promise = authApi.me();
     }
-    cache.at = now;
-    cache.promise = authApi.me().catch(error => {
-      cache.promise = null; // failed fetches must not poison the cache
-      throw error;
-    });
+    const pending = cache.promise;
     try {
-      const data = await cache.promise;
+      const data = await pending;
       setStudent(data.student);
       return data.student;
     } catch {
+      if (cache.promise === pending) cache.promise = null;
       setStudent(null);
       return null;
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  useEffect(() => { refresh(); }, []);
+  useEffect(() => { refresh({ force: false }); }, [refresh]);
 
   const login = async (email, password) => {
     const data = await authApi.login(email, password);

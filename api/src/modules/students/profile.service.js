@@ -183,7 +183,26 @@ class ProfileService {
     await store.saveStudent(student); return this.safe(student);
   }
   defaultSettings() { return { visibility: 'private', fieldVisibility: { personal: 'student', academic: 'student', interests: 'shareable', achievements: 'shareable', familyContext: 'student' } }; }
-  async achievement(id, achievement, achievementId) { const student = await store.getStudentById(id); const tidy = { title: String(achievement.title || '').trim(), category: String(achievement.category || 'General').trim(), description: String(achievement.description || '').trim(), year: String(achievement.year || '').trim() }; if (!tidy.title) throw new Error('Achievement title is required.'); if (achievementId) { const index = student.achievements.findIndex(a => a.id === achievementId); if (index < 0) throw new Error('Achievement not found.'); student.achievements[index] = { ...student.achievements[index], ...tidy }; } else student.achievements.push({ id: `ach_${Date.now()}_${Math.random().toString(36).slice(2,6)}`, ...tidy }); await store.saveStudent(student); return this.safe(student); }
+  async achievement(id, achievement, achievementId) {
+    const student = await store.getStudentById(id);
+    const tidy = {
+      title: String(achievement.title || '').trim(),
+      category: String(achievement.category || 'General').trim(),
+      description: String(achievement.description || '').trim(),
+      year: String(achievement.year || '').trim()
+    };
+    if (!tidy.title) throw new Error('Achievement title is required.');
+    const now = new Date().toISOString();
+    if (achievementId) {
+      const index = student.achievements.findIndex(item => item.id === achievementId);
+      if (index < 0) throw new Error('Achievement not found.');
+      student.achievements[index] = { ...student.achievements[index], ...tidy, updatedAt: now };
+    } else {
+      student.achievements.push({ id: `ach_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`, ...tidy, createdAt: now, updatedAt: now });
+    }
+    await store.saveStudent(student);
+    return this.safe(student);
+  }
   async deleteAchievement(id, achievementId) {
     const student = await store.getStudentById(id);
     const exists = student.achievements.some(a => a.id === achievementId);

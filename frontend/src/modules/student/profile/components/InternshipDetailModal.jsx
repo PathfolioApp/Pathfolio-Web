@@ -5,12 +5,13 @@ import { PdfIcon } from '../../../../components/ui/PdfIcon';
 import { formatInternshipTimeline } from '../utils/internshipUtils';
 import '../styles/InternshipStyles.css';
 
-export function InternshipDetailModal({ isOpen, onClose, internship }) {
+export function InternshipDetailModal({ isOpen, onClose, internship, className = '' }) {
   if (!internship) return null;
 
   return (
     <Modal
       isOpen={isOpen}
+      className={className}
       onClose={onClose}
       title="Internship Details"
       maxWidth="800px"

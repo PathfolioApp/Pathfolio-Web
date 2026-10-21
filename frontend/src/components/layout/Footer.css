@@ -261,3 +261,50 @@
     align-items: flex-start;
   }
 }
+
+/* Onboarding uses the same small legal footer before and after registration. */
+.pf-footer--minimal {
+  margin-top: 0;
+  padding: 20px 0;
+  background: transparent;
+}
+
+.pf-footer__minimal-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+}
+
+.pf-footer__minimal-inner p {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.pf-footer__legal-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 20px;
+}
+
+.pf-footer__legal-links a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.pf-footer__legal-links a:hover {
+  color: var(--color-primary);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+@media (max-width: 640px) {
+  .pf-footer__minimal-inner {
+    flex-direction: column;
+    text-align: center;
+  }
+}

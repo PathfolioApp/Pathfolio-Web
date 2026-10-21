@@ -1,3 +1,4 @@
+import '../styles/ProfileEditViewport.css';
 import React, { useState, useEffect, useRef } from 'react';
 import { FolderGit2, Calendar, Globe, ExternalLink, Plus, Trash2, Upload, UploadCloud, FileText, Check, AlertCircle, X, Star, Code2, Sparkles, Layers } from 'lucide-react';
 import { Modal } from '../../../../components/ui/Modal';
@@ -344,7 +345,7 @@ export function ProjectModal({
   };
 
   return (
-    <Modal
+    <Modal className="pf-profile-edit-dialog"
       isOpen={isOpen}
       onClose={onClose}
       title={isEditing ? 'Edit Project' : 'Add Project'}

@@ -1,3 +1,4 @@
+import '../styles/ProfileEditViewport.css';
 import React, { useState, useEffect, useRef } from 'react';
 import { Briefcase, Building2, Calendar, MapPin, Globe, ExternalLink, Plus, Trash2, Upload, UploadCloud, FileText, Check, AlertCircle, X } from 'lucide-react';
 import { Modal } from '../../../../components/ui/Modal';
@@ -400,7 +401,7 @@ export function InternshipModal({
   };
 
   return (
-    <Modal
+    <Modal className="pf-profile-edit-dialog"
       isOpen={isOpen}
       onClose={onClose}
       title={isEditing ? 'Edit Internship Experience' : 'Add Internship Experience'}

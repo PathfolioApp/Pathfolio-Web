@@ -44,7 +44,7 @@ export function PendingVerificationPage() {
     <div className="pf-completion-page">
       <header className="pf-completion-header">
         <div className="container pf-completion-header__inner">
-          <Link to="/" className="pf-brand">
+          <Link to="/" className="pf-brand" aria-label="PathfolioApp home">
             <div className="pf-brand__logo">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z" />
@@ -94,7 +94,7 @@ export function PendingVerificationPage() {
           </div>
         </div>
       </main>
-      <Footer compact />
+      <Footer minimal />
     </div>
   );
 }

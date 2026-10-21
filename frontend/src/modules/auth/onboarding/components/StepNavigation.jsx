@@ -8,6 +8,7 @@ export function StepNavigation({
   onPrev,
   onSkip,
   isSkippable = false,
+  showNext = true,
   isSubmitting = false,
   nextLabel = 'Continue',
   prevLabel = 'Back',
@@ -42,7 +43,7 @@ export function StepNavigation({
           </Button>
         )}
 
-        <Button
+        {showNext && <Button
           variant="primary"
           size="md"
           onClick={onNext}
@@ -51,7 +52,7 @@ export function StepNavigation({
           iconPosition="right"
         >
           {nextLabel}
-        </Button>
+        </Button>}
       </div>
     </div>
   );

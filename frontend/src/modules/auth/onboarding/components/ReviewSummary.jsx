@@ -1,5 +1,5 @@
 import React from 'react';
-import { Edit2, User, GraduationCap, Compass, Award, ShieldCheck, CheckCircle } from 'lucide-react';
+import { Edit2, User, GraduationCap, Compass, Award, ShieldCheck, CheckCircle, Phone } from 'lucide-react';
 import { Badge } from '../../../../components/ui/Badge';
 import './ReviewSummary.css';
 
@@ -22,16 +22,17 @@ export function ReviewSummary({ formData, onEditSection }) {
 
   return (
     <div className="pf-review-summary animate-fade-in">
-      {/* 1. Personal Identity Section */}
+      {/* 1. Personal details Section */}
       <div className="pf-review-card">
         <div className="pf-review-card__header">
           <div className="pf-review-card__title-group">
             <User size={18} className="pf-review-card__icon" />
-            <h3 className="pf-review-card__title">Personal Identity</h3>
+            <h3 className="pf-review-card__title">Personal details</h3>
           </div>
           <button
             type="button"
             onClick={() => onEditSection('identity')}
+            aria-label="Edit personal details"
             className="pf-review-card__edit-btn"
           >
             <Edit2 size={13} />
@@ -59,16 +60,34 @@ export function ReviewSummary({ formData, onEditSection }) {
         </div>
       </div>
 
-      {/* 2. Academic Enrollment Section */}
+      <div className="pf-review-card">
+        <div className="pf-review-card__header">
+          <div className="pf-review-card__title-group">
+            <Phone size={18} className="pf-review-card__icon" />
+            <h3 className="pf-review-card__title">Contact details</h3>
+          </div>
+          <button type="button" onClick={() => onEditSection('phone')} aria-label="Edit contact details" className="pf-review-card__edit-btn">
+            <Edit2 size={13} />
+            <span>Edit</span>
+          </button>
+        </div>
+        <div className="pf-review-item">
+          <span className="pf-review-item__label">Phone number (optional)</span>
+          <span className="pf-review-item__value">{personal.phone?.trim() || 'Not provided'}</span>
+        </div>
+      </div>
+
+      {/* 2. Academic details Section */}
       <div className="pf-review-card">
         <div className="pf-review-card__header">
           <div className="pf-review-card__title-group">
             <GraduationCap size={18} className="pf-review-card__icon" />
-            <h3 className="pf-review-card__title">Academic Enrollment</h3>
+            <h3 className="pf-review-card__title">Academic details</h3>
           </div>
           <button
             type="button"
             onClick={() => onEditSection('academic')}
+            aria-label="Edit academic details"
             className="pf-review-card__edit-btn"
           >
             <Edit2 size={13} />
@@ -82,22 +101,23 @@ export function ReviewSummary({ formData, onEditSection }) {
             <span className="pf-review-item__value">{academic.department || 'Not provided'}</span>
           </div>
           <div className="pf-review-item">
-            <span className="pf-review-item__label">Batch Cohort</span>
+            <span className="pf-review-item__label">Batch</span>
             <span className="pf-review-item__value">{academic.batchYear || 'Not provided'}</span>
           </div>
         </div>
       </div>
 
-      {/* 3. Interests & Passions Section */}
+      {/* 3. Interests & passions Section */}
       <div className="pf-review-card">
         <div className="pf-review-card__header">
           <div className="pf-review-card__title-group">
             <Compass size={18} className="pf-review-card__icon" />
-            <h3 className="pf-review-card__title">Interests & Passions</h3>
+            <h3 className="pf-review-card__title">Interests & passions</h3>
           </div>
           <button
             type="button"
             onClick={() => onEditSection('hobbies')}
+            aria-label="Edit interests and passions"
             className="pf-review-card__edit-btn"
           >
             <Edit2 size={13} />
@@ -107,7 +127,7 @@ export function ReviewSummary({ formData, onEditSection }) {
 
         <div className="pf-review-tags-block">
           <div className="pf-review-subitem">
-            <span className="pf-review-item__label">Hobbies & Extracurriculars</span>
+            <span className="pf-review-item__label">Hobbies & interests</span>
             <div className="pf-review-chips">
               {interests.hobbies?.length > 0 ? (
                 interests.hobbies.map(h => (
@@ -122,7 +142,7 @@ export function ReviewSummary({ formData, onEditSection }) {
           </div>
 
           <div className="pf-review-subitem" style={{ marginTop: '12px' }}>
-            <span className="pf-review-item__label">Passions & Curiosities</span>
+            <span className="pf-review-item__label">Passions & curiosities</span>
             <div className="pf-review-chips">
               {interests.passions?.length > 0 ? (
                 interests.passions.map(p => (
@@ -138,16 +158,17 @@ export function ReviewSummary({ formData, onEditSection }) {
         </div>
       </div>
 
-      {/* 4. Initial Achievements Section */}
+      {/* 4. Milestones section */}
       <div className="pf-review-card">
         <div className="pf-review-card__header">
           <div className="pf-review-card__title-group">
             <Award size={18} className="pf-review-card__icon" />
-            <h3 className="pf-review-card__title">Initial Achievements ({achievements?.length || 0})</h3>
+            <h3 className="pf-review-card__title">Milestones ({achievements?.length || 0})</h3>
           </div>
           <button
             type="button"
             onClick={() => onEditSection('achievements')}
+            aria-label="Edit milestones"
             className="pf-review-card__edit-btn"
           >
             <Edit2 size={13} />
@@ -173,7 +194,7 @@ export function ReviewSummary({ formData, onEditSection }) {
             ))}
           </div>
         ) : (
-          <p className="pf-review-empty">No initial achievements added (can be added later during college).</p>
+          <p className="pf-review-empty">No milestones added yet. You can add them to your profile later.</p>
         )}
       </div>
 
@@ -182,12 +203,12 @@ export function ReviewSummary({ formData, onEditSection }) {
         <div className="pf-review-card__header">
           <div className="pf-review-card__title-group">
             <ShieldCheck size={18} className="pf-review-card__icon pf-review-card__icon--sensitive" />
-            <h3 className="pf-review-card__title">Personal Context</h3>
-            <Badge variant="neutral" size="sm">Sensitive / Optional</Badge>
+            <h3 className="pf-review-card__title">Personal background</h3>
           </div>
           <button
             type="button"
             onClick={() => onEditSection('familyContext')}
+            aria-label="Edit personal background"
             className="pf-review-card__edit-btn"
           >
             <Edit2 size={13} />
@@ -195,16 +216,18 @@ export function ReviewSummary({ formData, onEditSection }) {
           </button>
         </div>
 
+        <div className="pf-review-card__notice"><Badge variant="neutral" size="sm">Sensitive · Optional</Badge></div>
+
         {familyContext?.details ? (
           <div className="pf-review-sensitive-content">
             <p className="pf-review-sensitive-text">{familyContext.details}</p>
             <div className="pf-review-consent-pill">
               <CheckCircle size={14} />
-              <span>Explicit Consent Confirmed</span>
+              <span>Consent confirmed</span>
             </div>
           </div>
         ) : (
-          <p className="pf-review-empty">Section skipped (no sensitive personal context stored).</p>
+          <p className="pf-review-empty">You chose not to add personal background details.</p>
         )}
       </div>
     </div>

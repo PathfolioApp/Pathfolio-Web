@@ -6,96 +6,89 @@
 }
 
 .pf-completion-header {
-  height: 72px;
+  min-height: 64px;
+  padding-block: 14px;
   background-color: rgba(251, 249, 245, 0.95);
-  backdrop-filter: blur(8px);
   border-bottom: 1px solid var(--border-subtle);
   display: flex;
   align-items: center;
 }
-
-.pf-completion-header__inner {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-}
+.pf-completion-header__inner { display: flex; align-items: center; }
 
 .pf-completion-main {
   flex: 1;
+  min-width: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: var(--space-3xl) var(--space-md);
+  padding: clamp(24px, 4vw, 40px) 24px;
 }
-
 .pf-completion-card {
-  background-color: var(--bg-surface);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-xl);
-  padding: var(--space-3xl);
-  box-shadow: var(--shadow-lg);
-  text-align: center;
   width: 100%;
+  min-width: 0;
   max-width: 680px;
+  padding: clamp(24px, 4vw, 40px);
+  background: var(--bg-surface);
+  border: 1px solid #dde5dc;
+  border-radius: 20px;
+  box-shadow: 0 16px 48px -30px rgba(25, 61, 43, 0.2);
+  text-align: center;
 }
-
-.pf-completion-badge-wrap {
-  margin-bottom: var(--space-md);
-}
-
+.pf-completion-badge-wrap { margin-bottom: 20px; }
 .pf-completion-check-bubble {
-  width: 64px;
-  height: 64px;
-  background-color: var(--color-primary-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  margin-inline: auto;
+  background: var(--color-primary-light);
   color: var(--color-primary);
   border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0 auto;
-  box-shadow: 0 0 0 8px var(--color-primary-subtle);
+  box-shadow: 0 0 0 6px var(--color-primary-subtle);
 }
-
+.pf-completion-card > .editorial-eyebrow { font-size: 0.7rem; letter-spacing: 0.1em; }
 .pf-completion-title {
-  font-size: 2.5rem;
+  font-size: clamp(1.875rem, 4vw, 2.5rem);
   font-weight: 500;
   color: var(--text-primary);
-  line-height: 1.2;
-  margin-bottom: var(--space-xs);
+  line-height: 1.12;
+  text-wrap: balance;
+  margin-bottom: 14px;
 }
-
 .pf-completion-sub {
-  font-size: 1.0625rem;
+  max-width: 460px;
+  margin: 0 auto 24px;
+  font-size: 0.9375rem;
+  line-height: 1.7;
   color: var(--text-secondary);
-  line-height: 1.6;
-  max-width: 520px;
-  margin: 0 auto var(--space-2xl);
 }
 
-/* Profile Genesis Card */
+/* A compact summary of the saved profile, with space for longer names. */
 .pf-completion-profile-card {
-  background-color: var(--bg-page);
+  min-width: 0;
+  padding: 24px;
+  margin-bottom: 24px;
   border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-lg);
-  padding: var(--space-xl);
+  border-radius: 14px;
+  background: var(--bg-page);
   text-align: left;
-  margin-bottom: var(--space-2xl);
 }
-
 .pf-completion-profile-top {
-  display: flex;
-  align-items: center;
-  gap: var(--space-md);
-  padding-bottom: var(--space-md);
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr);
+  align-items: start;
+  gap: 10px 14px;
+  padding-bottom: 18px;
   border-bottom: 1px solid var(--border-subtle);
-  margin-bottom: var(--space-md);
+  margin-bottom: 18px;
 }
-
 .pf-completion-avatar {
+  grid-row: span 2;
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  background-color: var(--color-primary);
+  background: var(--color-primary);
   color: var(--text-on-primary);
   display: flex;
   align-items: center;
@@ -103,180 +96,75 @@
   font-family: var(--font-serif);
   font-weight: 600;
   font-size: 1.125rem;
-  flex-shrink: 0;
 }
+.pf-completion-meta { min-width: 0; }
+.pf-completion-name { font-size: 1.25rem; font-weight: 500; line-height: 1.25; margin-bottom: 6px; }
+.pf-completion-dept, .pf-completion-batch { font-size: 0.8125rem; line-height: 1.6; color: var(--text-secondary); }
+.pf-completion-batch { margin-top: 2px; }
+.pf-completion-handle { display: block; margin-top: 6px; font-size: 0.75rem; color: var(--text-muted); }
+.pf-completion-profile-top > .pf-badge { grid-column: 2; justify-self: start; }
 
-.pf-completion-meta {
-  flex: 1;
-}
-
-.pf-completion-name {
-  font-family: var(--font-serif);
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-.pf-completion-dept {
-  font-size: 0.8125rem;
-  color: var(--text-secondary);
-}
-
-.pf-completion-handle {
-  font-size: 0.75rem;
-  color: var(--text-muted);
-  font-weight: 500;
-}
-
-.pf-completion-stats-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: var(--space-md);
-  margin-bottom: var(--space-md);
-}
-
+.pf-completion-stats-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
 .pf-completion-stat-box {
-  background-color: var(--bg-surface);
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 6px;
+  background: #fff;
   border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-md);
-  padding: var(--space-md);
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
+  border-radius: 10px;
+  text-align: center;
 }
+.pf-completion-stat-icon { color: var(--color-primary); flex-shrink: 0; }
+.pf-completion-stat-icon--gold { color: #976622; }
+.pf-completion-stat-info { display: flex; flex-direction: column; align-items: center; min-width: 0; gap: 4px; }
+.pf-completion-stat-num { font-family: var(--font-serif); font-size: 1.375rem; font-weight: 500; line-height: 1; color: var(--text-primary); }
+.pf-completion-stat-label { font-size: 0.6875rem; line-height: 1.5; color: var(--text-muted); }
+.pf-completion-start-note { margin: 16px 0 0; font-size: 0.75rem; line-height: 1.6; color: var(--text-muted); }
 
-.pf-completion-stat-icon {
-  color: var(--color-primary);
-}
-
-.pf-completion-stat-icon--gold {
-  color: #B37D2A;
-}
-
-.pf-completion-stat-info {
-  display: flex;
-  flex-direction: column;
-}
-
-.pf-completion-stat-num {
-  font-family: var(--font-serif);
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: var(--text-primary);
-  line-height: 1;
-}
-
-.pf-completion-stat-label {
-  font-size: 0.6875rem;
-  color: var(--text-muted);
-  margin-top: 2px;
-}
-
-.pf-completion-growth-bar {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding-top: var(--space-sm);
-}
-
-.pf-completion-growth-info {
-  display: flex;
-  justify-content: space-between;
-  font-size: 0.75rem;
-  color: var(--text-secondary);
-}
-
-.pf-completion-growth-track {
-  height: 6px;
-  background-color: var(--border-subtle);
-  border-radius: var(--radius-full);
-  overflow: hidden;
-}
-
-.pf-completion-growth-fill {
-  width: 25%;
-  height: 100%;
-  background-color: var(--color-primary);
-  border-radius: var(--radius-full);
-}
-
-/* Actions */
-.pf-completion-actions {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-md);
-}
-
+/* One primary destination, with optional guidance as a quieter action. */
+.pf-completion-actions { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.pf-completion-actions > .pf-btn { min-height: 46px; height: auto; padding-block: 12px; white-space: normal; }
+.pf-completion-actions > .pf-btn svg { flex-shrink: 0; }
 .pf-completion-next-btn {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-sm);
-  padding: 10px 20px;
-  font-size: 0.9375rem;
-  font-weight: 500;
-  color: var(--color-primary);
-  background: var(--bg-surface);
-  border: 1px solid var(--border-medium);
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  transition: all var(--transition-fast);
-}
-
-.pf-completion-next-btn:hover {
-  background: var(--bg-subtle);
-  border-color: var(--text-muted);
-  transform: translateY(-1px);
-}
-
-.pf-completion-return-btn {
-  background: none;
+  justify-content: center;
+  min-height: 44px;
+  padding: 10px 12px;
+  background: transparent;
   border: none;
+  border-radius: 8px;
+  color: var(--color-primary);
   font-size: 0.875rem;
   font-weight: 500;
-  color: var(--text-muted);
   cursor: pointer;
-  transition: color var(--transition-fast);
 }
+.pf-completion-next-btn:hover { text-decoration: underline; text-underline-offset: 4px; }
+/* Also used by the connected email verification page. */
+.pf-completion-return-btn { min-height: 44px; padding: 10px 12px; background: none; border: none; color: var(--text-muted); font-size: 0.875rem; cursor: pointer; }
+.pf-completion-return-btn:hover { color: var(--color-primary); }
+.pf-completion-page > .pf-footer--minimal { margin-top: 0; }
 
-.pf-completion-return-btn:hover {
-  color: var(--color-primary);
-}
-
-/* Coming Next list */
-.pf-coming-next-list {
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-sm);
-  padding: 0;
-}
-
-.pf-coming-next-list li {
-  font-size: 0.875rem;
-  color: var(--text-secondary);
-  line-height: 1.5;
-  padding: var(--space-xs) 0;
-  border-bottom: 1px solid var(--border-subtle);
-}
-
-.pf-coming-next-list li:last-child {
-  border-bottom: none;
-}
+.pf-coming-next-list { list-style: none; display: flex; flex-direction: column; gap: 8px; padding: 0; }
+.pf-coming-next-list li { font-size: 0.875rem; line-height: 1.6; color: var(--text-secondary); padding: 6px 0; border-bottom: 1px solid var(--border-subtle); }
+.pf-coming-next-list li:last-child { border-bottom: none; }
 
 @media (max-width: 640px) {
-  .pf-completion-card {
-    padding: var(--space-xl) var(--space-md);
-  }
-  .pf-completion-title {
-    font-size: 2rem;
-  }
-  .pf-completion-stats-grid {
-    grid-template-columns: 1fr;
-    gap: var(--space-xs);
-  }
-  .pf-completion-profile-top {
-    flex-direction: column;
-    align-items: flex-start;
-  }
+  .pf-completion-header .container, .pf-completion-main { padding-inline: 16px; }
+  .pf-completion-main { align-items: flex-start; padding-block: 20px; }
+  .pf-completion-card { padding: 28px 20px 20px; border-radius: 16px; }
+  .pf-completion-profile-card { padding: 16px; margin-bottom: 20px; }
+  .pf-completion-profile-top { grid-template-columns: 40px minmax(0, 1fr); gap: 10px; }
+  .pf-completion-avatar { width: 40px; height: 40px; font-size: 1rem; }
+  .pf-completion-name { font-size: 1.125rem; }
+  .pf-completion-actions > .pf-btn { width: 100%; font-size: 0.9375rem; }
+}
+
+@media (max-width: 360px) {
+  .pf-completion-card { padding-inline: 16px; }
+  .pf-completion-stats-grid { gap: 6px; }
 }

@@ -27,7 +27,7 @@ export function OnboardingPage() {
   return (
     <div className="pf-onboarding-entry">
       <header className="pf-onboarding-entry__header">
-        <Link to="/" className="pf-brand">
+        <Link to="/" className="pf-brand" aria-label="PathfolioApp home">
           <div className="pf-brand__logo">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z" />
@@ -37,6 +37,7 @@ export function OnboardingPage() {
           </div>
           <span className="pf-brand__name">Pathfolio<span className="pf-brand__sub">App</span></span>
         </Link>
+        <Link to="/signin" className="pf-onboarding-entry__signin"><span className="pf-onboarding-entry__signin-hint">Already registered?</span><span>Sign in</span></Link>
       </header>
 
       <main className="pf-onboarding-entry__main">
@@ -45,7 +46,7 @@ export function OnboardingPage() {
             <span className="editorial-eyebrow">Join Pathfolio</span>
             <h1>How would you like to join?</h1>
             <p className="pf-onboarding-choice__sub">
-              Pick the path that matches your role at the institution.
+              Your next chapter starts here. Choose the path that fits you.
             </p>
 
             <div className="pf-onboarding-choice__cards">
@@ -57,8 +58,8 @@ export function OnboardingPage() {
                 <div className="pf-onboarding-choice-card__icon pf-onboarding-choice-card__icon--student">
                   <GraduationCap size={26} />
                 </div>
-                <h2>Join Pathfolio as a Student</h2>
-                <p>Build your living record, interests, milestones, academics, through a guided journey.</p>
+                <h2>I’m a student</h2>
+                <p>Bring your interests, achievements, and college experiences together in one living record.</p>
                 <span className="pf-onboarding-choice-card__cta">Begin onboarding <ArrowRight size={15} /></span>
               </button>
 
@@ -70,9 +71,9 @@ export function OnboardingPage() {
                 <div className="pf-onboarding-choice-card__icon pf-onboarding-choice-card__icon--recruiter">
                   <BriefcaseBusiness size={26} />
                 </div>
-                <h2>Join Pathfolio as a Recruiter</h2>
-                <p>For company recruiters and institutional placement teams.</p>
-                <span className="pf-onboarding-choice-card__cta">Learn more <ArrowRight size={15} /></span>
+                <h2>I’m a recruiter</h2>
+                <p>Connect with student talent through your institution’s placement team.</p>
+                <span className="pf-onboarding-choice-card__cta">Explore recruiter access <ArrowRight size={15} /></span>
               </button>
             </div>
           </section>
@@ -82,8 +83,8 @@ export function OnboardingPage() {
           <section className="pf-recruiter-invite animate-fade-in" aria-label="Recruiter onboarding is invite-only">
             <div className="pf-recruiter-invite__card">
               <div className="pf-recruiter-invite__badge"><Lock size={22} /></div>
-              <span className="editorial-eyebrow">Recruiters</span>
-              <h1>Recruiter onboarding is invite-only.</h1>
+              <span className="editorial-eyebrow">Recruiter access • By invitation</span>
+              <h1>Great connections start here.</h1>
               <p className="pf-recruiter-invite__desc">
                 Recruiter onboarding is currently invite-only. Please contact
                 <a href="mailto:placement@kiit.ac.in"><b> placement@kiit.ac.in</b></a> to get onboarded.
@@ -111,7 +112,7 @@ export function OnboardingPage() {
         )}
       </main>
 
-      <Footer compact />
+      <Footer minimal />
     </div>
   );
 }

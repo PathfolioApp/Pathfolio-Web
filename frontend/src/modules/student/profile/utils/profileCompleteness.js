@@ -1,29 +1,29 @@
-// Profile completeness over the fields the product actually collects in
-// onboarding and profile edit. Previously this counted seven academic fields
-// no form ever writes (degreeProgram, graduationYear, currentSemester,
-// historicalBacklogs, gapYears, ...), so even a fully filled profile capped
-// out around 59-65% and the number read as broken.
-// Numeric fields (backlogs, percentages) count as complete when present,
-// including explicit 0.
+// Shared checklist: dashboard recommendations and profile percentage use the same fields.
 const isFilled = value => value !== undefined && value !== null && String(value).trim() !== '';
 const isNumeric = value => isFilled(value) && Number.isFinite(Number(value));
 
+export function profileChecklist(student) {
+  const personal = student?.personal || {};
+  const academic = student?.academic || {};
+  const interests = student?.interests || {};
+  return [
+    { id: 'name', label: 'Full name', complete: isFilled(personal.fullName), path: '/profile/edit#personal' },
+    { id: 'dob', label: 'Date of birth', complete: isFilled(personal.dateOfBirth), path: '/profile/edit#personal' },
+    { id: 'phone', label: 'Phone number', complete: isFilled(personal.phone), path: '/profile/edit#personal', optional: true },
+    { id: 'roll', label: 'Institutional roll number', complete: isFilled(academic.rollNumber), path: '/profile' },
+    { id: 'department', label: 'Department', complete: isFilled(academic.department), path: '/profile/edit#eligibility' },
+    { id: 'batch', label: 'Batch', complete: isFilled(academic.batchYear), path: '/profile/edit#eligibility' },
+    { id: 'tenth', label: 'Class 10 score', complete: isNumeric(academic.tenthPercentage), path: '/profile/edit#schooling' },
+    { id: 'twelfth', label: 'Class 12 score', complete: isNumeric(academic.twelfthPercentage), path: '/profile/edit#schooling' },
+    { id: 'backlogs', label: 'Active backlogs', complete: isNumeric(academic.activeBacklogs), path: '/profile/edit#eligibility' },
+    { id: 'hobbies', label: 'Hobbies', complete: interests.hobbies?.length > 0, path: '/profile/edit#interests' },
+    { id: 'passions', label: 'Interests & passions', complete: interests.passions?.length > 0, path: '/profile/edit#interests' },
+    { id: 'linkedin', label: 'LinkedIn profile', complete: isFilled(student?.social?.linkedin), path: '/profile/edit#social', optional: true }
+  ];
+}
+
 export function profileCompleteness(student) {
   if (!student) return 0;
-  const checks = [
-    isFilled(student.personal?.fullName),
-    isFilled(student.personal?.dateOfBirth),
-    isFilled(student.personal?.phone),
-    isFilled(student.academic?.rollNumber),
-    isFilled(student.academic?.department),
-    isFilled(student.academic?.batchYear),
-    isNumeric(student.academic?.tenthPercentage),
-    isNumeric(student.academic?.twelfthPercentage),
-    isNumeric(student.academic?.activeBacklogs),
-    student.interests?.hobbies?.length > 0,
-    student.interests?.passions?.length > 0,
-    Boolean(student.social?.linkedin && String(student.social.linkedin).trim())
-  ];
-  const score = checks.filter(Boolean).length;
-  return Math.round((score / checks.length) * 100);
+  const checks = profileChecklist(student);
+  return Math.round(checks.filter(item => item.complete).length / checks.length * 100);
 }

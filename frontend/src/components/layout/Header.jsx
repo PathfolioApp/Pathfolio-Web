@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { Menu, X } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '../ui/Button';
 import { useAuth } from '../../app/providers/AuthProvider';
@@ -9,9 +10,26 @@ export function Header() {
   const location = useLocation();
   const { student, loading } = useAuth();
   const [portalOpen, setPortalOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuToggleRef = useRef(null);
+
+  useEffect(() => {
+    setMenuOpen(false);
+    setPortalOpen(false);
+  }, [location.pathname, location.search, location.hash]);
+
+  const closeOnEscape = (event) => {
+    if (event.key !== 'Escape') return;
+    setMenuOpen(false);
+    setPortalOpen(false);
+    if (menuOpen) menuToggleRef.current?.focus();
+    else event.currentTarget.querySelector('.pf-portal-menu__trigger')?.focus();
+  };
 
   const scrollToSection = (e, sectionId) => {
     e.preventDefault();
+    setMenuOpen(false);
+    setPortalOpen(false);
     if (location.pathname !== '/') {
       navigate(`/#${sectionId}`);
       return;
@@ -25,7 +43,7 @@ export function Header() {
   };
 
   return (
-    <header className="pf-header">
+    <header className="pf-header" onKeyDown={closeOnEscape}>
         <div className="container pf-header__inner">
           <Link to="/" className="pf-brand" aria-label="PathfolioApp Home">
             <div className="pf-brand__logo">
@@ -39,45 +57,59 @@ export function Header() {
             <span className="pf-brand__name">Pathfolio<span className="pf-brand__sub">App</span></span>
           </Link>
 
-          <nav className="pf-nav" aria-label="Main Navigation">
-            <a href="#how-it-works" onClick={(e) => scrollToSection(e, 'how-it-works')} className="pf-nav__link">
-              How it works
-            </a>
-            <a href="#your-journey" onClick={(e) => scrollToSection(e, 'your-journey')} className="pf-nav__link">
-              Your journey
-            </a>
-            <a href="#privacy" onClick={(e) => scrollToSection(e, 'privacy')} className="pf-nav__link">
-              Privacy
-            </a>
-            <div className={`pf-portal-menu${portalOpen ? ' is-open' : ''}`} onMouseLeave={() => setPortalOpen(false)}>
-              <button
-                type="button"
-                className="pf-nav__link pf-portal-menu__trigger"
-                aria-haspopup="true"
-                aria-expanded={portalOpen}
-                onClick={() => setPortalOpen(open => !open)}
-              >
-                Portals
-              </button>
-              <div className="pf-portal-menu__items">
-                <button type="button" onClick={() => { setPortalOpen(false); navigate(student ? (student.onboarding?.completed ? '/dashboard' : '/onboarding') : '/signin'); }}>Student portal</button>
-                <button type="button" onClick={() => { setPortalOpen(false); navigate(student?.isRecruiter || student?.isAdmin ? '/recruiter' : '/signin?portal=recruiter'); }}>Recruiter portal</button>
-                <button type="button" onClick={() => { setPortalOpen(false); navigate(student?.isAdmin ? '/admin' : '/signin?portal=admin'); }}>Admin portal</button>
-              </div>
-            </div>
-          </nav>
+          <button
+            ref={menuToggleRef}
+            type="button"
+            className="pf-header__menu-toggle"
+            aria-label={menuOpen ? 'Close navigation' : 'Open navigation'}
+            aria-expanded={menuOpen}
+            aria-controls="public-header-menu"
+            onClick={() => { setMenuOpen(open => !open); setPortalOpen(false); }}
+          >
+            {menuOpen ? <X size={22} /> : <Menu size={22} />}
+          </button>
 
-          <div className="pf-header__actions">
-            {!loading && (student ? <button type="button" onClick={() => navigate(student.onboarding?.completed ? '/dashboard' : '/onboarding')} className="pf-header__signin">{student.onboarding?.completed ? `Hi, ${student.personal.fullName.split(' ')[0]}` : 'Continue onboarding'}</button> : <button type="button" onClick={() => navigate('/signin')} className="pf-header__signin">Sign in</button>)}
-            <Button
-              variant="primary"
-              size="sm"
-              onClick={() => navigate(student?.onboarding?.completed ? '/dashboard' : '/onboarding')}
-            >
-              {student?.onboarding?.completed ? 'Go to dashboard' : 'Begin your journey'}
-            </Button>
+          <div id="public-header-menu" className={`pf-header__menu${menuOpen ? ' is-open' : ''}`}>
+            <nav className="pf-nav" aria-label="Main Navigation">
+              <a href="#how-it-works" onClick={(e) => scrollToSection(e, 'how-it-works')} className="pf-nav__link">
+                How it works
+              </a>
+              <a href="#your-journey" onClick={(e) => scrollToSection(e, 'your-journey')} className="pf-nav__link">
+                Your journey
+              </a>
+              <a href="#privacy" onClick={(e) => scrollToSection(e, 'privacy')} className="pf-nav__link">
+                Privacy
+              </a>
+              <div className={`pf-portal-menu${portalOpen ? ' is-open' : ''}`} onMouseLeave={() => setPortalOpen(false)}>
+                <button
+                  type="button"
+                  className="pf-nav__link pf-portal-menu__trigger"
+                  aria-haspopup="true"
+                  aria-expanded={portalOpen}
+                  onClick={() => setPortalOpen(open => !open)}
+                >
+                  Portals
+                </button>
+                <div className="pf-portal-menu__items">
+                  <button type="button" onClick={() => { setPortalOpen(false); navigate(student ? (student.onboarding?.completed ? '/dashboard' : '/onboarding') : '/signin'); }}>Student portal</button>
+                  <button type="button" onClick={() => { setPortalOpen(false); navigate(student?.isRecruiter || student?.isAdmin ? '/recruiter' : '/signin?portal=recruiter'); }}>Recruiter portal</button>
+                  <button type="button" onClick={() => { setPortalOpen(false); navigate(student?.isAdmin ? '/admin' : '/signin?portal=admin'); }}>Admin portal</button>
+                </div>
+              </div>
+            </nav>
+
+            <div className="pf-header__actions">
+              {!loading && (student ? <button type="button" onClick={() => navigate(student.onboarding?.completed ? '/dashboard' : '/onboarding')} className="pf-header__signin">{student.onboarding?.completed ? `Hi, ${student.personal.fullName.split(' ')[0]}` : 'Continue onboarding'}</button> : <button type="button" onClick={() => navigate('/signin')} className="pf-header__signin">Sign in</button>)}
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={() => navigate(student?.onboarding?.completed ? '/dashboard' : '/onboarding')}
+              >
+                {student?.onboarding?.completed ? 'Go to dashboard' : 'Begin your journey'}
+              </Button>
+            </div>
+            </div>
           </div>
-        </div>
-    </header>
-  );
-}
+      </header>
+    );
+  }

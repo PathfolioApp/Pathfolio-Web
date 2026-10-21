@@ -1,219 +1,113 @@
 .pf-onboarding-entry {
+  min-height: 100vh;
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
-  background: linear-gradient(150deg, #f8f4ec 0%, #eef4ea 55%, #e8f0e5 100%);
+  background: radial-gradient(ellipse at 85% 20%, #eaf0e5, transparent 55%), var(--bg-page);
 }
 
 .pf-onboarding-entry__header {
-  padding: 22px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+  max-width: 1160px;
+  margin-inline: auto;
+  padding: 20px 24px;
 }
 
-.pf-onboarding-entry__header .pf-brand {
+.pf-onboarding-entry__signin {
   display: inline-flex;
   align-items: center;
+  flex-shrink: 0;
+  justify-content: center;
   gap: 8px;
-  margin: 0 auto;
-  width: fit-content;
-  padding-left: max(24px, calc((100vw - 1120px) / 2));
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid #d3ddcf;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.8);
+  white-space: nowrap;
+  font-size: 0.8125rem;
+  color: var(--text-muted);
 }
+
+.pf-onboarding-entry__signin > span:last-child { color: var(--color-primary); font-weight: 600; }
+.pf-onboarding-entry__signin:hover { background: #fff; border-color: #90b397; }
 
 .pf-onboarding-entry__main {
-  flex: 1 0 auto;
+  flex: 1;
   display: grid;
   place-items: center;
-  padding: 32px 24px 56px;
+  padding: clamp(24px, 5vw, 64px) 24px clamp(40px, 6vw, 80px);
+  min-width: 0;
 }
 
-/* Entry selection */
-.pf-onboarding-choice {
-  width: min(100%, 760px);
-  text-align: center;
-}
-
+.pf-onboarding-choice { width: min(100%, 800px); text-align: center; min-width: 0; }
+.pf-onboarding-entry .editorial-eyebrow { font-size: 0.72rem; letter-spacing: 0.12em; }
 .pf-onboarding-choice h1 {
-  font-size: 2.4rem;
-  margin: 8px 0 10px;
+  font-size: clamp(2rem, 4vw, 3rem);
+  line-height: 1.12;
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+  margin: 8px 0 16px;
 }
-
-.pf-onboarding-choice__sub {
-  color: var(--text-secondary);
-  margin-bottom: 34px;
-}
-
-.pf-onboarding-choice__cards {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 20px;
-}
-
+.pf-onboarding-choice__sub { line-height: 1.7; margin-bottom: clamp(28px, 4vw, 40px); }
+.pf-onboarding-choice__cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
 .pf-onboarding-choice-card {
+  min-width: 0;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 12px;
-  text-align: left;
-  background: var(--bg-surface);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-lg);
-  padding: 30px 28px;
-  cursor: pointer;
-  transition: transform var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast);
-  font-family: inherit;
-}
-
-.pf-onboarding-choice-card:hover {
-  transform: translateY(-3px);
-  border-color: var(--border-accent);
-}
-
-.pf-onboarding-choice-card__icon {
-  width: 52px;
-  height: 52px;
-  display: grid;
-  place-items: center;
-  border-radius: var(--radius-lg);
-}
-
-.pf-onboarding-choice-card__icon--student {
-  background: var(--color-primary-light);
-  color: var(--color-primary);
-}
-
-.pf-onboarding-choice-card__icon--recruiter {
-  background: rgba(38, 78, 54, 0.08);
-  color: var(--color-sage, #6b8f71);
-}
-
-.pf-onboarding-choice-card h2 {
-  font-family: var(--font-serif);
-  font-size: 1.3rem;
-  color: var(--text-primary);
-}
-
-.pf-onboarding-choice-card p {
-  font-size: 0.92rem;
-  color: var(--text-secondary);
-  margin: 0;
-}
-
-.pf-onboarding-choice-card__cta {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  margin-top: 4px;
-  font-size: 0.88rem;
-  font-weight: 700;
-  color: var(--color-primary);
-}
-
-/* Recruiter invite-only state */
-.pf-recruiter-invite {
-  width: min(100%, 560px);
-}
-
-.pf-recruiter-invite__card {
-  background: var(--bg-surface);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-lg);
-  padding: 42px;
-  text-align: center;
-}
-
-.pf-recruiter-invite__badge {
-  width: 56px;
-  height: 56px;
-  margin: 0 auto 18px;
-  display: grid;
-  place-items: center;
-  border-radius: 50%;
-  background: var(--color-primary-light);
-  color: var(--color-primary);
-}
-
-.pf-recruiter-invite__card h1 {
-  font-size: 1.9rem;
-  margin: 8px 0 14px;
-}
-
-.pf-recruiter-invite__desc {
-  color: var(--text-secondary);
-  font-size: 0.98rem;
-  line-height: 1.6;
-}
-
-.pf-recruiter-invite__desc a {
-  color: var(--color-primary);
-  text-decoration: underline;
-}
-
-.pf-recruiter-invite__points {
-  margin: 24px 0;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  text-align: left;
-}
-
-.pf-recruiter-invite__point {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  padding: 12px 14px;
-  background: var(--bg-subtle);
-  border-radius: var(--radius-md);
-  font-size: 0.88rem;
-  color: var(--text-secondary);
-}
-
-.pf-recruiter-invite__point svg {
-  flex-shrink: 0;
-  margin-top: 2px;
-  color: var(--color-primary);
-}
-
-.pf-recruiter-invite__actions {
-  display: flex;
-  align-items: center;
-  justify-content: center;
   gap: 16px;
-  flex-wrap: wrap;
-  margin-top: 8px;
-}
-
-.pf-recruiter-invite__back {
-  border: 1px solid var(--border-medium);
-  background: var(--bg-surface);
-  border-radius: var(--radius-md);
-  padding: 11px 18px;
-  font-weight: 600;
-  font-size: 0.9rem;
-  color: var(--text-primary);
+  text-align: left;
+  background: #fff;
+  border: 1px solid #cddbc8;
+  border-radius: 18px;
+  padding: clamp(24px, 3vw, 36px);
   cursor: pointer;
-  transition: background var(--transition-fast), border-color var(--transition-fast);
+  box-shadow: 0 12px 32px -20px rgba(25, 61, 43, 0.2);
+  transition: transform var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
-
-.pf-recruiter-invite__back:hover {
-  background: var(--bg-subtle);
-  border-color: var(--color-primary);
+@media (hover: hover) {
+  .pf-onboarding-choice-card:hover { transform: translateY(-3px); border-color: #90b397; box-shadow: 0 16px 36px -20px rgba(25, 61, 43, 0.24); }
 }
+.pf-onboarding-choice-card:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 4px; }
+.pf-onboarding-choice-card__icon { width: 48px; height: 48px; display: grid; place-items: center; border-radius: 13px; flex-shrink: 0; }
+.pf-onboarding-choice-card__icon--student { background: #edf3e9; color: #264e36; }
+.pf-onboarding-choice-card__icon--recruiter { background: #e3ecdf; color: #54765f; }
+.pf-onboarding-choice-card h2 { font-size: 1.625rem; line-height: 1.2; }
+.pf-onboarding-choice-card p { font-size: 0.9rem; line-height: 1.75; }
+.pf-onboarding-choice-card__cta { display: inline-flex; align-items: center; gap: 8px; margin-top: auto; padding-top: 8px; font-size: 0.84rem; font-weight: 600; color: var(--color-primary); }
+.pf-onboarding-choice-card__cta svg { flex-shrink: 0; }
 
-.pf-recruiter-invite__signin {
-  font-weight: 700;
-  font-size: 0.9rem;
-  color: var(--color-primary);
-}
+.pf-recruiter-invite { width: min(100%, 600px); min-width: 0; }
+.pf-recruiter-invite__card { background: #fff; border: 1px solid #dde5dc; border-radius: 20px; padding: clamp(24px, 5vw, 48px); text-align: center; box-shadow: 0 16px 48px -28px rgba(25, 61, 43, 0.2); }
+.pf-recruiter-invite__badge { width: 52px; height: 52px; margin: 0 auto 20px; display: grid; place-items: center; border-radius: 50%; background: #edf3e9; color: #54765f; }
+.pf-recruiter-invite__card h1 { font-size: clamp(1.875rem, 4vw, 2.5rem); line-height: 1.15; text-wrap: balance; margin: 8px 0 18px; }
+.pf-recruiter-invite__desc { font-size: 0.9375rem; line-height: 1.75; }
+.pf-recruiter-invite__desc a { overflow-wrap: anywhere; text-decoration: underline; text-underline-offset: 3px; }
+.pf-recruiter-invite__points { margin: 28px 0; display: flex; flex-direction: column; gap: 12px; text-align: left; }
+.pf-recruiter-invite__point { display: flex; align-items: flex-start; gap: 12px; padding: 14px; background: #f5f7f1; border-radius: 10px; font-size: 0.84rem; line-height: 1.7; color: var(--text-secondary); }
+.pf-recruiter-invite__point svg { flex-shrink: 0; margin-top: 3px; color: #54765f; }
+.pf-recruiter-invite__actions { display: flex; flex-direction: column-reverse; align-items: stretch; gap: 8px; }
+.pf-recruiter-invite__back, .pf-recruiter-invite__signin { display: inline-flex; align-items: center; justify-content: center; min-height: 46px; padding: 12px 16px; border-radius: 8px; font-size: 0.875rem; font-weight: 500; }
+.pf-recruiter-invite__back { border: 1px solid transparent; background: transparent; color: var(--text-secondary); cursor: pointer; }
+.pf-recruiter-invite__back:hover { background: var(--bg-subtle); }
+.pf-recruiter-invite__signin { color: #fff; background: var(--color-primary); border: 1px solid var(--color-primary); }
+.pf-recruiter-invite__signin:hover { color: #fff; background: var(--color-primary-hover); }
 
-@media (max-width: 560px) {
-  .pf-onboarding-entry__header .pf-brand {
-    padding-left: 20px;
-  }
-  .pf-recruiter-invite__card {
-    padding: 30px 22px;
-  }
-  .pf-onboarding-choice h1 {
-    font-size: 1.8rem;
-  }
+.pf-onboarding-entry > .pf-footer { margin-top: 0; background: transparent !important; }
+.pf-onboarding-entry > .pf-footer .container { padding-inline: 24px; max-width: 1160px; }
+.pf-onboarding-entry .pf-footer__list a,
+.pf-onboarding-entry .pf-footer__btn-link { display: inline-flex; align-items: center; min-height: 44px; }
+.pf-onboarding-entry .pf-footer__list { gap: 0; }
+
+@media (max-width: 600px) {
+  .pf-onboarding-entry__signin-hint { display: none; }
+  .pf-onboarding-choice__cards { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  .pf-onboarding-entry__header, .pf-onboarding-entry > .pf-footer .container { padding-inline: 16px; }
+  .pf-onboarding-entry__main { padding-inline: 16px; align-items: start; }
+  .pf-onboarding-choice-card { gap: 12px; }
 }

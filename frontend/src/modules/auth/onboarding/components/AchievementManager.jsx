@@ -1,23 +1,56 @@
-import React, { useState } from 'react';
-import { Plus, Trash2, Award, Calendar, Tag } from 'lucide-react';
+import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
+import { Plus, Trash2, Calendar } from 'lucide-react';
 import { ACHIEVEMENT_CATEGORIES } from '../types/config';
 import { Button } from '../../../../components/ui/Button';
 import { Badge } from '../../../../components/ui/Badge';
 import { AchievementIcon } from '../../../../components/ui/AchievementIcon';
 import './AchievementManager.css';
 
-export function AchievementManager({ achievements = [], onChange }) {
+export const AchievementManager = forwardRef(function AchievementManager({ achievements = [], onChange }, ref) {
   const [isAdding, setIsAdding] = useState(achievements.length === 0);
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState(ACHIEVEMENT_CATEGORIES[0]);
   const [year, setYear] = useState('');
   const [description, setDescription] = useState('');
   const [error, setError] = useState('');
+  const [pendingNavigation, setPendingNavigation] = useState(null);
+  const draftPromptRef = useRef(null);
+  const titleInputRef = useRef(null);
+  const hasDraft = isAdding && Boolean(
+    title.trim() || year.trim() || description.trim() || category !== ACHIEVEMENT_CATEGORIES[0]
+  );
+
+  useImperativeHandle(ref, () => ({
+    requestNavigation(action) {
+      if (hasDraft) setPendingNavigation(() => action);
+      else action();
+    }
+  }));
+
+  useEffect(() => {
+    if (pendingNavigation) draftPromptRef.current?.focus();
+  }, [pendingNavigation]);
+
+  const resetDraft = () => {
+    setTitle('');
+    setDescription('');
+    setYear('');
+    setCategory(ACHIEVEMENT_CATEGORIES[0]);
+    setError('');
+    setIsAdding(false);
+    setPendingNavigation(null);
+  };
+
+  const keepEditing = () => {
+    setPendingNavigation(null);
+    titleInputRef.current?.focus();
+  };
 
   const handleAdd = (e) => {
     e.preventDefault();
     if (!title.trim()) {
       setError('Please provide a title or name for your achievement.');
+      titleInputRef.current?.focus();
       return;
     }
 
@@ -31,12 +64,8 @@ export function AchievementManager({ achievements = [], onChange }) {
 
     onChange([...achievements, newItem]);
 
-    // Reset form
-    setTitle('');
-    setDescription('');
-    setYear('');
-    setError('');
-    setIsAdding(false);
+    resetDraft();
+    pendingNavigation?.();
   };
 
   const handleRemove = (id) => {
@@ -85,8 +114,12 @@ export function AchievementManager({ achievements = [], onChange }) {
           <h4 className="pf-achievement-form__heading">Add a milestone or achievement</h4>
           
           <div className="pf-form-group">
-            <label className="pf-form-label">Achievement Title *</label>
+            <label htmlFor="milestone-title" className="pf-form-label">Milestone title *</label>
             <input
+              id="milestone-title"
+              ref={titleInputRef}
+              aria-invalid={Boolean(error)}
+              aria-describedby={error ? "milestone-title-error" : undefined}
               type="text"
               value={title}
               onChange={(e) => {
@@ -97,7 +130,7 @@ export function AchievementManager({ achievements = [], onChange }) {
               className={`pf-input ${error ? 'is-error' : ''}`}
               maxLength={100}
             />
-            {error && <span className="pf-form-error">{error}</span>}
+            {error && <span id="milestone-title-error" className="pf-form-error" role="alert">{error}</span>}
           </div>
 
           <div className="pf-form-row">
@@ -141,12 +174,12 @@ export function AchievementManager({ achievements = [], onChange }) {
 
           <div className="pf-achievement-form__actions">
             {achievements.length > 0 && (
-              <Button variant="ghost" size="sm" onClick={() => setIsAdding(false)}>
+              <Button variant="ghost" size="sm" onClick={resetDraft}>
                 Cancel
               </Button>
             )}
             <Button variant="primary" size="sm" onClick={handleAdd} icon={Plus}>
-              Save Milestone
+              Save milestone
             </Button>
           </div>
         </div>
@@ -157,9 +190,20 @@ export function AchievementManager({ achievements = [], onChange }) {
           className="pf-achievement-add-trigger"
         >
           <Plus size={18} />
-          <span>Add another achievement or milestone</span>
+          <span>{achievements.length > 0 ? 'Add another milestone' : 'Add a milestone'}</span>
         </button>
+      )}
+      {pendingNavigation && (
+        <div className="pf-milestone-draft-prompt" ref={draftPromptRef} tabIndex={-1} role="region" aria-labelledby="milestone-draft-title">
+          <h4 id="milestone-draft-title">You have an unsaved milestone</h4>
+          <p>Save this milestone or discard the draft before leaving this step.</p>
+          <div className="pf-milestone-draft-prompt__actions">
+            <Button size="sm" onClick={handleAdd}>Save milestone</Button>
+            <Button variant="secondary" size="sm" onClick={() => { const action = pendingNavigation; resetDraft(); action(); }}>Discard draft</Button>
+            <Button variant="ghost" size="sm" onClick={keepEditing}>Keep editing</Button>
+          </div>
+        </div>
       )}
     </div>
   );
-}
+});

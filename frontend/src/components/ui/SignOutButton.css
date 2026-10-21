@@ -1,0 +1,37 @@
+/* The navigation drawer sits at 1101. Its confirmation must sit above it. */
+.pf-modal-backdrop.pf-signout-modal {
+  z-index: 1200;
+  padding: 16px;
+}
+
+.pf-signout-modal .pf-modal-container {
+  max-width: 440px;
+  height: auto;
+  max-height: calc(100dvh - 32px);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+}
+
+.pf-signout-modal .pf-btn,
+.pf-signout-modal .pf-modal-close {
+  min-height: 44px;
+}
+
+.pf-signout-modal .pf-modal-close {
+  min-width: 44px;
+  flex-shrink: 0;
+}
+
+@media (max-width: 480px) {
+  .pf-signout-modal .pf-modal-header,
+  .pf-signout-modal .pf-modal-body,
+  .pf-signout-modal .pf-modal-footer {
+    padding: 16px;
+  }
+  .pf-signout-modal .pf-modal-footer {
+    flex-wrap: wrap;
+  }
+  .pf-signout-modal .pf-modal-footer .pf-btn {
+    flex: 1 1 auto;
+  }
+}

@@ -4,13 +4,28 @@ import { ArrowRight } from 'lucide-react';
 import { useAuth } from '../../app/providers/AuthProvider';
 import './Footer.css';
 
-export function Footer({ compact = false } = {}) {
+export function Footer({ compact = false, minimal = false } = {}) {
   const navigate = useNavigate();
   const { student, loading } = useAuth();
 
   const onboardingComplete = student?.onboarding?.completed;
   const studentDestination = student ? (onboardingComplete ? '/dashboard' : '/onboarding') : '/signin';
   const studentLabel = student ? (onboardingComplete ? 'Go to dashboard' : 'Continue onboarding') : 'Student sign in';
+
+  if (minimal) {
+    return (
+      <footer className="pf-footer pf-footer--minimal">
+        <div className="container pf-footer__minimal-inner">
+          <p>© {new Date().getFullYear()} PathfolioApp. All rights reserved.</p>
+          <nav className="pf-footer__legal-links" aria-label="Legal information">
+            <Link to="/privacy">Privacy</Link>
+            <Link to="/terms">Terms</Link>
+            <Link to="/cookies">Cookies</Link>
+          </nav>
+        </div>
+      </footer>
+    );
+  }
 
   const portals = [
     { label: 'Student portal', action: () => navigate(studentDestination) },

@@ -8,15 +8,11 @@ import {
   Sparkles,
   ArrowRight,
   Compass,
-  GraduationCap,
   Award,
   ShieldCheck,
   CheckCircle2,
-  Lock,
   Layers,
   Flame,
-  Lightbulb,
-  TrendingUp,
   UserCheck,
   BriefcaseBusiness,
   Users,
@@ -50,10 +46,10 @@ export function LandingPage() {
             <div className="pf-hero__content animate-fade-in">
               <span className="editorial-eyebrow">Your college journey, documented.</span>
               <h1 className="pf-hero__headline">
-                Build a record of who you're becoming.
+                Your potential. <span>A story worth building.</span>
               </h1>
               <p className="pf-hero__sub">
-                PathfolioApp helps you manage the experiences, interests, and achievements that shape your college record.
+                Bring your interests, projects, and achievements together in a living portfolio. Start at admission. Grow with every semester.
               </p>
 
               <div className="pf-hero__actions">
@@ -74,41 +70,40 @@ export function LandingPage() {
               <div className="pf-hero__badges">
                 <div className="pf-hero-badge-item">
                   <UserCheck size={16} />
-                  <span>Admitted Student Onboarding</span>
+                  <span>Made for your college journey</span>
                 </div>
                 <div className="pf-hero-badge-item">
                   <ShieldCheck size={16} />
-                  <span>Strict Data Consent</span>
+                  <span>Privacy by choice</span>
                 </div>
               </div>
-
-              <p className="pf-hero__audience">
-                Built for <b>talent havers</b> and <b>talent hunters</b>, students grow a verified
-                record, while the placement team curates matches and connects recruiters with the people behind the potential.
-              </p>
             </div>
 
             {/* PRODUCT PREVIEW / VISUAL SECTION */}
             <div id="your-journey" className="pf-hero__visual-container animate-fade-in delay-200">
               <div className="pf-preview-card">
+                <div className="pf-preview-card__toolbar">
+                  <span><span className="pf-preview-live-dot" /> Your living record</span>
+                  <span>Example profile</span>
+                </div>
                 {/* Visual Card Header */}
                 <div className="pf-preview-card__top">
                   <div className="pf-preview-card__avatar">
-                    <span>MC</span>
+                    <img src="/images/ananya-sharma.jpg" alt="Portrait of Ananya Sharma, a fictional student" width="56" height="56" decoding="async" />
                   </div>
                   <div className="pf-preview-card__meta">
-                    <h3 className="pf-preview-card__name">Maya Chen</h3>
+                    <h3 className="pf-preview-card__name">Ananya Sharma</h3>
                     <p className="pf-preview-card__enrollment">
-                      Computer Science & Engineering • Class of '28
+                      Computer Science • Class of 2028
                     </p>
                   </div>
-                  <Badge variant="sage" size="sm">Record Initialized</Badge>
+                  <Badge variant="sage" size="sm">Journey started</Badge>
                 </div>
 
-                {/* Floating Journey Milestone Blocks */}
+                {/* Example interests and milestone */}
                 <div className="pf-preview-card__body">
                   <div className="pf-preview-section">
-                    <span className="pf-preview-label">Curiosity & Ambitions</span>
+                    <span className="pf-preview-label">Interests & ambitions</span>
                     <div className="pf-preview-tags">
                       <span className="pf-preview-tag pf-preview-tag--green">
                         <Sparkles size={12} /> Artificial Intelligence
@@ -119,34 +114,26 @@ export function LandingPage() {
                   </div>
 
                   <div className="pf-preview-section">
-                    <span className="pf-preview-label">Initial Milestone</span>
+                    <span className="pf-preview-label">A milestone to remember</span>
                     <div className="pf-preview-milestone">
                       <div className="pf-preview-milestone__icon">
                         <Award size={16} />
                       </div>
                       <div>
-                        <p className="pf-preview-milestone__title">National Science Olympiad Medalist</p>
-                        <span className="pf-preview-milestone__sub">Physical Computing • 2023</span>
+                        <p className="pf-preview-milestone__title">Inter-college hackathon finalist</p>
+                        <span className="pf-preview-milestone__sub">Smart campus project • 2026</span>
                       </div>
                     </div>
                   </div>
 
                   <div className="pf-preview-timeline-hint">
                     <div className="pf-preview-timeline-dot" />
-                    <span>Year 1 Genesis • Ready to capture 4 years of growth</span>
+                    <span>Year 1 • Your next chapter is taking shape</span>
                   </div>
                 </div>
               </div>
 
-              {/* Decorative subtle floating cards */}
-              <div className="pf-floating-chip pf-floating-chip--1">
-                <Compass size={14} />
-                <span>Interests: Photography & Chess</span>
-              </div>
-              <div className="pf-floating-chip pf-floating-chip--2">
-                <ShieldCheck size={14} />
-                <span>Verified College Roll No.</span>
-              </div>
+              <p className="pf-preview-caption">A little curiosity. A new experience. A story that keeps growing.</p>
             </div>
           </div>
         </section>
@@ -155,7 +142,7 @@ export function LandingPage() {
         <section className="pf-section pf-features-section">
           <div className="container">
             <div className="pf-section-header">
-              <span className="editorial-eyebrow">Purposeful Genesis</span>
+              <span className="editorial-eyebrow">More than a resume</span>
               <h2 className="pf-section-title">Start with what makes you, you.</h2>
               <p className="pf-section-subtitle">
                 Your interests, experiences, and ambitions deserve more than a single line on a form. PathfolioApp gives them a place to grow.
@@ -167,7 +154,7 @@ export function LandingPage() {
                 <div className="pf-feature-card__icon pf-feature-card__icon--forest">
                   <Compass size={22} />
                 </div>
-                <h3 className="pf-feature-card__title">Your Interests</h3>
+                <h3 className="pf-feature-card__title">Your interests</h3>
                 <p className="pf-feature-card__desc">
                   Capture the passions, creative crafts, and curiosities you explore beyond lecture halls and exams.
                 </p>
@@ -177,7 +164,7 @@ export function LandingPage() {
                 <div className="pf-feature-card__icon pf-feature-card__icon--sage">
                   <Award size={22} />
                 </div>
-                <h3 className="pf-feature-card__title">Your Experiences</h3>
+                <h3 className="pf-feature-card__title">Your experiences</h3>
                 <p className="pf-feature-card__desc">
                   Log your early achievements, hackathons, volunteer work, and projects from day one of enrollment.
                 </p>
@@ -187,7 +174,7 @@ export function LandingPage() {
                 <div className="pf-feature-card__icon pf-feature-card__icon--amber">
                   <Flame size={22} />
                 </div>
-                <h3 className="pf-feature-card__title">Your Ambitions</h3>
+                <h3 className="pf-feature-card__title">Your ambitions</h3>
                 <p className="pf-feature-card__desc">
                   Record the areas you want to explore, from research to entrepreneurship.
                 </p>
@@ -197,9 +184,9 @@ export function LandingPage() {
                 <div className="pf-feature-card__icon pf-feature-card__icon--primary">
                   <Layers size={22} />
                 </div>
-                <h3 className="pf-feature-card__title">Your Living Record</h3>
+                <h3 className="pf-feature-card__title">Your living record</h3>
                 <p className="pf-feature-card__desc">
-                  A verifiable timeline of who you become throughout your degree, backed by institutional alignment.
+                  Connect the dots between what you learn, what you do, and where you want to go.
                 </p>
               </div>
             </div>
@@ -210,8 +197,8 @@ export function LandingPage() {
         <section id="how-it-works" className="pf-section pf-how-it-works">
           <div className="container">
             <div className="pf-section-header">
-              <span className="editorial-eyebrow">The Lifecycle Framework</span>
-              <h2 className="pf-section-title">A three-phase evolution.</h2>
+              <span className="editorial-eyebrow">How it works</span>
+              <h2 className="pf-section-title">Start small. Keep growing.</h2>
               <p className="pf-section-subtitle">
                 Pathfolio begins at admission and evolves with you through graduation.
               </p>
@@ -226,41 +213,41 @@ export function LandingPage() {
                 </div>
                 <h3 className="pf-step-card__title">Begin</h3>
                 <p className="pf-step-card__desc">
-                  Tell us a little about yourself, your department enrollment, early milestones, and curiosities in our guided onboarding.
+                  Set up your student profile with a few details about your course, interests, and early achievements.
                 </p>
                 <div className="pf-step-card__status">
                   <CheckCircle2 size={16} />
-                  <span>Implemented in this release</span>
+                  <span>Guided student onboarding</span>
                 </div>
               </div>
 
-              {/* Step 2 - FUTURE */}
-              <div className="pf-step-card pf-step-card--future animate-fade-in delay-200">
+              {/* Step 2 */}
+              <div className="pf-step-card pf-step-card--active animate-fade-in delay-200">
                 <div className="pf-step-card__top">
                   <span className="pf-step-num">02</span>
-                  <Badge variant="coming-soon" size="sm">Coming Next</Badge>
+                  <Badge variant="sage" size="sm">Available Now</Badge>
                 </div>
                 <h3 className="pf-step-card__title">Build</h3>
                 <p className="pf-step-card__desc">
-                  Capture the coursework, internships, leadership roles, and research projects that shape your journey each semester.
+                  Add projects, internships, achievements, and experiences. See your college journey come together in Story Mode.
                 </p>
-                <div className="pf-step-card__status pf-step-card__status--future">
-                  <span>Future module: Profile Builder & Story Mode</span>
+                <div className="pf-step-card__status">
+                  <span>Profile builder & Story Mode</span>
                 </div>
               </div>
 
-              {/* Step 3 - FUTURE */}
-              <div className="pf-step-card pf-step-card--future animate-fade-in delay-300">
+              {/* Step 3 */}
+              <div className="pf-step-card pf-step-card--active animate-fade-in delay-300">
                 <div className="pf-step-card__top">
                   <span className="pf-step-num">03</span>
-                  <Badge variant="coming-soon" size="sm">Coming Next</Badge>
+                  <Badge variant="sage" size="sm">Available Now</Badge>
                 </div>
                 <h3 className="pf-step-card__title">Grow</h3>
                 <p className="pf-step-card__desc">
-                  Translate your living evidence record into career opportunities, placement portfolio exports, and verified credentials.
+                  Build your resume and explore opportunities shared by your placement team, with your experiences ready to show.
                 </p>
-                <div className="pf-step-card__status pf-step-card__status--future">
-                  <span>Future module: Career Prediction & Placements</span>
+                <div className="pf-step-card__status">
+                  <span>Resumes & placement opportunities</span>
                 </div>
               </div>
             </div>
@@ -271,10 +258,10 @@ export function LandingPage() {
         <section className="pf-section pf-recruiter-section">
           <div className="container">
             <div className="pf-section-header">
-              <span className="editorial-eyebrow">For talent hunters</span>
-              <h2 className="pf-section-title">Recruiting? Meet your shortest path to the right people.</h2>
+              <span className="editorial-eyebrow">For recruiters & placement teams</span>
+              <h2 className="pf-section-title">See the person behind the profile.</h2>
               <p className="pf-section-subtitle">
-                Submit your roles for placement-team review and receive curated candidate referrals, the living records students build, matched and shared by the TnP cell.
+                Share opportunities. Receive relevant referrals. Discover student potential through records curated by the placement team.
               </p>
             </div>
 
@@ -287,12 +274,12 @@ export function LandingPage() {
               <div className="pf-recruiter-feature animate-fade-in delay-200">
                 <div className="pf-recruiter-feature__icon"><Users size={20} /></div>
                 <h3>Receive curated candidates</h3>
-                <p>The placement team shares matched student profiles with your company, no database digging, just relevant referrals.</p>
+                <p>Receive student profiles matched and shared by the placement team, with the context you need to review them.</p>
               </div>
               <div className="pf-recruiter-feature animate-fade-in delay-300">
                 <div className="pf-recruiter-feature__icon"><FileSearch size={20} /></div>
                 <h3>Review living records</h3>
-                <p>Shared candidates arrive with interests, achievements, experience, and resumes, evidence, not static resumes.</p>
+                <p>Explore the projects, interests, achievements, and experience behind each candidate’s resume.</p>
               </div>
               <div className="pf-recruiter-feature animate-fade-in delay-400">
                 <div className="pf-recruiter-feature__icon"><Building2 size={20} /></div>
@@ -319,28 +306,28 @@ export function LandingPage() {
               </div>
               <h2 className="pf-privacy-card__title">Your information, your control.</h2>
               <p className="pf-privacy-card__desc">
-                PathfolioApp is architected around responsible handling of student data and radical transparency.
+                Your story belongs to you. Clear choices help you decide what to include.
               </p>
 
               <div className="pf-privacy-points">
                 <div className="pf-privacy-point">
                   <div className="pf-privacy-point__check"><CheckCircle2 size={16} /></div>
                   <div>
-                    <strong>Students decide what to share:</strong> Sensitive background notes are strictly optional and can be skipped with zero penalty.
+                    <strong>Students decide what to share:</strong> Personal background details are optional. Share only what you feel comfortable including.
                   </div>
                 </div>
 
                 <div className="pf-privacy-point">
                   <div className="pf-privacy-point__check"><CheckCircle2 size={16} /></div>
                   <div>
-                    <strong>Explicit consent required:</strong> Sensitive personal and family context requires non-prechecked, section-level consent before storage.
+                    <strong>Explicit consent required:</strong> Choose whether to include sensitive personal and family details before they are saved.
                   </div>
                 </div>
 
                 <div className="pf-privacy-point">
                   <div className="pf-privacy-point__check"><CheckCircle2 size={16} /></div>
                   <div>
-                    <strong>No unnecessary identity collection:</strong> We never request sensitive government IDs (Aadhaar/PAN), financial cards, or passwords.
+                    <strong>No unnecessary identity collection:</strong> Your profile does not need Aadhaar, PAN, or financial card details.
                   </div>
                 </div>
               </div>
@@ -353,10 +340,10 @@ export function LandingPage() {
           <div className="container pf-final-cta__inner">
             <span className="editorial-eyebrow">Ready to begin?</span>
             <h2 className="pf-final-cta__title">
-              Your journey starts with a few simple questions.
+              Make room for who you’re becoming.
             </h2>
             <p className="pf-final-cta__sub">
-              Complete your student onboarding in under 10 minutes.
+              Start with what you know about yourself. Build the rest as you go.
             </p>
             <Button
               variant="primary"

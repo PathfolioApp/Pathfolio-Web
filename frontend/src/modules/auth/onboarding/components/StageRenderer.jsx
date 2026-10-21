@@ -10,13 +10,12 @@ import {
   SUGGESTED_HOBBIES,
   SUGGESTED_PASSIONS,
   DEPARTMENTS,
-  BATCH_YEARS,
-  extractRollNumber
+  BATCH_YEARS
 } from '../types/config';
-import { Lock, Eye, EyeOff, Mail } from 'lucide-react';
+import { Lock, Eye, EyeOff, Compass, GraduationCap } from 'lucide-react';
 import './StageRenderer.css';
 
-export function StageRenderer() {
+export function StageRenderer({ milestoneManagerRef }) {
   const {
     currentStage,
     formData,
@@ -41,9 +40,9 @@ export function StageRenderer() {
           <div className="pf-welcome-card">
             <div className="pf-welcome-card__visual">
               <div className="pf-welcome-card__icon-stack">
-                <div className="pf-welcome-icon-bubble pf-welcome-icon-bubble--1"><Mail size={20} /></div>
+                <div className="pf-welcome-icon-bubble pf-welcome-icon-bubble--1"><GraduationCap size={20} /></div>
                 <div className="pf-welcome-icon-bubble pf-welcome-icon-bubble--2"><Lock size={20} /></div>
-                <div className="pf-welcome-icon-bubble pf-welcome-icon-bubble--3"><Mail size={20} /></div>
+                <div className="pf-welcome-icon-bubble pf-welcome-icon-bubble--3"><Compass size={20} /></div>
               </div>
             </div>
 
@@ -51,7 +50,7 @@ export function StageRenderer() {
               <span className="editorial-eyebrow">Your college journey begins</span>
               <h2 className="pf-welcome-card__title">Let's begin with you.</h2>
               <p className="pf-welcome-card__desc">
-                Your college journey starts with a few things that make you who you are. Over the next few minutes, we will establish your foundation on PathfolioApp.
+                Start with the essentials, then add the interests and experiences that make your story yours. We’ll guide you through each step.
               </p>
 
               <div className="pf-welcome-highlights">
@@ -60,12 +59,12 @@ export function StageRenderer() {
                   <span className="pf-welcome-highlight-text">Estimated time</span>
                 </div>
                 <div className="pf-welcome-highlight-item">
-                  <span className="pf-welcome-highlight-num">100%</span>
-                  <span className="pf-welcome-highlight-text">Your control & consent</span>
+                  <span className="pf-welcome-highlight-num">Your choice</span>
+                  <span className="pf-welcome-highlight-text">Optional personal details</span>
                 </div>
                 <div className="pf-welcome-highlight-item">
-                  <span className="pf-welcome-highlight-num">4 Years</span>
-                  <span className="pf-welcome-highlight-text">Record of growth</span>
+                  <span className="pf-welcome-highlight-num">One place</span>
+                  <span className="pf-welcome-highlight-text">For your college story</span>
                 </div>
               </div>
             </div>
@@ -113,7 +112,7 @@ export function StageRenderer() {
           />
           <div className="pf-stage-input-wrapper">
             <div className="pf-stage-input-group">
-              <label htmlFor="roll-locked" className="pf-form-label">Institutional Email</label>
+              <label htmlFor="email-locked" className="pf-form-label">Institutional Email</label>
               <input
                 id="email-locked"
                 type="email"
@@ -146,7 +145,7 @@ export function StageRenderer() {
                 autoFocus
                 value={formData.personal.fullName}
                 onChange={(e) => updatePersonal('fullName', e.target.value)}
-                placeholder="e.g. Maya Chen"
+                placeholder="e.g. Ananya Sharma"
                 className={`pf-stage-hero-input ${errors.fullName ? 'is-error' : ''}`}
                 maxLength={80}
               />
@@ -303,6 +302,7 @@ export function StageRenderer() {
             description={currentStage.description}
           />
           <AchievementManager
+            ref={milestoneManagerRef}
             achievements={formData.achievements}
             onChange={setAchievements}
           />
@@ -328,7 +328,7 @@ export function StageRenderer() {
         </div>
       );
 
-    // STAGE 11: Review
+    // STAGE 12: Review
     case 'review':
       return (
         <div className="pf-stage-content animate-fade-in">
@@ -344,7 +344,7 @@ export function StageRenderer() {
         </div>
       );
 
-    // STAGE 12: Phone (optional)
+    // STAGE 11: Phone (optional)
     case 'phone':
       return (
         <div className="pf-stage-content animate-fade-in">

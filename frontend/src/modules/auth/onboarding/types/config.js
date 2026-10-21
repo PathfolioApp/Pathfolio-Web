@@ -81,26 +81,26 @@ export const ONBOARDING_STAGES = [
     id: 'familyContext',
     stageNumber: 10,
     title: "Is there anything about your background you'd like us to understand?",
-    eyebrow: 'Step 10 of 12 • Personal Context (Optional)',
+    eyebrow: 'Step 10 of 12 • Personal background (optional)',
     description: "You decide what you share. Sensitive personal or family background details require your explicit consent before saving.",
     isSkippable: true,
     isSensitive: true
   },
   {
-    id: 'review',
+    id: 'phone',
     stageNumber: 11,
-    title: 'Review your initial record.',
-    eyebrow: 'Step 11 of 12 • Verification',
-    description: 'Take a moment to review the information you shared before we initialize your Pathfolio journey.',
-    isSkippable: false
+    title: 'How can the placement team reach you?',
+    eyebrow: 'Step 11 of 12 • Contact details (optional)',
+    description: 'Add a phone number for placement updates, or skip this step for now.',
+    isSkippable: true
   },
   {
-    id: 'phone',
+    id: 'review',
     stageNumber: 12,
-    title: 'How can the placement cell reach you?',
-    eyebrow: 'Step 12 of 12 • Contact',
-    description: 'Add a phone number so the placement team can reach you about opportunities (you can skip this for now).',
-    isSkippable: true
+    title: 'Review your profile.',
+    eyebrow: 'Step 12 of 12 • Review',
+    description: 'Check your details below. You can edit any section before completing onboarding.',
+    isSkippable: false
   }
 ];
 

@@ -8,13 +8,8 @@ import {
   CheckCircle,
   Sparkles,
   Award,
-  BookOpen,
   ArrowRight,
-  Compass,
-  Layers,
-  GraduationCap,
-  Calendar,
-  RotateCcw
+  Compass
 } from 'lucide-react';
 import './CompletionPage.css';
 
@@ -36,7 +31,7 @@ export function CompletionPage() {
 
   const name = student?.personal?.fullName || 'Student';
   const department = student?.academic?.department || 'Academic Department';
-  const batchYear = student?.academic?.batchYear || 'Class Cohort';
+  const batchYear = student?.academic?.batchYear || 'Batch not provided';
   const rollNumber = student?.academic?.rollNumber || 'Scholar';
   const hobbiesCount = student?.interests?.hobbies?.length || 0;
   const passionsCount = student?.interests?.passions?.length || 0;
@@ -47,7 +42,7 @@ export function CompletionPage() {
       {/* Minimal Header */}
       <header className="pf-completion-header">
         <div className="container pf-completion-header__inner">
-          <Link to="/" className="pf-brand">
+          <Link to="/" className="pf-brand" aria-label="PathfolioApp home">
             <div className="pf-brand__logo">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z" />
@@ -69,26 +64,27 @@ export function CompletionPage() {
             </div>
           </div>
 
-          <span className="editorial-eyebrow">Genesis Stage Complete</span>
+          <span className="editorial-eyebrow">Onboarding complete</span>
           <h1 className="pf-completion-title">Your journey has begun.</h1>
           <p className="pf-completion-sub">
-            You've taken the first step toward building a record of your college journey. Your initial identity, curiosities, and milestones are officially recorded.
+            Your profile is ready. Keep adding interests, experiences, and milestones as your college journey unfolds.
           </p>
 
-          {/* Student Genesis Summary Card */}
+          {/* Student profile summary */}
           <div className="pf-completion-profile-card">
             <div className="pf-completion-profile-top">
               <div className="pf-completion-avatar">
                 <span>{name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}</span>
               </div>
               <div className="pf-completion-meta">
-                <h3 className="pf-completion-name">{name}</h3>
+                <h2 className="pf-completion-name">{name}</h2>
                 <p className="pf-completion-dept">
-                  {department} • {batchYear}
+                  {department}
                 </p>
+                <p className="pf-completion-batch">{batchYear}</p>
                 <span className="pf-completion-handle">Roll No. {rollNumber}</span>
               </div>
-              <Badge variant="sage" size="md">Admitted & Initialized</Badge>
+              <Badge variant="sage" size="md">Profile created</Badge>
             </div>
 
             <div className="pf-completion-stats-grid">
@@ -96,7 +92,7 @@ export function CompletionPage() {
                 <Compass size={18} className="pf-completion-stat-icon" />
                 <div className="pf-completion-stat-info">
                   <span className="pf-completion-stat-num">{hobbiesCount}</span>
-                  <span className="pf-completion-stat-label">Hobbies Logged</span>
+                  <span className="pf-completion-stat-label">Hobbies</span>
                 </div>
               </div>
 
@@ -104,7 +100,7 @@ export function CompletionPage() {
                 <Sparkles size={18} className="pf-completion-stat-icon pf-completion-stat-icon--gold" />
                 <div className="pf-completion-stat-info">
                   <span className="pf-completion-stat-num">{passionsCount}</span>
-                  <span className="pf-completion-stat-label">Passions & Tracks</span>
+                  <span className="pf-completion-stat-label">Interests</span>
                 </div>
               </div>
 
@@ -112,20 +108,12 @@ export function CompletionPage() {
                 <Award size={18} className="pf-completion-stat-icon" />
                 <div className="pf-completion-stat-info">
                   <span className="pf-completion-stat-num">{achievementsCount}</span>
-                  <span className="pf-completion-stat-label">Initial Milestones</span>
+                  <span className="pf-completion-stat-label">Milestones</span>
                 </div>
               </div>
             </div>
 
-            <div className="pf-completion-growth-bar">
-              <div className="pf-completion-growth-info">
-                <span>Four-Year Lifecycle Track</span>
-                <strong>Genesis Complete (Year 1, Term 1)</strong>
-              </div>
-              <div className="pf-completion-growth-track">
-                <div className="pf-completion-growth-fill" />
-              </div>
-            </div>
+            <p className="pf-completion-start-note">Your starting point. Keep building your story from here.</p>
           </div>
 
           {/* Call to action controls */}
@@ -145,58 +133,51 @@ export function CompletionPage() {
               onClick={() => setShowNextModal(true)}
               className="pf-completion-next-btn"
             >
-              <Layers size={16} /> Preview what's next
+              Explore your next steps
             </button>
 
-            <button
-              type="button"
-              onClick={() => navigate('/')}
-              className="pf-completion-return-btn"
-            >
-              Return to Landing Page
-            </button>
           </div>
         </div>
       </main>
 
-      {/* "Coming Next" Preview Modal strictly demarcating post-onboarding modules */}
+      {/* Next steps after onboarding */}
       <Modal
         isOpen={showNextModal}
         onClose={() => setShowNextModal(false)}
-        title="PathfolioApp future modules"
+        title="Your next steps"
         footer={
           <Button variant="primary" size="sm" onClick={() => setShowNextModal(false)}>
-            Back to Overview
+            Back to overview
           </Button>
         }
       >
         <div className="pf-coming-next-modal-content">
-          <Badge variant="coming-soon">Upcoming in Future Releases</Badge>
+          <Badge variant="sage">Keep building your profile</Badge>
           <p style={{ marginTop: '12px', marginBottom: '14px', fontSize: '0.9375rem' }}>
-            Congratulations! The <strong>Admitted Student Onboarding Experience</strong> is complete. The following post-onboarding modules will unlock in subsequent releases:
+            Your profile is ready. Here are a few ways to keep building your college story:
           </p>
 
           <ul className="pf-coming-next-list">
             <li>
-              <strong>Profile Builder:</strong> Dynamic resume generation and skill taxonomy mapping.
+              <strong>Profile &amp; resumes:</strong> Add your projects, achievements, and experience, then build your resume.
             </li>
             <li>
-              <strong>Story Mode:</strong> Narrative-driven semester reflections and faculty mentorship notes.
+              <strong>Story Mode:</strong> Explore the interests, experiences, and milestones that shape your journey.
             </li>
             <li>
-              <strong>Living Timeline:</strong> Chronological visual evidence of projects, papers, and clubs.
+              <strong>Your living record:</strong> Keep your profile up to date as you learn and take on new experiences.
             </li>
             <li>
-              <strong>Career Prediction & Placement Portal:</strong> Evidence-based career pathway recommendations.
+              <strong>Placement opportunities:</strong> Explore opportunities shared by your placement team.
             </li>
           </ul>
 
           <p style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', marginTop: '14px' }}>
-            Your onboarding record has been saved and is ready to seed these modules upon release.
+            You can return to your profile and add more whenever you are ready.
           </p>
         </div>
       </Modal>
-      <Footer compact />
+      <Footer minimal />
     </div>
   );
 }

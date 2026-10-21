@@ -194,3 +194,33 @@
     gap: var(--space-sm);
   }
 }
+
+.pf-milestone-draft-prompt {
+  padding: 18px;
+  border: 1px solid #d8caa7;
+  border-radius: var(--radius-md);
+  background: #faf6eb;
+}
+
+.pf-milestone-draft-prompt h4 {
+  font-size: 1.125rem;
+  margin-bottom: 8px;
+}
+
+.pf-milestone-draft-prompt p {
+  font-size: 0.875rem;
+  line-height: 1.6;
+  margin-bottom: 16px;
+}
+
+.pf-milestone-draft-prompt__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+@media (max-width: 480px) {
+  .pf-milestone-draft-prompt__actions {
+    flex-direction: column;
+  }
+}

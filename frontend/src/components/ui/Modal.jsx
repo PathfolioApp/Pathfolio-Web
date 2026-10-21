@@ -24,7 +24,7 @@ export function Modal({ isOpen, onClose, title, children, footer, className = ''
   if (!isOpen) return null;
 
   return createPortal(
-    <div className={`pf-modal-backdrop ${className}`.trim()} onClick={onClose} role="dialog" aria-modal="true">
+    <div className={`pf-modal-backdrop ${className}`.trim()} onClick={onClose} role="dialog" aria-modal="true" aria-label={typeof title === 'string' ? title : undefined}>
       <div
         className="pf-modal-container"
         style={maxWidth ? { maxWidth } : undefined}

@@ -10,8 +10,10 @@
 .pf-dashboard-side nav button.active, .pf-dashboard-side nav a.active, .pf-mobile-nav__panel nav button.active, .pf-mobile-nav__panel nav a.active { background: var(--color-primary-light); color: var(--color-primary); font-weight: 700; }
 .pf-nav-group-header { margin-top: 10px; padding: 6px 10px 3px; color: var(--text-muted); font-size: .63rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
 .pf-dashboard-side small { margin-left: auto; color: #9ca49a; font-size: .68rem; }
-.pf-dashboard-side .pf-side-signout { margin-top: 6px; color: #87504a; display: flex; align-items: center; gap: 9px; padding: 8px 11px; border: 0; border-radius: 8px; background: transparent; text-align: left; font: inherit; font-size: .86rem; cursor: pointer; }
-.pf-dashboard-side .pf-side-signout:hover { background: #fff0ef; }
+.pf-dashboard-side .pf-side-signout,
+.pf-mobile-nav__panel .pf-side-signout { min-height: 44px; flex-shrink: 0; margin-top: 6px; color: #87504a; display: flex; align-items: center; gap: 9px; padding: 8px 11px; border: 0; border-radius: 8px; background: transparent; text-align: left; font: inherit; font-size: .86rem; cursor: pointer; }
+.pf-dashboard-side .pf-side-signout:hover,
+.pf-mobile-nav__panel .pf-side-signout:hover { background: #fff0ef; }
 
 /* Portal switcher: a sleek horizontal segmented toggle */
 .pf-portal-links { margin: auto 0 4px; padding-top: 8px; border-top: 1px solid var(--border-subtle); }
@@ -47,7 +49,7 @@
 .pf-mobile-nav__brand { padding: 0; }
 .pf-mobile-nav__close { display: grid; place-items: center; width: 34px; height: 34px; border: 0; border-radius: var(--radius-sm); background: transparent; color: var(--text-muted); cursor: pointer; }
 .pf-mobile-nav__close:hover { background: var(--bg-subtle); color: var(--text-primary); }
-.pf-mobile-nav__panel .pf-side-signout { margin-top: auto; }
+.pf-mobile-nav__panel .pf-side-signout { margin-bottom: env(safe-area-inset-bottom, 0px); }
 .pf-mobile-menu { display: none; }
 
 @media(max-width: 850px) {
@@ -75,3 +77,15 @@
   from { transform: translateX(-16px); opacity: 0.6; }
   to { transform: translateX(0); opacity: 1; }
 }
+
+/* Keep account actions together at the bottom, even without a portal switcher. */
+.pf-portal-account-actions {
+  margin-top: auto;
+  padding-top: 20px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.pf-portal-account-actions .pf-portal-links { margin: 0; }
+.pf-portal-account-actions .pf-side-signout { margin-top: 0; }

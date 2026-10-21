@@ -11,6 +11,7 @@ const VARIANT_ALIASES = {
 
 export function Button({
   children,
+  buttonRef,
   variant = 'primary',
   size = 'md',        // 'sm', 'md', 'lg'
   type = 'button',
@@ -25,6 +26,7 @@ export function Button({
   const resolvedVariant = VARIANT_ALIASES[variant] || variant;
   return (
     <button
+      ref={buttonRef}
       type={type}
       disabled={disabled || loading}
       onClick={onClick}

@@ -5,7 +5,7 @@ import { PdfIcon } from '../../../../components/ui/PdfIcon';
 import { formatProjectTimeline } from '../utils/projectUtils';
 import '../styles/ProjectStyles.css';
 
-export function ProjectDetailModal({ isOpen, onClose, project }) {
+export function ProjectDetailModal({ isOpen, onClose, project, className = '' }) {
   if (!project) return null;
 
   const timelineStr = formatProjectTimeline(project.startDate, project.endDate, project.currentlyWorking);
@@ -13,6 +13,7 @@ export function ProjectDetailModal({ isOpen, onClose, project }) {
   return (
     <Modal
       isOpen={isOpen}
+      className={className}
       onClose={onClose}
       title="Project Details"
       maxWidth="780px"

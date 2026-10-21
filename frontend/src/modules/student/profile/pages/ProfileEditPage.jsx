@@ -21,6 +21,7 @@ import '../styles/AcademicStyles.css';
 import '../styles/InternshipStyles.css';
 import '../styles/ProjectStyles.css';
 import '../styles/SocialStyles.css';
+import '../styles/ProfileEditViewport.css';
 
 const split = value => value.split(',').map(item => item.trim()).filter(Boolean);
 // Interest entries arrive as either legacy strings or onboarding objects
@@ -453,7 +454,7 @@ export function ProfileEditPage() {
     };
   }, [message, error]);
 
-  return <div className="pf-profile-page">
+  return <div className="pf-profile-page pf-profile-edit-view">
     <div className="pf-edit-heading">
       <div><p className="editorial-eyebrow">Edit profile</p><h1>Keep your record current.</h1><p>Update one section at a time. Your other information stays untouched.</p></div>
       <button className="pf-secondary pf-back-button" onClick={() => navigate('/profile')}><ArrowLeft size={16} /> Back</button>
@@ -466,10 +467,10 @@ export function ProfileEditPage() {
       <AvatarEditor name={student.personal.fullName} currentUrl={student.personal.avatarUrl || ''} onSaved={refresh} />
     </section>
 
-    <EditSection title="Personal information" note="Your email and roll number are linked to your institutional identity and can't be changed here." onSave={() => save('personal', personal)} saving={savingSection === 'personal'}>
+    <EditSection id="personal" title="Personal information" note="Your email and roll number are linked to your institutional identity and can't be changed here." onSave={() => save('personal', personal)} saving={savingSection === 'personal'}>
       <label>Full name <span className="pf-required-star">*</span><input value={personal.fullName} onChange={event => setPersonal({ ...personal, fullName: event.target.value })} /></label>
       <label>Date of birth <span className="pf-required-star">*</span><input type="date" max={new Date().toISOString().slice(0, 10)} value={(personal.dateOfBirth || '').slice(0, 10)} onChange={event => setPersonal({ ...personal, dateOfBirth: event.target.value })} /></label>
-      <label>Phone number <span className="pf-required-star">*</span><input type="tel" placeholder="+91 98765 43210" value={personal.phone || ''} onChange={event => setPersonal({ ...personal, phone: event.target.value })} /></label>
+      <label>Phone number (optional)<input type="tel" placeholder="+91 98765 43210" value={personal.phone || ''} onChange={event => setPersonal({ ...personal, phone: event.target.value })} /></label>
       <label>Institutional email<input value={personal.email} disabled /></label>
     </EditSection>
 
@@ -837,7 +838,7 @@ export function ProfileEditPage() {
     </EditSection>
 
     {/* Semester Modal */}
-    <Modal
+    <Modal className="pf-profile-edit-dialog"
       isOpen={isSemesterModalOpen}
       onClose={() => setIsSemesterModalOpen(false)}
       title={semesterModalData?.id ? `Edit Semester ${semesterModalData.semester}` : 'Add Semester Result'}
@@ -1344,7 +1345,7 @@ export function ProfileEditPage() {
       </div>
     </EditSection>
 
-    <Modal isOpen={isAddAchievementOpen} onClose={() => setIsAddAchievementOpen(false)} title="Add an achievement" footer={<><button type="button" className="pf-secondary" onClick={() => setIsAddAchievementOpen(false)}>Cancel</button><button type="button" className="pf-save" disabled={savingSection === 'achievements'} onClick={add}>{savingSection === 'achievements' ? 'Adding...' : 'Save achievement'}</button></>}>
+    <Modal className="pf-profile-edit-dialog" isOpen={isAddAchievementOpen} onClose={() => setIsAddAchievementOpen(false)} title="Add an achievement" footer={<><button type="button" className="pf-secondary" onClick={() => setIsAddAchievementOpen(false)}>Cancel</button><button type="button" className="pf-save" disabled={savingSection === 'achievements'} onClick={add}>{savingSection === 'achievements' ? 'Adding...' : 'Save achievement'}</button></>}>
       <p className="pf-achievement-modal-intro">Capture a milestone with enough detail to help TNP understand its value.</p>
       <div className="pf-achievement-modal-form"><label>Title<input autoFocus value={newAchievement.title} onChange={event => setNewAchievement({ ...newAchievement, title: event.target.value })} placeholder="AWS certification or hackathon rank" /></label><label>Type / category<select value={newAchievement.category} onChange={event => setNewAchievement({ ...newAchievement, category: event.target.value, customCategory: '' })}>{ACHIEVEMENT_CATEGORIES.map(category => <option key={category} value={category}>{category}</option>)}<option value="Other">Other</option></select></label>{newAchievement.category === 'Other' && <label>Custom category<input value={newAchievement.customCategory} onChange={event => setNewAchievement({ ...newAchievement, customCategory: event.target.value })} placeholder="Write a category" /></label>}<label>Completion year<input type="number" value={newAchievement.year} onChange={event => setNewAchievement({ ...newAchievement, year: event.target.value })} placeholder="2026" /></label><label className="pf-achievement-modal-form__description">Description<textarea value={newAchievement.description} onChange={event => setNewAchievement({ ...newAchievement, description: event.target.value })} placeholder="What did you achieve, build, or learn?" /></label></div>
     </Modal>

@@ -132,10 +132,12 @@ export function PortalShell({ navItems = [], portalLinks, showBackButton = true,
       <aside className="pf-dashboard-side">
         <Brand className="pf-dashboard-brand" />
         {sidebarNav(navigateFromNav)}
-        {portalLinks}
-        <SignOutButton className="pf-side-signout">
-          <LogOut size={18} />Sign out
-        </SignOutButton>
+        <div className="pf-portal-account-actions">
+          {portalLinks}
+          <SignOutButton className="pf-side-signout">
+            <LogOut size={18} />Sign out
+          </SignOutButton>
+        </div>
       </aside>
 
       {/* Mobile navigation drawer */}
@@ -150,10 +152,12 @@ export function PortalShell({ navItems = [], portalLinks, showBackButton = true,
               </button>
             </div>
             {sidebarNav(navigateFromNav)}
-            {portalLinks}
-            <SignOutButton className="pf-side-signout">
-              <LogOut size={18} />Sign out
-            </SignOutButton>
+            <div className="pf-portal-account-actions">
+              {portalLinks}
+              <SignOutButton className="pf-side-signout">
+                <LogOut size={18} />Sign out
+              </SignOutButton>
+            </div>
           </aside>
         </div>
       )}

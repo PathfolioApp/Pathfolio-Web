@@ -41,6 +41,7 @@ import '../styles/AcademicStyles.css';
 import '../styles/InternshipStyles.css';
 import '../styles/ProjectStyles.css';
 import '../styles/SocialStyles.css';
+import '../styles/ProfileViewport.css';
 
 // Interests arrive in two shapes across the app's history: legacy plain
 // strings and the canonical onboarding objects {name, proficiency, reason}.
@@ -167,7 +168,7 @@ export function ProfilePage() {
   const visibleAchievements = showAllAchievements ? achievements : achievements.slice(0, 3);
   const hasMoreAchievements = achievements.length > 3;
 
-  return <div className="pf-profile-page">
+  return <div className="pf-profile-page pf-profile-view">
     <section className="pf-profile-hero">
       <div className="pf-profile-hero-left">
         <div className="pf-profile-avatar-wrapper">
@@ -353,7 +354,7 @@ export function ProfilePage() {
                   {defaultResume.tags && defaultResume.tags.length > 0 && (
                     <>
                       <span className="pf-dot">·</span>
-                      <span style={{ display: 'inline-flex', gap: '0.3rem' }}>
+                      <span className="pf-profile-resume-tags" style={{ display: 'inline-flex', gap: '0.3rem' }}>
                         {defaultResume.tags.map(t => (
                           <span key={t} className="pf-resume-tag-pill">
                             {t}
@@ -389,7 +390,7 @@ export function ProfilePage() {
             </div>
           </div>
         ) : (
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 18px', background: '#f4f7f4', border: '1px dashed #cfdacf', borderRadius: '10px' }}>
+          <div className="pf-profile-empty-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 18px', background: '#f4f7f4', border: '1px dashed #cfdacf', borderRadius: '10px' }}>
             <p className="pf-empty" style={{ margin: 0 }}>You haven't uploaded a resume yet.</p>
             <Link to="/resume" className="pf-btn-primary-pill">
               Upload resume
@@ -512,7 +513,7 @@ export function ProfilePage() {
           <Link to="/profile/edit#semesters" className="pf-section-link">Manage semester results</Link>
         </div>
         {academic.semesters && academic.semesters.length > 0 ? (
-          <div className="pf-transcripts-table-wrapper">
+          <div className="pf-transcripts-table-wrapper" role="region" aria-label="Semester results and transcripts" tabIndex={0}>
             <table className="pf-transcripts-table">
               <thead>
                 <tr>
@@ -564,7 +565,7 @@ export function ProfilePage() {
             </table>
           </div>
         ) : (
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 18px', background: '#f4f7f4', border: '1px dashed #cfdacf', borderRadius: '10px', marginTop: '12px' }}>
+          <div className="pf-profile-empty-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 18px', background: '#f4f7f4', border: '1px dashed #cfdacf', borderRadius: '10px', marginTop: '12px' }}>
             <p className="pf-empty" style={{ margin: 0 }}>No semester records or transcripts uploaded yet.</p>
             <Link to="/profile/edit#semesters" className="pf-btn-subtle">
               Add semester results
@@ -845,7 +846,7 @@ export function ProfilePage() {
             )}
           </>
         ) : (
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', background: '#f4f7f4', border: '1px dashed #cfdacf', borderRadius: '10px', marginTop: '12px' }}>
+          <div className="pf-profile-empty-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', background: '#f4f7f4', border: '1px dashed #cfdacf', borderRadius: '10px', marginTop: '12px' }}>
             <p className="pf-empty" style={{ margin: 0 }}>No internships or corporate experience added yet.</p>
             <Link to="/profile/edit#internships" className="pf-btn-subtle">
               Add your first internship
@@ -871,7 +872,7 @@ export function ProfilePage() {
           </div>
 
           <div className="pf-project-header-actions">
-            {projects.length > 2 && (
+            {(canScrollLeft || canScrollRight) && (
               <div className="pf-carousel-nav-arrows">
                 <button
                   type="button"
@@ -904,6 +905,7 @@ export function ProfilePage() {
             <div
               ref={projectTrackRef}
               className={`pf-project-carousel-track ${projects.length <= 2 ? 'pf-project-carousel-track--few' : ''}`}
+              data-project-count={projects.length}
             >
               {projects.map(project => {
                 const timelineStr = formatProjectTimeline(project.startDate, project.endDate, project.currentlyWorking);
@@ -1071,7 +1073,7 @@ export function ProfilePage() {
             )}
           </div>
         ) : (
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', background: '#f4f7f4', border: '1px dashed #cfdacf', borderRadius: '10px', marginTop: '12px' }}>
+          <div className="pf-profile-empty-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', background: '#f4f7f4', border: '1px dashed #cfdacf', borderRadius: '10px', marginTop: '12px' }}>
             <p className="pf-empty" style={{ margin: 0 }}>No projects added yet.</p>
             <Link to="/profile/edit#projects" className="pf-btn-subtle">
               Add your first project
@@ -1176,12 +1178,14 @@ export function ProfilePage() {
         isOpen={Boolean(selectedInternshipDetail)}
         onClose={() => setSelectedInternshipDetail(null)}
         internship={selectedInternshipDetail}
+        className="pf-profile-detail-viewport"
       />
 
       <ProjectDetailModal
         isOpen={Boolean(selectedProjectDetail)}
         onClose={() => setSelectedProjectDetail(null)}
         project={selectedProjectDetail}
+        className="pf-profile-detail-viewport"
       />
     </div>
   </div>;

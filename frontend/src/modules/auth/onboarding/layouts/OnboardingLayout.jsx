@@ -1,15 +1,16 @@
-import React, { useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useEffect, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import { useOnboarding } from '../context/OnboardingContext';
 import { StageRenderer } from '../components/StageRenderer';
 import { StepNavigation } from '../components/StepNavigation';
 import { Footer } from '../../../../components/layout/Footer';
-import { Shield, Sparkles } from 'lucide-react';
+import { Shield } from 'lucide-react';
 import './OnboardingLayout.css';
 
 export function OnboardingLayout() {
   const {
     currentStage,
+    formData,
     currentStepIndex,
     totalStages,
     nextStep,
@@ -21,17 +22,29 @@ export function OnboardingLayout() {
 
   const progressPercent = Math.round(((currentStepIndex + 1) / totalStages) * 100);
 
-  // Keyboard shortcut navigation
+  const stageFrameRef = useRef(null);
+  const milestoneManagerRef = useRef(null);
+  const isFinalStep = currentStepIndex === totalStages - 1;
+  const isMilestoneStep = currentStage.id === 'achievements';
+  const hasMilestones = formData.achievements.length > 0;
+  const navigateFromStep = (action) => {
+    if (isMilestoneStep && milestoneManagerRef.current) {
+      milestoneManagerRef.current.requestNavigation(action);
+    } else {
+      action();
+    }
+  };
+
+  // Keep the start of the new step in view after leaving a longer form.
   useEffect(() => {
-    const handleKeyDown = (e) => {
-      // Don't trigger if user is inside a textarea or adding custom tag
-      if (e.target.tagName === 'TEXTAREA' || (e.target.tagName === 'INPUT' && e.target.type === 'text' && e.key === 'Enter')) {
-        return;
+    const frame = requestAnimationFrame(() => {
+      window.scrollTo({ top: 0, behavior: 'instant' });
+      if (!stageFrameRef.current?.contains(document.activeElement)) {
+        stageFrameRef.current?.focus({ preventScroll: true });
       }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [currentStage.id]);
 
   return (
     <div className="pf-onboarding-shell">
@@ -58,6 +71,8 @@ export function OnboardingLayout() {
                 className="pf-onboarding-bar-fill"
                 style={{ width: `${progressPercent}%` }}
                 role="progressbar"
+                aria-label="Onboarding progress"
+                aria-valuetext={`Step ${currentStepIndex + 1} of ${totalStages}: ${currentStage.title}`}
                 aria-valuenow={progressPercent}
                 aria-valuemin="0"
                 aria-valuemax="100"
@@ -76,25 +91,26 @@ export function OnboardingLayout() {
             </div>
           )}
 
-          <div className="pf-onboarding-card-frame">
-            <StageRenderer />
+          <div className="pf-onboarding-card-frame" ref={stageFrameRef} tabIndex={-1} role="region" aria-label={currentStage.title}>
+            <StageRenderer milestoneManagerRef={milestoneManagerRef} />
 
             <StepNavigation
-              onNext={nextStep}
-              onPrev={prevStep}
-              onSkip={skipStep}
-              isSkippable={currentStage.isSkippable}
+              onNext={() => navigateFromStep(nextStep)}
+              onPrev={() => navigateFromStep(prevStep)}
+              onSkip={() => navigateFromStep(skipStep)}
+              isSkippable={isMilestoneStep ? !hasMilestones : currentStage.isSkippable}
+              showNext={!isMilestoneStep || hasMilestones}
               isSubmitting={isSubmitting}
               nextLabel={
                 currentStage.id === 'welcome'
                   ? "Let's begin"
-                  : currentStage.id === 'review'
+                  : isFinalStep
                   ? 'Complete onboarding'
                   : 'Continue'
               }
               prevLabel={currentStepIndex === 0 ? 'Exit' : 'Back'}
               skipLabel={currentStage.id === 'familyContext' ? 'Skip this section' : 'Skip for now'}
-              isFinalStep={currentStage.id === 'review'}
+              isFinalStep={isFinalStep}
             />
           </div>
         </div>
@@ -105,11 +121,11 @@ export function OnboardingLayout() {
         <div className="container-narrow pf-onboarding-footer__inner">
           <div className="pf-onboarding-trust-badge">
             <Shield size={14} />
-            <span>Admitted Student Onboarding • End-to-End Consent Protected</span>
+            <span>Your college story, built one step at a time.</span>
           </div>
         </div>
       </footer>
-      <Footer compact />
+      <Footer minimal />
     </div>
   );
 }
