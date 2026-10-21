@@ -7,10 +7,13 @@ import './DataRow.css';
  * muted meta line, and right-aligned aside content (actions, badges).
  * With `onClick`/`as="button"` the whole row is clickable.
  */
-export function DataRow({ title, meta, aside, icon, onClick, className = '', children }) {
-  const Tag = onClick ? 'button' : 'article';
+export function DataRow({ title, meta, aside, icon, onClick, interactiveChildren = false, className = '', children }) {
+  // Rows containing their own action buttons must not become nested <button>s.
+  const Tag = onClick && !interactiveChildren ? 'button' : 'article';
   const extraProps = onClick
-    ? { type: 'button', onClick, style: { width: '100%', textAlign: 'left', font: 'inherit', background: 'none', border: 0 } }
+    ? { ...(interactiveChildren ? { role: 'group', tabIndex: 0, onKeyDown: event => {
+      if (event.target === event.currentTarget && ['Enter', ' '].includes(event.key)) { event.preventDefault(); onClick(event); }
+    } } : { type: 'button' }), onClick, style: { width: '100%', textAlign: 'left', font: 'inherit', background: 'none', border: 0 } }
     : {};
   return (
     <Tag className={`pf-data-row ${onClick ? 'pf-data-row--clickable' : ''} ${className}`} {...extraProps}>

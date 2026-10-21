@@ -2,10 +2,15 @@ const assert = require('node:assert/strict');
 
 process.env.NODE_ENV = 'development';
 process.env.USE_DATABASE = 'false';
+// Signature generation is local; this test never uploads to Cloudinary.
+process.env.CLOUDINARY_CLOUD_NAME = 'fixture-cloud';
+process.env.CLOUDINARY_API_KEY = 'fixture-key';
+process.env.CLOUDINARY_API_SECRET = 'fixture-secret';
 
 const app = require('../src/app');
 const studentStore = require('../src/modules/students/studentStore');
 const contentStore = require('../src/modules/admin/adminContentStore');
+const resumeStore = require('../src/modules/resumes/resumeStore');
 
 const unique = Date.now().toString();
 const ids = { admin: `admin_${unique}`, student: `student_${unique}`, recruiter: `recruiter_${unique}` };
@@ -37,6 +42,10 @@ async function run() {
   const admin = await studentStore.saveStudent(studentRecord(ids.admin, `admin_${unique}@kiit.ac.in`, true));
   const student = await studentStore.saveStudent(studentRecord(ids.student, `student_${unique}@kiit.ac.in`, false));
   const recruiter = await studentStore.saveStudent(studentRecord(ids.recruiter, `recruiter_${unique}@kiit.ac.in`, false, true));
+  const resume = await resumeStore.create(student.id, {
+    filename: 'Fixture_Resume.pdf', filepath: '', isDefault: true,
+    extractedData: { personal: { fullName: student.personal.fullName, email: student.personal.email } },
+  });
   const adminCookie = `pf_session=${await studentStore.createSession(admin.id)}`;
   const studentCookie = `pf_session=${await studentStore.createSession(student.id)}`;
   const recruiterCookie = `pf_session=${await studentStore.createSession(recruiter.id)}`;
@@ -113,15 +122,16 @@ async function run() {
     console.log('PASS admin publishes approved job with student notification');
 
     // Student applies
-    result = await request(baseUrl, `/opportunities/${job.id}/applications`, { method: 'POST', body: JSON.stringify({ answers: { department: 'Computer Science & Engineering' } }) }, studentCookie);
+    result = await request(baseUrl, `/opportunities/${job.id}/applications`, { method: 'POST', body: JSON.stringify({ resumeId: resume.id, answers: { department: 'Computer Science & Engineering' } }) }, studentCookie);
     expectStatus(result.response, 201, 'student application');
     const application = result.body.application;
-    assert.equal(application.profileSnapshot.email, student.personal.email);
+    assert.equal(application.profileSnapshot.personal.email, student.personal.email);
+    assert.equal(application.selectedResume.id, resume.id);
     assert.equal(application.profileSnapshot.username, undefined, 'snapshot must not include username');
     console.log('PASS student application API');
 
     // Duplicate application blocked
-    result = await request(baseUrl, `/opportunities/${job.id}/applications`, { method: 'POST', body: JSON.stringify({ answers: { department: 'Computer Science & Engineering' } }) }, studentCookie);
+    result = await request(baseUrl, `/opportunities/${job.id}/applications`, { method: 'POST', body: JSON.stringify({ resumeId: resume.id, answers: { department: 'Computer Science & Engineering' } }) }, studentCookie);
     expectStatus(result.response, 400, 'duplicate application rejected');
     console.log('PASS duplicate application prevented');
 

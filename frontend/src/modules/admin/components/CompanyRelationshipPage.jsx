@@ -6,7 +6,7 @@ import {
 import { adminApi } from '../adminApi';
 import { recruitmentApi } from '../recruitmentApi';
 import { Button } from '../../../components/ui/Button';
-import { Modal } from '../../../components/ui/Modal';
+import { AdminModal as Modal } from './AdminDialogs';
 import { EmptyState } from '../../../components/ui/EmptyState';
 import { StatusBadge } from '../../../components/ui/Badge';
 import { Empty } from '../utils/adminHelpers';

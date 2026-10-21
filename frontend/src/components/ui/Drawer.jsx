@@ -7,7 +7,7 @@ import './Drawer.css';
  * Right-side drawer for create/edit forms. Escape closes, body scroll is
  * locked while open, and it becomes full screen on small viewports.
  */
-export function Drawer({ isOpen, onClose, title, children, footer, width }) {
+export function Drawer({ isOpen, onClose, title, children, footer, width, className = '' }) {
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === 'Escape' && isOpen) onClose();
@@ -26,9 +26,9 @@ export function Drawer({ isOpen, onClose, title, children, footer, width }) {
 
   return createPortal(
     <>
-      <div className="pf-drawer-backdrop" onClick={onClose} aria-hidden="true" />
+      <div className={`pf-drawer-backdrop ${className}`.trim()} onClick={onClose} aria-hidden="true" />
       <aside
-        className="pf-drawer-panel"
+        className={`pf-drawer-panel ${className}`.trim()}
         role="dialog"
         aria-modal="true"
         aria-label={title || 'Panel'}

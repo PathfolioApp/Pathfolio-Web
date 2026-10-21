@@ -6,8 +6,8 @@ import {
 } from 'lucide-react';
 import { recruitmentApi } from '../recruitmentApi';
 import { Button } from '../../../components/ui/Button';
-import { Drawer } from '../../../components/ui/Drawer';
-import { Modal } from '../../../components/ui/Modal';
+import { AdminDrawer as Drawer } from './AdminDialogs';
+import { AdminModal as Modal } from './AdminDialogs';
 import { EmptyState } from '../../../components/ui/EmptyState';
 import { StatusBadge } from '../../../components/ui/Badge';
 import { TabFade } from '../../../components/ui/TabFade';

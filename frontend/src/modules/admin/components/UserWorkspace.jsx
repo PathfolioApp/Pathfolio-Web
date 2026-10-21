@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Eye, UserRound, Ban, CheckCircle2, Trash2, Mail, UserPlus } from 'lucide-react';
 import { Button } from '../../../components/ui/Button';
-import { Modal } from '../../../components/ui/Modal';
+import { AdminModal as Modal } from './AdminDialogs';
 import { DataRow, RowMenu } from '../../../components/ui/DataRow';
 import { StatusBadge } from '../../../components/ui/Badge';
 import { EmptyState } from '../../../components/ui/EmptyState';

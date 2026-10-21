@@ -55,8 +55,8 @@ export function AdminLayout() {
   );
 
   return (
-    <PortalShell navItems={navItems} portalLinks={portalLinks} showBackButton={false}>
+    <div className="pf-admin-shell"><PortalShell navItems={navItems} portalLinks={portalLinks} showBackButton={false}>
       <Outlet />
-    </PortalShell>
+    </PortalShell></div>
   );
 }

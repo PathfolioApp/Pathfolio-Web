@@ -6,7 +6,7 @@ import {
   Building2, ArrowLeft, ArrowUpDown
 } from 'lucide-react';
 import { Button } from '../../../components/ui/Button';
-import { Modal } from '../../../components/ui/Modal';
+import { AdminModal as Modal } from './AdminDialogs';
 import { DataRow } from '../../../components/ui/DataRow';
 import { StatusBadge } from '../../../components/ui/Badge';
 import { EmptyState } from '../../../components/ui/EmptyState';
@@ -563,10 +563,8 @@ export function ApplicationWorkspace({
           <Button variant="ghost" size="sm" onClick={() => { setApplicationJobFilter(''); setSelectedAppIds(new Set()); }} icon={ArrowLeft}>
             All job posts
           </Button>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ fontSize: '0.95rem', fontWeight: 600 }}>{selectedJob?.companyName}</span>
-            <span style={{ color: 'var(--text-muted)' }}>·</span>
-            <span style={{ fontSize: '0.95rem', fontWeight: 500 }}>{selectedJob?.title}</span>
+          <div className="pf-app-selected-job">
+            <div><span>{selectedJob?.companyName}</span><h2>{selectedJob?.title}</h2></div>
             <StatusBadge status={selectedJob?.status} />
           </div>
         </div>
@@ -797,6 +795,7 @@ export function ApplicationWorkspace({
 
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <DataRow
+                      interactiveChildren
                       onClick={() => setViewingAppId(application.id)}
                       title={<>
                         {candidateName}

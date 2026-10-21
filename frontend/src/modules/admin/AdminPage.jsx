@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation, useParams, useNavigate } from 'react-router-dom';
-import { BriefcaseBusiness, Building2, FileSearch, LayoutDashboard, UserPlus, Users, Search, Share2, History, Plus, Upload, ShieldCheck, Target } from 'lucide-react';
+import { BriefcaseBusiness, Building2, FileSearch, LayoutDashboard, UserPlus, Users, Search, Share2, History, Plus, Upload, ShieldCheck, Target, ArrowUpRight, RefreshCw } from 'lucide-react';
 import { useAuth } from '../../app/providers/AuthProvider';
 import { PageHeader } from '../../components/ui/PageHeader';
 import { OverviewCards } from '../../components/ui/StatCard';
@@ -19,6 +19,7 @@ import { RecruitmentWorkspace } from './components/RecruitmentWorkspace';
 import { CompanyRelationshipPage } from './components/CompanyRelationshipPage';
 import { TabFade } from '../../components/ui/TabFade';
 import './AdminPage.css';
+import './AdminExperience.css';
 
 const emptyCompany = { name: '', website: '', description: '', logoUrl: '', logoPublicId: '' };
 const emptyJob = {
@@ -42,6 +43,18 @@ const SECTION_META = {
   jd: { icon: FileSearch, label: 'JD analyser' }
 };
 const TAB_IDS = Object.keys(SECTION_META);
+const SECTION_DESCRIPTIONS = {
+  jobs: 'Review submissions, manage eligibility, and publish opportunities for your students.',
+  students: 'Discover campus talent using skills, academic records, and verified experience.',
+  shares: 'Keep track of candidate shortlists shared with your hiring partners.',
+  companies: 'Manage the hiring partners connected to your placement workspace.',
+  applications: 'Review submissions and move candidates through the recruitment process.',
+  recruitment: 'Plan outreach, coordinate drives, and follow every company relationship.',
+  policy: 'Configure placement rules, offer limits, and resume sharing preferences.',
+  users: 'Find campus accounts and manage roles and access.',
+  logs: 'Follow administrative activity with a clear record of who changed what.',
+  jd: 'Understand a role’s requirements and find candidates with relevant experience.',
+};
 
 /**
  * AdminPage, TnP admin portal container.
@@ -58,6 +71,8 @@ export function AdminPage() {
   // Use the parameter from the URL, default to overview if it doesn't match
   const tab = TAB_IDS.includes(tabParam) ? tabParam : 'overview';
   const [overview, setOverview] = useState(null);
+  const [overviewLoading, setOverviewLoading] = useState(true);
+  const [overviewError, setOverviewError] = useState('');
   const [companies, setCompanies] = useState([]);
   const [jobs, setJobs] = useState([]);
   const [applications, setApplications] = useState([]);
@@ -72,7 +87,12 @@ export function AdminPage() {
   const [jobFilter, setJobFilter] = useState(''); const [applicationFilter, setApplicationFilter] = useState(''); const [applicationJobFilter, setApplicationJobFilter] = useState('');
   const [loading, setLoading] = useState(true); const [saving, setSaving] = useState(false); const [error, setError] = useState('');
 
-  const update = (setter, field) => event => setter(value => ({ ...value, [field]: event.target.value }));
+  const update = (setter, field) => event => {
+    // Capture before React runs the state updater; reading the live input there
+    // can lose characters when rapid edits and renders overlap.
+    const nextValue = event.target.value;
+    setter(value => ({ ...value, [field]: nextValue }));
+  };
 
   // Company relationship page lives under the recruitment tab via ?company=<id>.
   const relationshipCompanyId = new URLSearchParams(location.search).get('company') || '';
@@ -97,6 +117,7 @@ export function AdminPage() {
     catch (err) { setError(err.message); } finally { setLoading(false); }
   };
   const loadOverview = async () => {
+    setOverviewLoading(true); setOverviewError('');
     try {
       const data = await adminApi.overview();
       const base = data.overview || {};
@@ -106,7 +127,8 @@ export function AdminPage() {
         companies: data.companies || base.companies || [],
         applications: data.applications || base.applications || []
       });
-    } catch { /* non-critical */ }
+    } catch (err) { setOverviewError(err.message || 'Unable to load the workspace overview.'); }
+    finally { setOverviewLoading(false); }
   };
 
   useEffect(() => { loadBase(); }, [jobFilter]);
@@ -129,17 +151,17 @@ export function AdminPage() {
       navigate('/admin/overview', { replace: true });
     }
   }, [location.hash, navigate]);
-  useEffect(() => { loadOverview(); }, []);
   useEffect(() => { if (tab === 'overview' || tab === 'applications') loadOverview(); }, [tab]);
 
   const resetCompany = () => { setCompanyForm({ ...emptyCompany }); setLogoFile(null); setEditingCompany(null); };
   const resetJob = () => { setJobForm({ ...emptyJob, companyId: companies[0]?.id || '' }); setNamedAttachments([]); setEditingJob(null); };
 
-  const openNewCompany = () => { resetCompany(); setCompanyDrawerOpen(true); };
-  const editCompany = company => { setEditingCompany(company.id); setCompanyForm({ name: company.name, website: company.website, description: company.description, logoUrl: company.logoUrl || '', logoPublicId: company.logoPublicId || '' }); setLogoFile(null); setCompanyDrawerOpen(true); };
+  const openNewCompany = () => { setError(''); resetCompany(); setCompanyDrawerOpen(true); };
+  const editCompany = company => { setError(''); setEditingCompany(company.id); setCompanyForm({ name: company.name, website: company.website, description: company.description, logoUrl: company.logoUrl || '', logoPublicId: company.logoPublicId || '' }); setLogoFile(null); setCompanyDrawerOpen(true); };
 
-  const openNewJob = () => { resetJob(); setJobDrawerOpen(true); };
+  const openNewJob = () => { setError(''); resetJob(); setJobDrawerOpen(true); };
   const editJob = job => {
+    setError('');
     setEditingJob(job.id);
     setJobForm({
       companyName: job.companyName || '', title: job.title || '', description: job.description || '', location: job.location || '', employmentType: job.employmentType || 'Full-time', applicationUrl: job.applicationUrl || '',
@@ -235,14 +257,14 @@ export function AdminPage() {
   const headerCount = tab === 'jobs' ? jobs.length
     : tab === 'companies' ? companies.length
     : tab === 'users' ? users.length
-    : tab === 'applications' ? (applicationJobFilter ? visibleApplications.length : jobs.length)
-    : tab === 'overview' ? (overview?.total ?? null)
+    : tab === 'applications' ? visibleApplications.length
     : undefined;
   const headerTitle = tab === 'overview' ? `Good to see you, ${student?.personal?.fullName?.split(' ')[0] || 'Admin'}.` : meta.label;
-  const headerSubtitle = tab === 'overview' ? 'Everything happening across the placement workspace at a glance.' : undefined;
+  const headerSubtitle = tab === 'overview' ? 'Your campus, your hiring partners, and the next steps that matter.' : SECTION_DESCRIPTIONS[tab];
 
   return (
-    <main className="pf-admin-page">
+    <main className="pf-admin-page" data-admin-view={tab}>
+      <p className="pf-admin-kicker"><ShieldCheck size={14} aria-hidden="true" /> Placement administration</p>
       <PageHeader
         title={headerTitle}
         count={headerCount}
@@ -251,27 +273,33 @@ export function AdminPage() {
           tab === 'jobs' ? <button type="button" className="pf-btn pf-btn--primary pf-btn--md" onClick={openNewJob}><Plus size={16} /> New post</button>
           : tab === 'companies' ? <button type="button" className="pf-btn pf-btn--primary pf-btn--md" onClick={openNewCompany}><Plus size={16} /> Add company</button>
           : tab === 'users' ? <button type="button" className="pf-btn pf-btn--primary pf-btn--md" onClick={() => setUserImportOpen(true)}><Upload size={16} /> Import CSV</button>
-          : undefined
+          : tab === 'overview' ? <button type="button" className="pf-btn pf-btn--secondary pf-btn--md" onClick={loadOverview} disabled={overviewLoading}><RefreshCw size={15} /> {overviewLoading ? 'Updating…' : 'Refresh overview'}</button> : undefined
         }
       />
 
       <TabFade tabKey={tab}>
+      {tab === 'overview' && overviewError && <div className="pf-admin-error" role="alert">{overviewError}<button type="button" className="pf-btn pf-btn--secondary pf-btn--sm" onClick={loadOverview} disabled={overviewLoading}>Try again</button></div>}
+      {tab === 'overview' && overviewLoading && !overview && <div className="pf-admin-loading" role="status">Loading your campus overview…</div>}
       {tab === 'overview' && overview && (
         <>
           <OverviewCards cards={[
-            { label: 'Total users', value: overview.total, hint: `${overview.students} students · ${overview.recruiters} recruiters` },
-            { label: 'Job posts', value: overview.jobs?.length ?? 0, hint: `${overview.jobs?.filter(j => j.status === 'published').length ?? 0} published` },
-            { label: 'Applications', value: overview.applications?.length ?? 0, hint: `${overview.applications?.filter(a => a.status === 'applied').length ?? 0} awaiting review` },
-            { label: 'Companies', value: overview.companies?.length ?? 0, hint: `${overview.recentSignups} new users this week` }
+            { icon: Users, label: 'Campus accounts', value: overview.total, hint: `${overview.students ?? 0} student${overview.students === 1 ? '' : 's'} · ${overview.recruiters ?? 0} recruiter${overview.recruiters === 1 ? '' : 's'}` },
+            { icon: BriefcaseBusiness, label: 'Job posts', value: overview.jobs?.length ?? 0, hint: `${overview.jobs?.filter(j => j.status === 'published').length ?? 0} published` },
+            { icon: UserPlus, label: 'Applications', value: overview.applications?.length ?? 0, hint: `${overview.applications?.filter(a => a.status === 'applied').length ?? 0} awaiting review` },
+            { icon: Building2, label: 'Hiring partners', value: overview.companies?.length ?? 0, hint: 'Companies in your workspace' }
           ]} />
+          <p className="pf-admin-overview-note"><UserPlus size={14} aria-hidden="true" />{overview.recentSignups ?? 0} new campus account{overview.recentSignups === 1 ? '' : 's'} in the last 7 days</p>
+          <div className="pf-admin-section-heading"><div><p className="pf-admin-eyebrow">Your workspace</p><h2>Where would you like to start?</h2></div><span>Placement tools</span></div>
           <div className="pf-admin-quick-links">
-            <button onClick={() => navigate('/admin/recruitment')}><Target size={17} /><span>Recruitment intelligence - plan outreach</span></button>
-            <button onClick={() => navigate('/admin/jobs')}><BriefcaseBusiness size={17} /><span>Review & publish job posts</span></button>
-            <button onClick={() => navigate('/admin/students')}><Search size={17} /><span>Search & share students</span></button>
-            <button onClick={() => navigate('/admin/applications')}><Users size={17} /><span>Review applications</span></button>
-            <button onClick={() => navigate('/admin/policy')}><ShieldCheck size={17} /><span>Placement upgrade policy</span></button>
-            <button onClick={() => navigate('/admin/users')}><UserPlus size={17} /><span>Add or manage users</span></button>
-            <button onClick={() => navigate('/admin/jd')}><FileSearch size={17} /><span>Analyse a job description</span></button>
+            {[
+              ['recruitment', Target, 'Plan recruitment', 'Coordinate outreach and campus drives.'],
+              ['jobs', BriefcaseBusiness, 'Manage opportunities', 'Review submissions and publish roles.'],
+              ['students', Search, 'Discover campus talent', 'Find and shortlist relevant students.'],
+              ['applications', Users, 'Review applications', 'Follow candidates through each stage.'],
+              ['policy', ShieldCheck, 'Placement policy', 'Manage offer rules and sharing defaults.'],
+              ['users', UserPlus, 'Manage accounts', 'Review roles and campus access.'],
+              ['jd', FileSearch, 'Analyse a job description', 'Match role requirements to campus talent.'],
+            ].map(([id, Icon, title, text]) => <button type="button" key={id} onClick={() => navigate(`/admin/${id}`)}><span className="pf-admin-shortcut-icon"><Icon size={20} /></span><span><strong>{title}</strong><small>{text}</small></span><ArrowUpRight size={16} aria-hidden="true" /></button>)}
           </div>
         </>
       )}
@@ -283,13 +311,14 @@ export function AdminPage() {
           <CompanyFormDrawer
             open={companyDrawerOpen}
             saving={saving}
+            error={error}
             editingCompany={editingCompany}
             companyForm={companyForm}
             setCompanyForm={setCompanyForm}
             logoFile={logoFile}
             setLogoFile={setLogoFile}
             update={update}
-            onClose={() => { setCompanyDrawerOpen(false); resetCompany(); }}
+            onClose={() => { if (!saving) { setCompanyDrawerOpen(false); resetCompany(); } }}
             onSubmit={saveCompany}
           />
           <CompanyImport
@@ -309,6 +338,7 @@ export function AdminPage() {
           <JobFormDrawer
             open={jobDrawerOpen}
             saving={saving}
+            error={error}
             editingJob={editingJob}
             companies={companies}
             jobForm={jobForm}
@@ -316,7 +346,7 @@ export function AdminPage() {
             namedAttachments={namedAttachments}
             setNamedAttachments={setNamedAttachments}
             update={update}
-            onClose={() => { setJobDrawerOpen(false); resetJob(); }}
+            onClose={() => { if (!saving) { setJobDrawerOpen(false); resetJob(); } }}
             onSubmit={saveJob}
           />
         </>

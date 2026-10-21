@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Clock, Save, Send, Undo2, Paperclip, X, CheckCircle2, RotateCcw, MessageSquareWarning, Pencil } from 'lucide-react';
 import { Button } from '../../../components/ui/Button';
-import { Drawer } from '../../../components/ui/Drawer';
+import { AdminDrawer as Drawer } from './AdminDialogs';
 import { StatusBadge } from '../../../components/ui/Badge';
 import { DataRow } from '../../../components/ui/DataRow';
 import { EmptyState } from '../../../components/ui/EmptyState';
@@ -103,7 +103,7 @@ export function JobWorkspace({ companies, jobs, loading, jobFilter, setJobFilter
 }
 
 /** Create/edit job post form in a right-side drawer (prefills when editing). */
-export function JobFormDrawer({ open, saving, editingJob, companies, jobForm, setJobForm, namedAttachments, setNamedAttachments, update, onClose, onSubmit }) {
+export function JobFormDrawer({ open, saving, error, editingJob, companies, jobForm, setJobForm, namedAttachments, setNamedAttachments, update, onClose, onSubmit }) {
   return (
     <Drawer
       isOpen={open}
@@ -118,6 +118,7 @@ export function JobFormDrawer({ open, saving, editingJob, companies, jobForm, se
       }
     >
       <form id="pf-admin-job-form" className="pf-admin-form" onSubmit={onSubmit}>
+        {error && <p className="pf-admin-error pf-admin-full-field" role="alert">{error}</p>}
         <Input label="Company" full>
           <input required list="admin-company-options" value={jobForm.companyName || ''} onChange={update(setJobForm, 'companyName')} placeholder="e.g. Acme Systems" maxLength={180} />
           <datalist id="admin-company-options">

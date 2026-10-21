@@ -22,7 +22,7 @@ import {
 } from 'lucide-react';
 import { adminApi } from '../adminApi';
 import { Button } from '../../../components/ui/Button';
-import { Modal } from '../../../components/ui/Modal';
+import { AdminModal as Modal } from './AdminDialogs';
 import { PanelHeading, Empty } from '../utils/adminHelpers';
 import './StudentSearchWorkspace.css';
 
@@ -263,7 +263,7 @@ export function StudentSearchWorkspace({ jobs }) {
         <div className="pf-student-search-panel__header">
           <div>
             <p className="pf-admin-eyebrow">Student Discovery</p>
-            <h1 className="pf-student-search-panel__title">Search & Filter Students</h1>
+            <h2 className="pf-student-search-panel__title">Search & Filter Students</h2>
             <p className="pf-student-search-panel__desc">
               Browse the student directory, filter by department, batch, CGPA, or skills, and curate candidates to share directly with recruiters.
             </p>
@@ -283,7 +283,8 @@ export function StudentSearchWorkspace({ jobs }) {
             <input
               type="text"
               className="pf-student-hero-bar__input"
-              placeholder="Search by student name, roll number, email, or department..."
+              placeholder="Name, roll number, or email"
+              aria-label="Search students by name, roll number, email, or department"
               value={filters.search}
               onChange={updateFilter('search')}
             />
@@ -312,6 +313,8 @@ export function StudentSearchWorkspace({ jobs }) {
             className={`pf-student-filter-toggle ${filterDrawerOpen ? 'is-open' : ''} ${activeSecondaryCount > 0 ? 'has-active' : ''}`}
             onClick={() => setFilterDrawerOpen(prev => !prev)}
             title="Toggle advanced filters"
+            aria-expanded={filterDrawerOpen}
+            aria-controls="student-search-filters"
           >
             <SlidersHorizontal size={15} />
             <span>Filters</span>
@@ -336,7 +339,7 @@ export function StudentSearchWorkspace({ jobs }) {
 
         {/* Collapsible Advanced Filters Drawer */}
         {filterDrawerOpen && (
-          <div className="pf-student-filter-drawer">
+          <div className="pf-student-filter-drawer" id="student-search-filters">
             <div className="pf-student-filter-grid">
               {/* Group 1: Academics & Cohort */}
               <div className="pf-student-filter-group">

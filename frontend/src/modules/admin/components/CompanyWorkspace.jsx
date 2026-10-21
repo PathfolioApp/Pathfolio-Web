@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Building2, Archive, X, ImagePlus, Plus, Save } from 'lucide-react';
 import { Button } from '../../../components/ui/Button';
-import { Drawer } from '../../../components/ui/Drawer';
-import { Modal } from '../../../components/ui/Modal';
+import { AdminDrawer as Drawer } from './AdminDialogs';
+import { AdminModal as Modal } from './AdminDialogs';
 import { DataRow } from '../../../components/ui/DataRow';
 import { EmptyState } from '../../../components/ui/EmptyState';
 import { adminApi } from '../adminApi';
@@ -43,7 +43,7 @@ export function CompanyWorkspace({ companies, loading, editCompany, archive }) {
 }
 
 /** Create/edit company form in a right-side drawer. */
-export function CompanyFormDrawer({ open, saving, editingCompany, companyForm, setCompanyForm, logoFile, setLogoFile, update, onClose, onSubmit }) {
+export function CompanyFormDrawer({ open, saving, error, editingCompany, companyForm, setCompanyForm, logoFile, setLogoFile, update, onClose, onSubmit }) {
   return (
     <Drawer
       isOpen={open}
@@ -57,6 +57,7 @@ export function CompanyFormDrawer({ open, saving, editingCompany, companyForm, s
       }
     >
       <form id="pf-admin-company-form" className="pf-admin-form" onSubmit={onSubmit}>
+        {error && <p className="pf-admin-error pf-admin-full-field" role="alert">{error}</p>}
         <Input label="Company name" full>
           <input required value={companyForm.name} onChange={update(setCompanyForm, 'name')} placeholder="e.g. Acme Systems" />
         </Input>
