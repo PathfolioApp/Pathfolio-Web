@@ -13,6 +13,7 @@ const recruiterShareService = require('./modules/recruiters/recruiterShare.servi
 const auditLogService = require('./shared/auditLog.service');
 const adminUserService = require('./modules/admin/adminUser.service');
 const recruitmentStore = require('./modules/admin/recruitmentStore');
+const { closePdfBrowser } = require('./modules/resumes/resumePdf.service');
 
 /**
  * Run one startup step and log its outcome with timing, so the console reads
@@ -128,7 +129,7 @@ async function start() {
     log.startup.info(`${signal} received: closing HTTP server and database pools`);
     // `node --watch` sends SIGTERM on restart; closing pools first stops the
     // watcher from racing a half-closed pool on the next boot.
-    closeAllPools()
+    Promise.all([closeAllPools(), closePdfBrowser()])
       .catch(error => log.db.warn(`Pool shutdown: ${log.describeError(error)}`))
       .finally(() => {
         server.close(() => {

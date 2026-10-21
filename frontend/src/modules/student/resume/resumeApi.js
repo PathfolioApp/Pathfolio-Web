@@ -1,4 +1,5 @@
 import { apiUrl, apiHeaders } from '../../../app/services/apiClient.js';
+import { readPdfResponse } from './pdfDownload.mjs';
 
 async function request(path, options = {}) {
   const res = await fetch(apiUrl(path), {
@@ -12,6 +13,33 @@ async function request(path, options = {}) {
 }
 
 export const resumeApi = {
+  downloadPdf: async path => {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 35_000);
+    try {
+      return await readPdfResponse(await fetch(apiUrl(path), {
+        credentials: 'include', headers: apiHeaders(), signal: controller.signal,
+      }));
+    } catch (error) {
+      if (error.name === 'AbortError') throw new Error('PDF download timed out. Please try again.');
+      throw error;
+    } finally { clearTimeout(timeout); }
+  },
+  exportPdf: async ({ html, filename }) => {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 35_000);
+    try {
+      const res = await fetch(apiUrl('/api/resumes/export-pdf'), {
+        method: 'POST', credentials: 'include', signal: controller.signal,
+        headers: apiHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify({ html, filename })
+      });
+      return await readPdfResponse(res);
+    } catch (error) {
+      if (error.name === 'AbortError') throw new Error('PDF export timed out. Please try again or use Print.');
+      throw error;
+    } finally { clearTimeout(timeout); }
+  },
   list: () => request('/api/resumes'),
   categories: () => request('/api/resumes/categories'),
   createCategory: name => request('/api/resumes/categories', { method: 'POST', body: JSON.stringify({ name }) }),

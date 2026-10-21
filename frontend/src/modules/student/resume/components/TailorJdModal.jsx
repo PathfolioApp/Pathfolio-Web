@@ -91,7 +91,7 @@ export default function TailorJdModal({ isOpen, onClose, onSuccess }) {
   };
 
   return createPortal(
-    <div className="pf-tailor-modal-overlay" onClick={handleClose}>
+    <div className="pf-tailor-modal-overlay pf-resume-tailor-dialog" onClick={handleClose}>
       <div 
         className="pf-tailor-modal-card" 
         onClick={e => e.stopPropagation()}

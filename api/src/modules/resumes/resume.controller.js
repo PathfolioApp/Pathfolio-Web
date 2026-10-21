@@ -3,6 +3,8 @@ const resumeStore = require('./resumeStore');
 const r2Service = require('./r2.service');
 const { analysePdf } = require('./resumeAnalysis');
 const tailorResumeService = require('./tailorResume.service');
+const { renderResumePdf } = require('./resumePdf.service');
+const { renderSavedResumeHtml } = require('./resumeDocument.service');
 const {
   validatePdfBuffer,
   sanitizeFilename,
@@ -37,72 +39,6 @@ async function bodyToBuffer(body) {
     return Buffer.concat(chunks);
   }
   return Buffer.from(body);
-}
-
-function renderStudioHtml(data, filename = '') {
-  const escape = str => String(str || '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  const personal = data.personal || {};
-  const summary = data.summary?.text || '';
-  const skills = Array.isArray(data.skills?.raw) ? data.skills.raw : [];
-  const entries = (items = [], title) => {
-    if (!items.length) return '';
-    return `<section><h2>${escape(title)}</h2>${items.map(item => `
-      <div class="entry">
-        <b>${escape(item.title || item.role || item.company || item.name || '')}</b>
-        <span>${escape([item.company || item.institution, item.dates, item.location].filter(Boolean).join(' · '))}</span>
-        ${item.description ? `<p>${escape(item.description)}</p>` : ''}
-        ${item.bullets?.length ? `<ul>${item.bullets.map(b => `<li>${escape(b)}</li>`).join('')}</ul>` : ''}
-      </div>`).join('')}
-    </section>`;
-  };
-
-  return `<!doctype html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <title>${escape(filename ? filename.replace(/\.pdf$/i, '') : ((personal.fullName || 'Student') + ' - Resume'))}</title>
-  <style>
-    @page { size: A4 portrait; margin: 10mm 12mm; }
-    *, *::before, *::after { box-sizing: border-box; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-    html, body { width: 100%; max-width: 100%; margin: 0; padding: 0; background: #fff !important; color: #1d2921; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; font-size: 8.8pt; line-height: 1.34; }
-    .resume { width: 100% !important; max-width: 100% !important; margin: 0 !important; padding: 0 !important; box-shadow: none !important; border: 0 !important; }
-    header { text-align: center; border-bottom: 1.5pt solid #264e36; padding-bottom: 5pt; margin-bottom: 8pt; }
-    header h1 { margin: 0 0 2pt; font-size: 19pt; color: #1d2921; line-height: 1.15; }
-    header p { margin: 1.5pt 0; color: #4a594f; font-size: 8.4pt; word-break: break-word; }
-    header a { color: #264e36; text-decoration: none; }
-    header strong { color: #264e36; display: block; margin-top: 2pt; font-size: 8.8pt; }
-    section { margin-top: 7.5pt; break-inside: auto; }
-    h2 { font-size: 9pt; text-transform: uppercase; letter-spacing: 0.8px; color: #264e36; border-bottom: 0.75pt solid #cbd6c8; padding-bottom: 1.5pt; margin: 0 0 3.5pt; break-after: avoid; }
-    .entry { margin-bottom: 4.5pt; break-inside: avoid; page-break-inside: avoid; }
-    .entry b { display: block; font-size: 8.8pt; color: #1d2921; line-height: 1.25; }
-    .entry span { font-size: 8pt; color: #55665a; display: block; margin-bottom: 1pt; }
-    .entry p { margin: 1.5pt 0; font-size: 8.4pt; }
-    ul { margin: 1.5pt 0 3pt 13pt; padding: 0; }
-    li { font-size: 8.4pt; margin-bottom: 1pt; line-height: 1.32; }
-    @media print {
-      body { margin: 0 !important; padding: 0 !important; background: #fff !important; }
-      .resume { width: 100% !important; max-width: 100% !important; box-shadow: none !important; border: 0 !important; margin: 0 !important; padding: 0 !important; }
-    }
-  </style>
-</head>
-<body>
-  <main class="resume">
-    <header>
-      <h1>${escape(personal.fullName || 'Student')}</h1>
-      <p>${escape([personal.email, personal.phone, ...(personal.links || [])].filter(Boolean).join(' | '))}</p>
-      ${personal.headline ? `<strong>${escape(personal.headline)}</strong>` : ''}
-    </header>
-    ${summary ? `<section><h2>Summary</h2><p>${escape(summary)}</p></section>` : ''}
-    ${skills.length ? `<section><h2>Skills</h2><p>${escape(skills.join(' | '))}</p></section>` : ''}
-    ${entries(data.experience, 'Experience')}
-    ${entries(data.projects, 'Projects')}
-    ${entries(data.education, 'Education')}
-    ${entries(data.certifications, 'Certifications')}
-    ${entries(data.achievements, 'Achievements & Awards')}
-    ${entries(data.leadership, 'Leadership & Activities')}
-  </main>
-</body>
-</html>`;
 }
 
 const resumeController = {
@@ -283,7 +219,14 @@ const resumeController = {
       if (!resume.filepath) {
         if (resume.extractedData) {
           const safeFilename = String(resume.filename || 'resume').replace(/"/g, '').replace(/\.pdf$/i, '');
-          const html = renderStudioHtml(resume.extractedData, safeFilename);
+          const html = await renderSavedResumeHtml(resume.extractedData, safeFilename);
+          if (req.query.mode === 'download') {
+            const pdf = await renderResumePdf(html);
+            res.setHeader('Cache-Control', 'no-store');
+            res.setHeader('X-Content-Type-Options', 'nosniff');
+            res.attachment(sanitizeFilename(resume.filename || 'Resume.pdf'));
+            return res.send(pdf);
+          }
           res.setHeader('Content-Type', 'text/html; charset=utf-8');
           res.setHeader('Content-Disposition', `inline; filename="${safeFilename}.html"`);
           return res.send(html);

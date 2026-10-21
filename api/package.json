@@ -6,7 +6,7 @@
   "type": "commonjs",
   "scripts": {
     "start": "node src/server.js",
-    "dev": "node --watch --watch-path=src --watch-path=.env --watch-preserve-output src/server.js",
+    "dev": "node --watch --watch-path=src --watch-path=../shared --watch-path=.env --watch-preserve-output src/server.js",
     "test:smoke": "node scripts/smoke-test.js",
     "test:resilience": "node scripts/test-db-reset-resilience.js",
     "verify:async": "node scripts/verify-async-safety.js",
@@ -16,7 +16,9 @@
     "test:recruitment": "node scripts/recruitment-smoke-test.js",
     "seed:demo": "node scripts/seed-demo.js",
     "seed:recruiter": "node scripts/seed-recruiter-demo.js",
-    "test:story": "node --test scripts/story-ai.test.js scripts/story-client.test.js scripts/story-mysql.test.js"
+    "test:story": "node --test scripts/story-ai.test.js scripts/story-client.test.js scripts/story-mysql.test.js",
+    "test:resume-pdf": "node --test scripts/resume-pdf.test.js",
+    "pdf:install-browser": "puppeteer browsers install chrome"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1142.0",
@@ -29,7 +31,8 @@
     "nodemailer": "^10.0.12",
     "pathfolio-app-workspace": "file:..",
     "pdf-lib": "^1.17.1",
-    "pdf-parse": "^1.1.4"
+    "pdf-parse": "^1.1.4",
+    "puppeteer": "^25.15.0"
   },
   "devDependencies": {
     "morgan": "^1.10.0"

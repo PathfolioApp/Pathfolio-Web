@@ -1,0 +1,94 @@
+/* Screen chrome only: never change the A4 page, templates, pagination or print CSS. */
+@media screen {
+  .pf-resume-studio { width: 100%; min-width: 0; box-sizing: border-box; }
+  .pf-resume-studio .pf-studio-topbar { flex-wrap: wrap; padding-block: 12px; }
+  .pf-resume-studio .pf-studio-topbar-left { flex-wrap: wrap; }
+  .pf-resume-studio .pf-studio-top-actions { flex-wrap: wrap; gap: 8px; min-width: 0; }
+  .pf-resume-studio .pf-studio-tools-wrap { position: relative; }
+  .pf-resume-studio .pf-studio-tools-trigger, .pf-resume-studio .pf-studio-mobile-views { display: none; }
+  .pf-resume-studio .pf-studio-tools-menu { display: flex; gap: 8px; flex-wrap: wrap; }
+  .pf-resume-studio .pf-studio-topbar button { min-height: 40px; }
+  .pf-resume-studio .pf-studio-print-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; border: 1px solid #d9e3d1; border-radius: 8px; background: #fff; color: #5f7651; padding: 8px 12px; font: inherit; font-size: .8rem; cursor: pointer; }
+  .pf-resume-studio .pf-studio-print-btn:disabled { opacity: .5; cursor: not-allowed; }
+  .pf-resume-studio .pf-studio-file-selector-wrap { flex: 1 1 200px; min-width: 0; }
+  .pf-resume-studio .pf-studio-file-selector, .pf-resume-studio .pf-studio-rename-form { min-width: 0; max-width: 100%; flex: 1; }
+  .pf-resume-studio .pf-studio-resume-select { min-width: 0; max-width: 100%; }
+  .pf-resume-studio .pf-studio-rename-input { min-width: 0; width: 100%; }
+  .pf-resume-studio .pf-studio-save-menu { z-index: 30; max-width: min(320px, calc(100vw - 40px)); max-height: 60dvh; overflow-y: auto; }
+  .pf-resume-studio .pf-studio-save-menu button { white-space: normal; text-align: left; }
+  .pf-resume-studio .pf-studio-editor[hidden], .pf-resume-studio .pf-studio-sidebar[hidden] { display: none; }
+  .pf-resume-studio .pf-studio-editor-head { flex-wrap: wrap; }
+  .pf-resume-studio .pf-studio-editor-head-info { min-width: 0; }
+  .pf-resume-studio .pf-studio-editor-head-info h1 { overflow-wrap: anywhere; }
+  .pf-resume-studio .pf-studio-preview-head { flex-wrap: wrap; gap: 10px; }
+  .pf-resume-studio .pf-studio-preview:not(.is-fullscreen) { min-width: 0; max-width: 100%; }
+  .pf-resume-studio .pf-studio-paper-wrap { min-width: 0; box-sizing: border-box; overflow: auto; overscroll-behavior: contain; align-items: flex-start; justify-content: flex-start; }
+  .pf-resume-studio .pf-studio-paper-scaler { margin-inline: auto; flex-shrink: 0; }
+  .pf-resume-studio .pf-studio-preview-head button { min-width: 36px; min-height: 40px; }
+  .pf-resume-studio[data-narrow="true"] .pf-studio-topbar-left { width: 100%; flex-basis: 100%; gap: 10px; }
+  .pf-resume-studio[data-narrow="true"] .pf-studio-top-actions { width: 100%; justify-content: flex-end; }
+  .pf-resume-studio[data-narrow="true"] .pf-studio-tools-wrap { margin-right: auto; }
+  .pf-resume-studio[data-narrow="true"] .pf-studio-tools-trigger { display: inline-flex; align-items: center; justify-content: center; gap: 6px; border: 1px solid #dce5d5; background: #f5f8f0; border-radius: 8px; padding: 9px 12px; color: #5d7651; font: inherit; font-size: .8rem; }
+  .pf-resume-studio[data-narrow="true"] .pf-studio-tools-menu { display: none; position: absolute; top: calc(100% + 8px); left: 0; width: min(280px, calc(100vw - 40px)); padding: 8px; box-sizing: border-box; border: 1px solid #dce5d4; border-radius: 10px; background: #fff; box-shadow: 0 8px 28px #31482c1a; z-index: 40; }
+  .pf-resume-studio[data-narrow="true"] .pf-studio-tools-menu[data-open="true"] { display: flex; flex-direction: column; }
+  .pf-resume-studio[data-narrow="true"] .pf-studio-tools-menu button { width: 100%; justify-content: flex-start; white-space: normal; min-height: 44px; }
+  .pf-resume-studio[data-narrow="true"] .pf-studio-tools-menu .pf-studio-view-toggle-btn { display: none; }
+  .pf-resume-studio[data-narrow="true"] .pf-studio-mobile-views { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; margin-top: 16px; padding: 4px; background: #eef3e8; border: 1px solid #dfe7d5; border-radius: 10px; }
+  .pf-studio-mobile-views button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; border: 1px solid transparent; border-radius: 7px; background: transparent; font: inherit; font-size: .85rem; color: #728166; cursor: pointer; }
+  .pf-studio-mobile-views button[aria-pressed="true"] { background: #fff; border-color: #dde6d4; color: #45643a; box-shadow: 0 1px 4px #273c2210; }
+  .pf-studio-mobile-navigation { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; padding: 16px 0 0; }
+  .pf-studio-mobile-navigation label { display: grid; gap: 6px; min-width: 0; font-size: .75rem; color: #677a5c; }
+  .pf-studio-mobile-navigation select { min-width: 0; width: 100%; min-height: 44px; padding: 8px; border: 1px solid #dce5d3; border-radius: 8px; background: #fff; color: #475e3e; font: inherit; font-size: 16px; }
+  .pf-studio-mobile-reorder { grid-column: 1 / -1; display: flex; align-items: center; gap: 8px; font-size: .75rem; color: #74836a; }
+  .pf-studio-mobile-reorder > span { margin-right: auto; }
+  .pf-studio-mobile-reorder button { display: grid; place-items: center; min-width: 44px; min-height: 44px; border: 1px solid #dce4d4; border-radius: 8px; background: #fff; color: #5e7a50; }
+  .pf-studio-mobile-reorder button:disabled { opacity: .45; }
+  .pf-resume-studio[data-narrow="true"] .pf-studio-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0; padding-top: 16px; transition: none; }
+  .pf-resume-studio[data-narrow="true"] .pf-studio-editor { min-height: 0; padding: 18px; margin: 0; }
+  .pf-resume-studio[data-narrow="true"] .pf-studio-preview:not(.is-fullscreen) { grid-column: 1; position: static; margin: 0; }
+  .pf-resume-studio[data-narrow="true"] .pf-studio-preview-head { padding: 12px; }
+  .pf-resume-studio[data-narrow="true"] .pf-studio-paper-wrap { max-height: 75dvh; min-height: 50dvh; padding: 12px; }
+  .pf-resume-studio[data-narrow="true"] .pf-studio-preview-head .pf-collapse-hint-btn { display: none; }
+  .pf-resume-studio[data-narrow="true"] .pf-studio-preview-head button { min-width: 44px; min-height: 44px; }
+  .pf-resume-studio[data-narrow="true"] .pf-studio-editor :is(input, select, textarea) { font-size: 16px; min-height: 44px; }
+  .pf-resume-studio[data-narrow="true"] .pf-studio-editor button { min-height: 44px; }
+  .pf-resume-studio[data-narrow="true"] .pf-studio-record-fields { grid-template-columns: minmax(0, 1fr); }
+  .pf-resume-studio[data-narrow="true"] .pf-studio-editor-head-actions { flex-wrap: wrap; }
+  .pf-resume-studio[data-narrow="true"] .pf-studio-record-head { flex-wrap: wrap; gap: 10px; }
+  .pf-resume-studio[data-narrow="true"] .pf-preview-controls { flex-wrap: wrap; gap: 8px; }
+  .pf-resume-studio[data-narrow="true"] .pf-studio-topbar button { min-height: 44px; }
+  .pf-resume-studio[data-narrow="true"] .pf-studio-top-actions > button { flex: 0 1 auto; }
+  .pf-resume-studio[data-narrow="true"] .pf-studio-save-group button { flex: none; }
+  .pf-resume-studio[data-narrow="true"] .pf-studio-resume-select, .pf-resume-studio[data-narrow="true"] .pf-studio-rename-input { font-size: 16px; }
+  .pf-resume-studio[data-narrow="true"] .pf-studio-file-selector { max-width: none; }
+  .pf-resume-studio[data-narrow="true"] .pf-studio-brand-sub { display: none; }
+  .pf-resume-studio[data-narrow="true"] .pf-studio-back-btn span { display: none; }
+  .pf-resume-studio[data-narrow="true"] .pf-studio-topbar-divider { display: none; }
+  .pf-resume-studio[data-narrow="true"] .pf-studio-notice { align-items: flex-start; overflow-wrap: anywhere; }
+  .pf-studio-modal-backdrop { box-sizing: border-box; }
+  .pf-studio-modal-card { min-width: 0; max-height: 90dvh; display: flex; flex-direction: column; }
+  .pf-studio-modal-header { flex-shrink: 0; }
+  .pf-studio-modal-body { min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+  .pf-studio-modal-actions { flex-wrap: wrap; }
+  .pf-studio-modal-header button, .pf-studio-modal-actions button { min-height: 44px; }
+}
+@media screen and (max-width: 900px) {
+  .pf-resume-studio { padding: 8px 0 32px; }
+}
+@media screen and (max-width: 600px) {
+  .pf-resume-studio .pf-studio-file-selector-wrap { flex-basis: 100%; }
+  .pf-resume-studio .pf-studio-top-actions { gap: 6px; }
+  .pf-resume-studio .pf-studio-top-actions button { font-size: .75rem; }
+  .pf-resume-studio .pf-studio-preview-head { align-items: flex-start; }
+  .pf-resume-studio .pf-studio-preview-title { flex-wrap: wrap; }
+  .pf-resume-studio .pf-preview-spill-banner { align-items: flex-start; line-height: 1.6; }
+  .pf-studio-modal-backdrop { padding: 12px; }
+  .pf-studio-modal-card { max-height: calc(100dvh - 24px); }
+  .pf-studio-modal-body :is(input, select) { min-width: 0; width: 100%; font-size: 16px; box-sizing: border-box; }
+  .pf-studio-modal-actions > button { flex: 1 1 120px; }
+}
+@media screen and (max-width: 360px) {
+  .pf-resume-studio .pf-studio-top-actions { display: grid; grid-template-columns: auto minmax(0, 1fr); }
+  .pf-resume-studio .pf-studio-btn-export { grid-column: 1 / -1; justify-content: center; }
+  .pf-studio-mobile-navigation { grid-template-columns: minmax(0, 1fr); }
+}

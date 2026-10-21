@@ -7,7 +7,6 @@ import {
   CircleDashed, AlertCircle, Target, Loader, RefreshCw, Compass, Briefcase
 } from 'lucide-react';
 import { resumeApi, uploadResume } from './resumeApi';
-import { apiUrl, apiHeaders } from '../../../app/services/apiClient.js';
 import { Button } from '../../../components/ui/Button';
 import { PdfIcon } from '../../../components/ui/PdfIcon';
 import AiToast from '../../../components/ui/AiToast';
@@ -15,6 +14,7 @@ import TailorJdModal from './components/TailorJdModal';
 import JdFitStatsModal from './components/JdFitStatsModal';
 import './ResumePage.css';
 import './ResumePageEnhancements.css';
+import './ResumeResponsive.css';
 
 const FALLBACK_CATEGORIES = ['Software Engineering', 'Backend Engineering', 'Cloud / DevOps', 'Data / AI', 'Core Engineering', 'Design / Product', 'General'];
 
@@ -580,72 +580,22 @@ export function ResumePage() {
                   </div>
                   <div className="pf-resume-row-details">
                     <div className="pf-resume-title-row">
-                      <Link to={`/resume/${resume.id}`} className="pf-resume-title-link">
-                        <h2 title={resume.filename}>
-                          {resume.filename}
-                        </h2>
-                      </Link>
-                      {tailoredMeta && (
-                        <span
-                          className="pf-resume-tailored-pill"
-                          title={`Tailored for ${targetRole ? `${targetRole}${cleanCompany ? ` at ${cleanCompany}` : ''}` : (cleanCompany || 'Target JD')} • Click for Fit Insights`}
-                          onClick={() => setSelectedStatsResume(resume)}
-                          role="button"
-                          tabIndex={0}
-                        >
-                          <Target size={11} />
-                          <span className="pf-tailored-pill-label">Tailored</span>
-                          {cleanCompany && (
-                            <span className="pf-tailored-pill-company" title={cleanCompany}>
-                              · {cleanCompany}
-                            </span>
-                          )}
-                        </span>
-                      )}
-                      {resume.isDefault && (
-                        <span className="pf-resume-primary-pill" title="Default primary resume used for applications">
-                          <Star size={11} fill="currentColor" /> Primary
-                        </span>
-                      )}
-                      {showCategoryBadge && (
-                        <span
-                          className="pf-category-badge is-clickable"
-                          onClick={e => openCategoryModal(resume, e)}
-                          title="Click to change category"
-                        >
-                          {resume.category || 'General'}
-                        </span>
-                      )}
+                      <Link to={`/resume/${resume.id}`} className="pf-resume-title-link"><h2 title={resume.filename}>{resume.filename}</h2></Link>
+                      {resume.isDefault && <span className="pf-resume-primary-pill" title="Default primary resume used for applications"><Star size={11} fill="currentColor" /> Primary</span>}
                     </div>
-
+                    {(tailoredMeta || showCategoryBadge || targetRole || displayTags.length > 0) && <div className="pf-resume-context-row">
+                      {tailoredMeta && <button type="button" className="pf-resume-tailored-pill" title={`Tailored for ${targetRole ? targetRole + (cleanCompany ? ' at ' + cleanCompany : '') : cleanCompany || 'Target JD'} • Click for Fit Insights`} onClick={() => setSelectedStatsResume(resume)}>
+                        <Target size={11} /><span className="pf-tailored-pill-label">Tailored</span>{cleanCompany && <span className="pf-tailored-pill-company" title={cleanCompany}> · {cleanCompany}</span>}
+                      </button>}
+                      {showCategoryBadge && <button type="button" className="pf-category-badge is-clickable" onClick={e => openCategoryModal(resume, e)} title="Change category">{resume.category || 'General'}</button>}
+                      {targetRole && <span className="pf-resume-role-pill" title={`Target role: ${targetRole}`}><Briefcase size={11} /><span>{targetRole}</span></span>}
+                      {displayTags.slice(0, 6).map(tag => <span key={tag} className="pf-resume-tag-pill">{tag}</span>)}
+                      {displayTags.length > 6 && <span className="pf-resume-tag-pill pf-tag-more">+{displayTags.length - 6}</span>}
+                    </div>}
                     <div className="pf-resume-row-sub">
-                      <span className="pf-date-text">
-                        Added {new Date(resume.createdAt || resume.uploadedAt || new Date()).toLocaleDateString()}
-                      </span>
+                      <span className="pf-date-text">Updated {new Date(resume.updatedAt || resume.uploadedAt || new Date()).toLocaleDateString()}</span>
                       <span className="pf-dot">·</span>
-                      <span className="pf-date-text">
-                        Updated {new Date(resume.updatedAt || resume.uploadedAt || new Date()).toLocaleDateString()}
-                      </span>
-
-                      {(targetRole || displayTags.length > 0) && (
-                        <>
-                          <span className="pf-sub-divider" />
-                          <div className="pf-resume-row-tags">
-                            {targetRole && (
-                              <span className="pf-resume-role-pill" title={`Target role: ${targetRole}`}>
-                                <Briefcase size={11} />
-                                <span>{targetRole}</span>
-                              </span>
-                            )}
-                            {displayTags.slice(0, 6).map(tag => (
-                              <span key={tag} className="pf-resume-tag-pill">{tag}</span>
-                            ))}
-                            {displayTags.length > 6 && (
-                              <span className="pf-resume-tag-pill pf-tag-more">+{displayTags.length - 6}</span>
-                            )}
-                          </div>
-                        </>
-                      )}
+                      <span className="pf-date-text pf-resume-date-added">Added {new Date(resume.createdAt || resume.uploadedAt || new Date()).toLocaleDateString()}</span>
                     </div>
                   </div>
                 </div>
@@ -654,9 +604,9 @@ export function ResumePage() {
                   {tailoredMeta ? (
                     <button
                       type="button"
-                      className={`pf-analysis-status is-${tailoredMeta.matchScore >= 80 ? 'good' : 'warn'} is-clickable`}
+                      className={`pf-analysis-status is-${tailoredMeta.matchScore >= 80 ? 'good' : 'warn'} is-clickable is-jd-fit`}
                       onClick={() => setSelectedStatsResume(resume)}
-                      title="Click to view ATS JD Match & Improvement Insights"
+                      title="View job-description fit and improvement insights"
                     >
                       <Target size={14} />
                       JD Fit
@@ -748,15 +698,13 @@ export function ResumePage() {
                           if (!resume.downloadUrl) return;
                           (async () => {
                             try {
-                              const res = await fetch(apiUrl(resume.downloadUrl), { credentials: 'include', headers: apiHeaders() });
-                              if (!res.ok) throw new Error('unavailable');
-                              const blob = await res.blob();
+                              const blob = await resumeApi.downloadPdf(resume.downloadUrl);
                               const url = URL.createObjectURL(blob);
                               const a = document.createElement('a');
                               a.href = url; a.download = resume.filename || 'resume.pdf';
                               document.body.appendChild(a); a.click(); a.remove();
-                              URL.revokeObjectURL(url);
-                            } catch { setError('Unable to download the resume.'); }
+                              setTimeout(() => URL.revokeObjectURL(url), 60_000);
+                            } catch (error) { setError(error.message || 'Unable to download the resume.'); }
                           })();
                         }}
                       >
@@ -794,7 +742,7 @@ export function ResumePage() {
 
       {/* 1. Change Category Modal */}
       {categoryModalResume && createPortal(
-        <div className="pf-library-modal-backdrop" onClick={() => !updatingCategory && setCategoryModalResume(null)}>
+        <div className="pf-library-modal-backdrop pf-resume-library-dialog" onClick={() => !updatingCategory && setCategoryModalResume(null)}>
           <div className="pf-library-modal-card" onClick={e => e.stopPropagation()}>
             <div className="pf-library-modal-header">
               <div className="pf-library-modal-title">
@@ -874,7 +822,7 @@ export function ResumePage() {
 
       {/* 2. Set as Primary Modal */}
       {primaryModalResume && createPortal(
-        <div className="pf-library-modal-backdrop" onClick={() => !updatingPrimary && setPrimaryModalResume(null)}>
+        <div className="pf-library-modal-backdrop pf-resume-library-dialog" onClick={() => !updatingPrimary && setPrimaryModalResume(null)}>
           <div className="pf-library-modal-card" onClick={e => e.stopPropagation()}>
             <div className="pf-library-modal-header">
               <div className="pf-library-modal-title">
@@ -928,7 +876,7 @@ export function ResumePage() {
 
       {/* 3. Delete Resume Modal */}
       {deleteModalResume && createPortal(
-        <div className="pf-library-modal-backdrop" onClick={() => !deletingResume && setDeleteModalResume(null)}>
+        <div className="pf-library-modal-backdrop pf-resume-library-dialog" onClick={() => !deletingResume && setDeleteModalResume(null)}>
           <div className="pf-library-modal-card" onClick={e => e.stopPropagation()}>
             <div className="pf-library-modal-header">
               <div className="pf-library-modal-title">

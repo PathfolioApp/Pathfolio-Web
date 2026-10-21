@@ -1,0 +1,118 @@
+const log = require('../../shared/logger');
+
+const MAX_HTML_BYTES = 512 * 1024;
+const MAX_CONCURRENT_EXPORTS = 2;
+const EXPORT_TIMEOUT_MS = 25_000;
+let activeExports = 0;
+let browserPromise = null;
+let idleTimer = null;
+
+const failure = (message, statusCode) => Object.assign(new Error(message), { statusCode });
+
+function validateHtml(html) {
+  if (typeof html !== 'string' || !/^\s*<!doctype html>/i.test(html)) {
+    throw failure('A printable resume document is required.', 400);
+  }
+  if (Buffer.byteLength(html, 'utf8') > MAX_HTML_BYTES) {
+    throw failure('The resume is too large to export. Please shorten its content.', 413);
+  }
+}
+
+async function getBrowser() {
+  clearTimeout(idleTimer);
+  if (!browserPromise) {
+    const pending = import('puppeteer').then(({ default: puppeteer }) => puppeteer.launch({
+      headless: true,
+      timeout: 10_000,
+      protocolTimeout: 15_000,
+      ...(process.env.PUPPETEER_EXECUTABLE_PATH ? { executablePath: process.env.PUPPETEER_EXECUTABLE_PATH } : {})
+    }));
+    browserPromise = pending;
+    pending.then(browser => browser.on('disconnected', () => {
+      if (browserPromise === pending) browserPromise = null;
+    })).catch(() => { if (browserPromise === pending) browserPromise = null; });
+  }
+  try { return await browserPromise; }
+  catch (error) {
+    log.api.warn('[Resume PDF] Chrome could not start.', { reason: error.message });
+    throw failure('PDF export is unavailable. Check the server’s Chrome installation or use Print / Save as PDF.', 503);
+  }
+}
+
+async function closePdfBrowser() {
+  clearTimeout(idleTimer);
+  const pending = browserPromise;
+  browserPromise = null;
+  if (pending) await pending.then(browser => browser.close()).catch(() => {});
+}
+
+async function renderResumePdf(html) {
+  validateHtml(html);
+  if (activeExports >= MAX_CONCURRENT_EXPORTS) {
+    throw failure('PDF export is busy. Please try again in a few seconds.', 503);
+  }
+  activeExports++;
+  clearTimeout(idleTimer);
+  let context;
+  let expired = false;
+  let deadline;
+  const started = Date.now();
+  const checkDeadline = () => { if (expired) throw failure('PDF export timed out. Please try again.', 504); };
+  const render = async () => {
+    try {
+      const browser = await getBrowser();
+      checkDeadline();
+      // A fresh context prevents cookies and document data crossing between exports.
+      context = await browser.createBrowserContext();
+      checkDeadline();
+      const page = await context.newPage();
+      checkDeadline();
+      await page.setJavaScriptEnabled(false);
+      await page.setRequestInterception(true);
+      // Resume HTML is self-contained: no network, local files, external fonts or embeds.
+      page.on('request', request => { request.abort().catch(() => {}); });
+      await page.setViewport({ width: 794, height: 1123, deviceScaleFactor: 1 });
+      await page.emulateMediaType('print');
+      const policy = '<meta http-equiv="Content-Security-Policy" content="default-src &#39;none&#39;; style-src &#39;unsafe-inline&#39;; img-src &#39;none&#39;; font-src &#39;none&#39;; frame-src &#39;none&#39;; object-src &#39;none&#39;; form-action &#39;none&#39;">';
+      const document = html.replace(/<head(?:\s[^>]*)?>/i, match => match + policy);
+      await page.setContent(document, { waitUntil: 'domcontentloaded', timeout: 8_000 });
+      const { DENSITY_LIMITS } = await import('../../../../shared/resume/resumeDocument.mjs');
+      await page.evaluate(async limits => {
+        await document.fonts.ready;
+        const resume = document.querySelector('.resume[data-auto-density="true"]');
+        if (!resume) return;
+        if (resume.getBoundingClientRect().height > limits.compact) resume.classList.add('is-compact');
+        if (resume.getBoundingClientRect().height > limits.condense) resume.classList.add('is-condensed');
+      }, DENSITY_LIMITS);
+      checkDeadline();
+      const pdf = Buffer.from(await page.pdf({
+        format: 'A4', printBackground: true, displayHeaderFooter: false,
+        margin: { top: 0, right: 0, bottom: 0, left: 0 },
+        scale: 1, preferCSSPageSize: true, tagged: true, timeout: 15_000
+      }));
+      checkDeadline();
+      log.api.info('[Resume PDF] Export completed.', { bytes: pdf.length, durationMs: Date.now() - started });
+      return pdf;
+    } finally {
+      if (context) await context.close().catch(() => {});
+    }
+  };
+  try {
+    return await Promise.race([render(), new Promise((_, reject) => {
+      deadline = setTimeout(() => {
+        expired = true;
+        if (context) context.close().catch(() => {});
+        reject(failure('PDF export timed out. Please try again.', 504));
+      }, EXPORT_TIMEOUT_MS);
+    })]);
+  } finally {
+    clearTimeout(deadline);
+    activeExports--;
+    if (!activeExports) {
+      idleTimer = setTimeout(() => { closePdfBrowser().catch(() => {}); }, 30_000);
+      idleTimer.unref?.();
+    }
+  }
+}
+
+module.exports = { renderResumePdf, closePdfBrowser, validateHtml };

@@ -11,6 +11,7 @@ import './ResumeDetailsEnhancements.css';
 import './ResumeDetailsFields.css';
 import './ResumeDetailsUX.css';
 import './ResumeStudioPage.css';
+import './ResumeResponsive.css';
 
 const READINESS_LABELS = { local: 'Document extraction' };
 const TABS = ['overview', 'analysis', 'extracted'];
@@ -228,7 +229,7 @@ export function ResumeDetailsPage() {
             <PdfIcon size={25} className="pf-resume-pdf-icon" />
           </div>
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div className="pf-detail-title-line">
               <h1>{resume.filename}</h1>
               {resume.isDefault && <span className="pf-detail-primary"><Star size={12} fill="currentColor" /> Primary resume</span>}
             </div>
@@ -246,18 +247,16 @@ export function ResumeDetailsPage() {
         </label>
         <a className="pf-detail-download-btn" href="#" onClick={event => {
           event.preventDefault();
-          if (!resume.fileUrl) return;
+          if (!resume.downloadUrl) return;
           (async () => {
             try {
-              const res = await fetch(apiUrl(resume.downloadUrl), { credentials: 'include', headers: apiHeaders() });
-              if (!res.ok) throw new Error('unavailable');
-              const blob = await res.blob();
+              const blob = await resumeApi.downloadPdf(resume.downloadUrl);
               const url = URL.createObjectURL(blob);
               const a = document.createElement('a');
               a.href = url; a.download = resume.filename || 'resume.pdf';
               document.body.appendChild(a); a.click(); a.remove();
-              URL.revokeObjectURL(url);
-            } catch { setError('Unable to download the document.'); }
+              setTimeout(() => URL.revokeObjectURL(url), 60_000);
+            } catch (error) { setError(error.message || 'Unable to download the document.'); }
           })();
         }}>
           <Download size={15} /> Download PDF

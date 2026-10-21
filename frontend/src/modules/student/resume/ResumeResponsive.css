@@ -1,0 +1,157 @@
+/* Library and detail UI only. Studio and the A4 Preview content are deliberately excluded. */
+.pf-resume-library { container: resume-library / inline-size; }
+.pf-resume-details-page { container: resume-details / inline-size; }
+.pf-resume-library, .pf-resume-details-page { width: 100%; min-width: 0; box-sizing: border-box; }
+.pf-resume-library :is(.pf-library-header > div, .pf-library-toolbar > *, .pf-resume-library-list, .pf-resume-row-details, .pf-category-manager-body) { min-width: 0; }
+.pf-resume-library :is(.pf-library-header-actions a, .pf-library-header-actions button, .pf-library-upload, .pf-resume-row-actions > a, .pf-resume-row-actions > button, .pf-category-manager summary, .pf-filter-toggle) { min-height: 44px; box-sizing: border-box; }
+.pf-resume-library :is(.pf-library-header-actions a, .pf-library-header-actions button, .pf-library-upload) { white-space: normal; text-align: center; line-height: 1.5; }
+.pf-resume-library .pf-library-header { flex-wrap: wrap; }
+.pf-resume-library .pf-library-toolbar { flex-wrap: wrap; }
+.pf-resume-library .pf-library-search { flex: 1 1 240px; min-width: 0; }
+.pf-resume-library .pf-library-search input { min-width: 0; width: 100%; }
+.pf-resume-library .pf-resume-row { display: grid; grid-template-columns: minmax(0, 1fr) 138px auto; }
+.pf-resume-library .pf-resume-row-analysis { grid-column: auto; }
+.pf-resume-library .pf-resume-row-actions { grid-column: auto; grid-row: auto; }
+.pf-resume-library .pf-resume-action-menu { right: 0; left: auto; width: max-content; max-width: min(300px, calc(100vw - 48px)); max-height: min(400px, 60dvh); overflow-y: auto; overscroll-behavior: contain; box-sizing: border-box; }
+.pf-resume-library .pf-resume-action-menu :is(a, button) { min-height: 44px; white-space: normal; overflow-wrap: anywhere; }
+.pf-resume-library :is(.pf-resume-title-row, .pf-resume-context-row, .pf-category-item-pill) { max-width: 100%; }
+.pf-resume-library .pf-category-item-pill { overflow-wrap: anywhere; flex-wrap: wrap; }
+.pf-resume-library .pf-category-manager-body form { flex-wrap: wrap; }
+.pf-resume-library .pf-category-manager-body form input { flex: 1 1 200px; min-width: 0; max-width: 100%; box-sizing: border-box; }
+.pf-resume-library .pf-library-snapshot { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.pf-resume-library .pf-snapshot-card { min-width: 0; }
+.pf-resume-library .pf-snapshot-card-bottom { flex-wrap: wrap; gap: .5rem; }
+.pf-resume-library .pf-snapshot-label { overflow-wrap: anywhere; }
+@container resume-library (max-width: 1000px) {
+  .pf-resume-library .pf-library-header { align-items: flex-start; flex-direction: column; gap: 18px; }
+  .pf-resume-library .pf-library-header-actions { width: 100%; justify-content: flex-start; }
+  .pf-resume-library .pf-resume-row { grid-template-columns: minmax(0, 1fr) auto; gap: 12px 18px; }
+  .pf-resume-library .pf-resume-row-analysis { grid-column: 1; justify-content: flex-start; }
+  .pf-resume-library .pf-resume-row-analysis .pf-analysis-status { width: auto; min-width: 132px; }
+  .pf-resume-library .pf-resume-row-actions { grid-column: 2; grid-row: 1 / span 2; }
+  .pf-resume-library .pf-library-toolbar { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .pf-resume-library .pf-library-count { grid-column: 1 / -1; width: auto; border-right: 0; border-bottom: 1px solid #edf1eb; padding: 0 0 10px; }
+  .pf-resume-library .pf-library-search { grid-column: 1 / -1; width: auto; }
+  .pf-resume-library :is(.pf-toolbar-select, .pf-library-sort, .pf-filter-toggle) { width: 100%; min-width: 0; box-sizing: border-box; }
+  .pf-resume-library .pf-library-sort select { min-width: 0; flex: 1; }
+}
+@container resume-library (max-width: 800px) {
+  .pf-resume-library .pf-library-snapshot { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@container resume-library (max-width: 680px) {
+  .pf-resume-library .pf-resume-row { grid-template-columns: minmax(0, 1fr); gap: 14px; padding: 17px 16px; }
+  .pf-resume-library .pf-resume-row-file { align-items: flex-start; }
+  .pf-resume-library .pf-resume-row-details h2 { display: block; -webkit-line-clamp: unset; }
+  .pf-resume-library .pf-resume-row-analysis { grid-column: 1; margin: 0; }
+  .pf-resume-library .pf-resume-row-actions { grid-column: 1; grid-row: auto; justify-content: flex-start; flex-wrap: wrap; }
+  .pf-resume-library .pf-resume-row-actions > a { flex: 1 1 120px; white-space: normal; text-align: center; }
+  .pf-resume-library .pf-resume-row-actions > .pf-row-more { flex: 0 0 44px !important; min-width: 44px; }
+  .pf-resume-library .pf-resume-row-analysis > button, .pf-resume-library .pf-resume-context-row > button { min-height: 44px; }
+  .pf-resume-library .pf-library-header-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .pf-resume-library .pf-library-upload { grid-column: 1 / -1; justify-content: center; }
+  .pf-resume-library :is(input, select, textarea) { font-size: 16px; min-height: 44px; }
+  .pf-resume-library .pf-category-item-pill button { min-width: 40px; min-height: 44px; }
+  .pf-resume-library .pf-library-empty > div:last-child { flex-wrap: wrap; }
+}
+@container resume-library (max-width: 360px) {
+  .pf-resume-library .pf-library-toolbar { grid-template-columns: minmax(0, 1fr); }
+  .pf-resume-library .pf-snapshot-card { padding: 14px; }
+  .pf-resume-library .pf-snapshot-card-top { gap: 6px; align-items: flex-start; }
+  .pf-resume-library .pf-snapshot-label { font-size: .7rem; }
+  .pf-resume-library .pf-resume-row-file { gap: 10px; }
+  .pf-resume-library .pf-resume-row-file .pf-resume-pdf-box { width: 36px; height: 40px; }
+  .pf-resume-library .pf-resume-row-details h2 { font-size: .85rem; }
+}
+
+.pf-resume-details-page :is(.pf-detail-header-left, .pf-detail-file-title > div, .pf-detail-side, .pf-detail-side-card, .pf-detail-section, .pf-detail-record, .pf-detail-extracted, .pf-detail-analysis, .pf-detail-document, .pf-analysis-metric-grid > div) { min-width: 0; max-width: 100%; box-sizing: border-box; }
+.pf-resume-details-page .pf-detail-header { flex-wrap: wrap; }
+.pf-resume-details-page .pf-detail-title-line { display: flex; align-items: baseline; flex-wrap: wrap; gap: 8px 10px; }
+.pf-resume-details-page .pf-detail-file-title h1 { overflow-wrap: anywhere; font-size: clamp(1.5rem, 3cqi, 1.85rem); }
+.pf-resume-details-page .pf-detail-file-title p { overflow-wrap: anywhere; line-height: 1.7; }
+.pf-resume-details-page .pf-detail-actions { flex-shrink: 1; min-width: 0; }
+.pf-resume-details-page .pf-detail-actions > *, .pf-resume-details-page .pf-detail-back, .pf-resume-details-page .pf-detail-tabs button { min-height: 44px; box-sizing: border-box; }
+.pf-resume-details-page .pf-detail-actions > * { white-space: normal; line-height: 1.5; }
+.pf-resume-details-page .pf-detail-more-btn { min-width: 44px; }
+.pf-resume-details-page .pf-detail-overview { grid-template-columns: minmax(0, 1fr); }
+.pf-resume-details-page .pf-detail-document-head { flex-wrap: wrap; gap: 10px; }
+.pf-resume-details-page .pf-detail-document-head > a { min-height: 44px; display: inline-flex; align-items: center; }
+.pf-resume-details-page .pf-detail-document iframe { width: 100%; max-width: 100%; height: clamp(320px, 70dvh, 800px); box-sizing: border-box; }
+.pf-resume-details-page .pf-detail-side-card :is(p, strong), .pf-resume-details-page .pf-detail-record-head, .pf-resume-details-page .pf-detail-skill-groups p { overflow-wrap: anywhere; }
+.pf-resume-details-page :is(.pf-extracted-grid, .pf-detail-record-fields, .pf-detail-skill-groups) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.pf-resume-details-page :is(.pf-extracted-grid input, .pf-detail-record input, .pf-detail-record textarea, .pf-summary-editor, .pf-detail-tag-form input, .pf-detail-category-select) { min-width: 0; max-width: 100%; box-sizing: border-box; }
+.pf-resume-details-page .pf-detail-tag-form { flex-wrap: wrap; }
+.pf-resume-details-page .pf-detail-tag-form input { flex: 1 1 140px; }
+.pf-resume-details-page .pf-detail-tag-list > span { max-width: 100%; overflow-wrap: anywhere; }
+.pf-resume-details-page .pf-detail-tag-list button { min-width: 32px; min-height: 36px; flex-shrink: 0; }
+.pf-resume-details-page :is(.pf-extracted-toolbar, .pf-detail-section-title, .pf-analysis-hero) { flex-wrap: wrap; gap: 14px; }
+.pf-resume-details-page .pf-extracted-toolbar > div, .pf-resume-details-page .pf-analysis-hero > div { min-width: 0; }
+.pf-resume-details-page .pf-analysis-breakdown > div { min-width: 0; gap: 12px; flex-wrap: wrap; }
+.pf-resume-details-page .pf-analysis-finding { grid-template-columns: minmax(0, .8fr) minmax(0, 1fr); }
+.pf-resume-details-page .pf-analysis-finding :is(span, p) { min-width: 0; overflow-wrap: anywhere; }
+@container resume-details (min-width: 920px) {
+  .pf-resume-details-page .pf-detail-overview { grid-template-columns: minmax(0, 1fr) 290px; }
+}
+@container resume-details (max-width: 900px) {
+  .pf-resume-details-page .pf-detail-header { flex-direction: column; gap: 18px; }
+  .pf-resume-details-page .pf-detail-actions { width: 100%; }
+  .pf-resume-details-page .pf-analysis-metric-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@container resume-details (max-width: 600px) {
+  .pf-resume-details-page .pf-detail-file-title { align-items: flex-start; gap: 12px; }
+  .pf-resume-details-page .pf-detail-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .pf-resume-details-page .pf-detail-actions > * { justify-content: center; padding: 10px; text-align: center; }
+  .pf-resume-details-page .pf-detail-tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; overflow: visible; }
+  .pf-resume-details-page .pf-detail-tabs button { min-width: 0; padding: 10px 4px; white-space: normal; font-size: .8rem; line-height: 1.4; }
+  .pf-resume-details-page :is(.pf-extracted-grid, .pf-detail-record-fields, .pf-detail-skill-groups, .pf-analysis-finding) { grid-template-columns: minmax(0, 1fr); }
+  .pf-resume-details-page :is(.pf-extracted-grid input, .pf-detail-record input, .pf-detail-record textarea, .pf-summary-editor, .pf-detail-tag-form input, .pf-detail-category-select) { font-size: 16px; min-height: 44px; }
+  .pf-resume-details-page :is(.pf-detail-side-card button, .pf-extracted-toolbar button, .pf-analysis-hero button, .pf-detail-empty button, .pf-open-studio) { min-height: 44px; white-space: normal; line-height: 1.5; }
+  .pf-resume-details-page .pf-detail-section { padding: 18px 16px; }
+  .pf-resume-details-page .pf-detail-record { padding: 14px; }
+  .pf-resume-details-page .pf-analysis-hero { display: flex; flex-direction: column; align-items: flex-start; padding: 20px 16px; }
+  .pf-resume-details-page .pf-analysis-finding { gap: 7px; }
+  .pf-resume-details-page .pf-detail-tag-list button { min-width: 40px; min-height: 44px; }
+  .pf-resume-details-page .pf-extracted-toolbar > button { width: 100%; }
+}
+@media (max-width: 900px) {
+  .pf-resume-library, .pf-resume-details-page { padding: 24px 0 40px; }
+}
+
+/* Portalled library dialogs: never target Studio's dialogs or print surface. */
+.pf-resume-library-dialog, .pf-resume-tailor-dialog { width: auto; height: auto; box-sizing: border-box; padding: 20px; }
+.pf-resume-library-dialog .pf-library-modal-card, .pf-resume-tailor-dialog .pf-tailor-modal-card { max-height: min(90vh, 90dvh); min-width: 0; display: flex; flex-direction: column; }
+.pf-resume-library-dialog .pf-library-modal-header, .pf-resume-tailor-dialog .pf-tailor-modal-header { flex-shrink: 0; min-width: 0; }
+.pf-resume-library-dialog .pf-library-modal-title, .pf-resume-tailor-dialog .pf-tailor-modal-header-left { min-width: 0; }
+.pf-resume-library-dialog .pf-library-modal-title > div, .pf-resume-tailor-dialog .pf-tailor-modal-header-left > div { min-width: 0; }
+.pf-resume-library-dialog .pf-library-modal-title p, .pf-resume-library-dialog .pf-library-modal-desc, .pf-resume-tailor-dialog .pf-tailor-modal-header :is(h2, p) { overflow-wrap: anywhere; }
+.pf-resume-library-dialog .pf-library-modal-title p { white-space: normal; max-width: 100%; }
+.pf-resume-library-dialog .pf-library-modal-body, .pf-resume-tailor-dialog .pf-tailor-modal-body { min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+.pf-resume-library-dialog .pf-library-modal-actions, .pf-resume-tailor-dialog .pf-tailor-modal-footer { flex-wrap: wrap; gap: 10px; }
+.pf-resume-library-dialog button, .pf-resume-tailor-dialog button { min-height: 44px; }
+.pf-resume-library-dialog .pf-library-modal-close, .pf-resume-tailor-dialog .pf-tailor-modal-close { min-width: 44px; flex-shrink: 0; }
+.pf-resume-library-dialog :is(input, select), .pf-resume-tailor-dialog :is(input, textarea) { min-width: 0; max-width: 100%; box-sizing: border-box; }
+.pf-resume-tailor-dialog :is(.pf-tailor-success-details, .pf-tailor-field, .pf-tailor-stage-label) { min-width: 0; overflow-wrap: anywhere; }
+.pf-resume-tailor-dialog :is(.pf-tailor-row-inputs, .pf-tailor-success-top, .pf-tailor-success-actions, .pf-tailor-label-split) { flex-wrap: wrap; }
+.pf-resume-tailor-dialog .pf-tailor-field { flex: 1 1 180px; }
+.pf-resume-tailor-dialog .pf-tailor-row-inputs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.pf-resume-tailor-dialog .pf-tailor-chip { max-width: 100%; box-sizing: border-box; overflow-wrap: anywhere; white-space: normal; }
+@media (max-width: 620px) {
+  .pf-resume-library-dialog, .pf-resume-tailor-dialog { padding: 12px; }
+  .pf-resume-library-dialog .pf-library-modal-card { max-height: calc(100dvh - 24px); }
+  .pf-resume-library-dialog .pf-library-modal-header, .pf-resume-library-dialog .pf-library-modal-body { padding: 18px 16px; }
+  .pf-resume-library-dialog .pf-library-modal-actions > button { flex: 1 1 120px; white-space: normal; line-height: 1.5; }
+  .pf-resume-library-dialog :is(input, select), .pf-resume-tailor-dialog :is(input, textarea) { font-size: 16px; min-height: 44px; }
+  .pf-resume-tailor-dialog { padding: 0; }
+  .pf-resume-tailor-dialog .pf-tailor-modal-card { height: 100dvh; max-height: 100dvh; border: 0; border-radius: 0; }
+  .pf-resume-tailor-dialog .pf-tailor-modal-header { padding: max(16px, env(safe-area-inset-top)) 16px 16px; align-items: flex-start; }
+  .pf-resume-tailor-dialog .pf-tailor-modal-header-left { align-items: flex-start; }
+  .pf-resume-tailor-dialog .pf-tailor-icon-badge { display: none; }
+  .pf-resume-tailor-dialog .pf-tailor-modal-body { padding: 18px 16px max(18px, env(safe-area-inset-bottom)); }
+  .pf-resume-tailor-dialog .pf-tailor-row-inputs { display: grid; grid-template-columns: minmax(0, 1fr); }
+  .pf-resume-tailor-dialog .pf-tailor-success-top { display: flex; }
+  .pf-resume-tailor-dialog .pf-tailor-modal-footer { padding-inline: 0; }
+  .pf-resume-tailor-dialog .pf-tailor-modal-footer > button { flex: 1 1 120px; white-space: normal; line-height: 1.5; }
+}
+@media (max-height: 500px) and (min-width: 621px) {
+  .pf-resume-library-dialog, .pf-resume-tailor-dialog { padding: 8px; }
+  .pf-resume-library-dialog .pf-library-modal-card, .pf-resume-tailor-dialog .pf-tailor-modal-card { max-height: calc(100dvh - 16px); }
+}
