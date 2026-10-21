@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, ShieldCheck, Eye, Shield, Check, Globe, Copy, X, ExternalLink } from 'lucide-react';
+import { ShieldCheck, Eye, Shield, Check, Globe, Copy, X, ExternalLink } from 'lucide-react';
 import { profileApi } from '../../profile/services/profileApi';
 import { useAuth } from '../../../../app/providers/AuthProvider';
 import { Button } from '../../../../components/ui/Button';
 import '../../../../modules/student/profile/styles/ProfilePages.css';
+import { SettingsLayout } from '../SettingsLayout';
 
 import { apiUrl, apiHeaders } from '../../../../app/services/apiClient.js';
 
@@ -24,26 +24,42 @@ function PublicShareCard() {
   const [includeResume, setIncludeResume] = useState(false);
   const [bio, setBio] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [loadFailed, setLoadFailed] = useState(false);
+  const [message, setMessage] = useState('');
 
-  useEffect(() => {
-    shareRequest('/me').then(data => setShare(data.share || null)).catch(() => setShare(null));
-  }, []);
+  const load = async () => {
+    setLoading(true); setError(''); setLoadFailed(false);
+    try {
+      const data = await shareRequest('/me');
+      setShare(data.share || null);
+      setIncludeResume(Boolean(data.share?.includeResume));
+      setBio(data.share?.bio || '');
+    } catch (err) { setError(err.message); setLoadFailed(true); }
+    finally { setLoading(false); }
+  };
+
+  useEffect(() => { load(); }, []);
 
   const create = async () => {
-    setBusy(true); setError('');
+    if (busy) return;
+    setBusy(true); setError(''); setMessage('');
     try {
       const data = await shareRequest('/me', { method: 'POST', body: JSON.stringify({ includeResume, bio }) });
       setShare(data.share);
       setLink(`${window.location.origin}${data.url}`);
+      setCopied(false); setMessage('Your public link is ready. Copy it and keep it somewhere safe.');
     } catch (err) { setError(err.message); }
     finally { setBusy(false); }
   };
 
   const update = async () => {
-    setBusy(true); setError('');
+    if (busy) return;
+    setBusy(true); setError(''); setMessage('');
     try {
       const data = await shareRequest('/me', { method: 'PATCH', body: JSON.stringify({ includeResume, bio }) });
       setShare(data.share);
+      setMessage('Your public page has been updated.');
     } catch (err) { setError(err.message); }
     finally { setBusy(false); }
   };
@@ -53,15 +69,16 @@ function PublicShareCard() {
     setBusy(true); setError('');
     try {
       await shareRequest('/me', { method: 'DELETE' });
-      setShare(null); setLink('');
+      setShare(null); setLink(''); setMessage('Your public link has been disabled.');
     } catch (err) { setError(err.message); }
     finally { setBusy(false); }
   };
 
   const copy = async () => {
-    await navigator.clipboard.writeText(link);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    try {
+      await navigator.clipboard.writeText(link);
+      setCopied(true); setTimeout(() => setCopied(false), 2000);
+    } catch { setError('Unable to copy automatically. Select the link and copy it manually.'); }
   };
 
   return (
@@ -71,42 +88,46 @@ function PublicShareCard() {
         <div>
           <h2>Public profile link</h2>
           <p className="pf-settings-card-subtitle">
-            Generate a shareable link (like LinkedIn) that lets anyone - recruiters, mentors, your network - view a curated version of your profile. No sign-in needed.
+            Let recruiters, mentors, and your network see a curated profile without signing in. Manage this link separately from your profile visibility below.
           </p>
         </div>
       </div>
 
-      {error && <p className="pf-error" style={{ marginBottom: '12px' }}>{error}</p>}
+      {error && <p className="pf-settings-feedback is-error" role="alert">{error}</p>}
+      {message && <p className="pf-settings-feedback is-success" role="status">{message}</p>}
 
-      {share ? (
+      {loading ? <p className="pf-settings-card-subtitle" role="status">Loading your sharing preferences…</p> : loadFailed ? <Button variant="secondary" onClick={load}>Try again</Button> : share ? (
         <>
           {link && (
             <div className="pf-publiclink-box">
               <input readOnly value={link} onFocus={event => event.target.select()} aria-label="Your public profile link" />
               <Button variant="secondary" size="sm" icon={copied ? Check : Copy} onClick={copy}>{copied ? 'Copied' : 'Copy'}</Button>
-              <a href={link} target="_blank" rel="noreferrer" className="pf-publiclink-open"><ExternalLink size={15} /></a>
+              <a href={link} target="_blank" rel="noreferrer" className="pf-publiclink-open" aria-label="Open public profile"><ExternalLink size={15} /></a>
             </div>
           )}
+          {!link && <div className="pf-settings-notice"><ShieldCheck size={18} /><span>Your public link is active. For privacy, the full address is shown only when created. Keep your saved link, or <button type="button" className="pf-settings-text-button" disabled={busy} onClick={() => { if (window.confirm('Replace your public link? The previous link will stop working.')) create(); }}>create a replacement</button>.</span></div>}
           <div className="pf-publiclink-stats">
             <span><b>{share.viewCount ?? 0}</b> views</span>
             <span>Created {share.createdAt ? new Date(share.createdAt).toLocaleDateString() : '-'}</span>
           </div>
           <label className="pf-publiclink-toggle">
-            <input type="checkbox" checked={includeResume} onChange={event => setIncludeResume(event.target.checked)} />
+            <input type="checkbox" checked={includeResume} disabled={busy} onChange={event => setIncludeResume(event.target.checked)} />
             Feature my default resume on the public page
           </label>
-          <label className="pf-settings-label" style={{ display: 'block', marginTop: 10 }}>
+          <label className="pf-settings-label">
             Short bio (shown at the top of your public page)
             <textarea
               rows={2}
               value={bio}
+              maxLength={500}
+              disabled={busy}
               onChange={event => setBio(event.target.value)}
               placeholder="e.g. Backend-focused engineering student who loves shipping APIs…"
               className="pf-settings-textarea"
-              style={{ width: '100%', marginTop: 4, border: '1px solid var(--border-medium)', borderRadius: 'var(--radius-sm)', padding: '8px 10px', font: 'inherit', fontSize: '.86rem' }}
             />
           </label>
-          <div className="pf-settings-actions" style={{ marginTop: 12 }}>
+          <p className="pf-settings-card-subtitle pf-settings-character-count">{bio.length}/500 characters</p>
+          <div className="pf-settings-actions">
             <Button variant="primary" size="sm" onClick={update} loading={busy}>Update public page</Button>
             <Button variant="ghost" size="sm" icon={X} onClick={revoke} disabled={busy}>Disable link</Button>
           </div>
@@ -151,9 +172,8 @@ const PRIVACY_SECTIONS = [
 
 export function ProfileSettingsPage() {
   const { student, refresh } = useAuth();
-  const navigate = useNavigate();
-  const [visibility, setVisibility] = useState(student.profileSettings?.visibility || 'private');
-  const [fields, setFields] = useState(student.profileSettings?.fieldVisibility || {});
+  const [visibility, setVisibility] = useState(student?.profileSettings?.visibility || 'private');
+  const [fields, setFields] = useState(student?.profileSettings?.fieldVisibility || {});
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState('');
   const [error, setError] = useState('');
@@ -180,24 +200,7 @@ export function ProfileSettingsPage() {
   };
 
   return (
-    <div className="pf-profile-page pf-privacy-settings-page">
-      <div className="pf-edit-heading">
-        <div>
-          <span className="editorial-eyebrow">PROFILE SETTINGS</span>
-          <h1>Privacy & Sharing Controls</h1>
-          <p className="pf-edit-subtitle">
-            Configure how your profile is represented and control access to individual sections.
-          </p>
-        </div>
-        <button
-          type="button"
-          className="pf-secondary pf-back-button"
-          onClick={() => navigate('/profile')}
-          aria-label="Back to profile"
-        >
-          <ArrowLeft size={16} /> Back to profile
-        </button>
-      </div>
+    <SettingsLayout className="pf-privacy-settings-page" title="Privacy & sharing" description="Choose your profile visibility and share your story on your terms.">
 
       <PublicShareCard />
 
@@ -209,7 +212,7 @@ export function ProfileSettingsPage() {
           <div>
             <h2>Overall profile visibility</h2>
             <p className="pf-settings-card-subtitle">
-              Set the baseline exposure for your profile link and recruiter discovery.
+              Set your profile visibility. Your public link is managed separately above.
             </p>
           </div>
         </div>
@@ -222,12 +225,14 @@ export function ProfileSettingsPage() {
             <select
               id="overall-visibility"
               value={visibility}
-              onChange={e => setVisibility(e.target.value)}
+              onChange={e => { setVisibility(e.target.value); setMsg(''); setError(''); }}
               className="pf-settings-select"
+              disabled={saving}
             >
-              <option value="private">🔒 Private, Only you and authorized college administrators</option>
-              <option value="shareable">🌐 Shareable, Accessible to recruiters based on section rules below</option>
+              <option value="private">Private</option>
+              <option value="shareable">Shareable</option>
             </select>
+            <p className="pf-settings-card-subtitle">{visibility === 'private' ? 'Visible to you and authorized college administrators.' : 'Shared according to the section permissions below.'}</p>
           </div>
         </div>
       </section>
@@ -255,12 +260,13 @@ export function ProfileSettingsPage() {
               <div className="pf-visibility-action">
                 <select
                   value={fields[key] || 'student'}
-                  onChange={e => setFields({ ...fields, [key]: e.target.value })}
+                  onChange={e => { setFields({ ...fields, [key]: e.target.value }); setMsg(''); setError(''); }}
                   className="pf-select-pill"
                   aria-label={`${label} visibility`}
+                  disabled={saving}
                 >
                   <option value="student">Only me</option>
-                  <option value="staff">Authorized college staff</option>
+                  <option value="staff">College staff</option>
                   <option value="shareable">Shareable profile</option>
                 </select>
               </div>
@@ -275,7 +281,7 @@ export function ProfileSettingsPage() {
           </span>
         </div>
 
-        {error && <p className="pf-error" style={{ marginBottom: '16px' }}>{error}</p>}
+        {error && <p className="pf-settings-feedback is-error" role="alert">{error}</p>}
 
         <div className="pf-settings-actions">
           <Button
@@ -287,13 +293,13 @@ export function ProfileSettingsPage() {
             Save privacy settings
           </Button>
           {msg && (
-            <div className="pf-settings-saved-badge">
+            <div className="pf-settings-saved-badge" role="status">
               <Check size={16} />
               <span>{msg}</span>
             </div>
           )}
         </div>
       </section>
-    </div>
+    </SettingsLayout>
   );
 }

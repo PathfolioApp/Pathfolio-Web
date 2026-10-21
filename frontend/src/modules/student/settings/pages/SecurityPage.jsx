@@ -1,45 +1,55 @@
 import React, { useState } from 'react';
-import { useAuth } from '../../../../app/providers/AuthProvider';
+import { KeyRound, ShieldCheck, Eye, EyeOff, LogOut } from 'lucide-react';
 import { profileApi } from '../../profile/services/profileApi';
 import { SignOutButton } from '../../../../components/ui/SignOutButton';
-import '../../../../modules/student/profile/styles/ProfilePages.css';
+import { Button } from '../../../../components/ui/Button';
+import { SettingsLayout, SettingsCardHeading } from '../SettingsLayout';
+import { ProfileSettingsPage } from './ProfileSettingsPage';
 
 export function SecurityPage() {
-  const { logout } = useAuth();
   const [data, setData] = useState({ currentPassword: '', newPassword: '', confirm: '' });
   const [msg, setMsg] = useState('');
   const [err, setErr] = useState('');
-  const save = async () => {
+  const [saving, setSaving] = useState(false);
+  const [visible, setVisible] = useState({});
+  const save = async event => {
+    event.preventDefault(); if (saving) return;
+    setMsg(''); setErr('');
     if (data.newPassword !== data.confirm) return setErr('New passwords do not match.');
     try {
-      await profileApi.password(data);
-      setMsg('Password updated securely.');
-      setErr('');
-      setData({ currentPassword: '', newPassword: '', confirm: '' });
-    } catch (e) {
-      setErr(e.message);
-    }
+      setSaving(true);
+      await profileApi.password({ currentPassword: data.currentPassword, newPassword: data.newPassword });
+      setMsg('Your password has been updated.'); setData({ currentPassword: '', newPassword: '', confirm: '' }); setVisible({});
+    } catch (e) { setErr(e.message || 'Unable to update your password.'); }
+    finally { setSaving(false); }
   };
-  return (
-    <div className="pf-profile-page">
-      <p className="editorial-eyebrow">Security</p>
-      <h1>Keep your account secure.</h1>
-      <section className="pf-edit-section">
-        <h2>Change password</h2>
-        {err && <p className="pf-error">{err}</p>}
-        {msg && <p className="pf-success">{msg}</p>}
-        <div className="pf-edit-fields">
-          <label>Current password<input type="password" value={data.currentPassword} onChange={e => setData({ ...data, currentPassword: e.target.value })} /></label>
-          <label>New password<input type="password" value={data.newPassword} onChange={e => setData({ ...data, newPassword: e.target.value })} /></label>
-          <label>Confirm new password<input type="password" value={data.confirm} onChange={e => setData({ ...data, confirm: e.target.value })} /></label>
-        </div>
-        <button className="pf-save" onClick={save}>Update password</button>
-        <SignOutButton className="pf-secondary">Sign out</SignOutButton>
+  return <SettingsLayout title="Security & password" description="Keep your account protected and your next chapter yours.">
+    <div className="pf-settings-grid pf-settings-security-grid">
+      <section className="pf-settings-card">
+        <SettingsCardHeading icon={KeyRound} title="Change password" description="Choose a unique password you don’t use for other accounts." />
+        <form onSubmit={save} className="pf-settings-form">
+          {[
+            ['currentPassword', 'Current password', 'current-password'], ['newPassword', 'New password', 'new-password'], ['confirm', 'Confirm new password', 'new-password'],
+          ].map(([key, label, autoComplete]) => <div className="pf-settings-field" key={key}>
+            <label htmlFor={`settings-${key}`}>{label}</label>
+            <div className="pf-settings-password">
+              <input id={`settings-${key}`} type={visible[key] ? 'text' : 'password'} required minLength={key === 'currentPassword' ? undefined : 8} autoComplete={autoComplete} value={data[key]} disabled={saving}
+                aria-describedby={key === 'newPassword' ? 'password-hint' : undefined} onChange={e => { setData({ ...data, [key]: e.target.value }); setMsg(''); setErr(''); }} />
+              <button type="button" onClick={() => setVisible({ ...visible, [key]: !visible[key] })} aria-label={`${visible[key] ? 'Hide' : 'Show'} ${label.toLowerCase()}`} aria-pressed={!!visible[key]} disabled={saving}>{visible[key] ? <EyeOff size={18} /> : <Eye size={18} />}</button>
+            </div>
+            {key === 'newPassword' && <small id="password-hint">Use at least 8 characters.</small>}
+          </div>)}
+          {err && <p className="pf-settings-feedback is-error" role="alert">{err}</p>}
+          {msg && <p className="pf-settings-feedback is-success" role="status">{msg}</p>}
+          <div className="pf-settings-actions"><Button type="submit" icon={ShieldCheck} loading={saving}>Update password</Button></div>
+        </form>
       </section>
+      <aside className="pf-settings-card pf-settings-security-note">
+        <SettingsCardHeading icon={LogOut} title="Using a shared device?" description="Sign out when you’re finished to keep your profile and personal information protected." />
+        <SignOutButton className="pf-settings-signout">Sign out of this device</SignOutButton>
+      </aside>
     </div>
-  );
+  </SettingsLayout>;
 }
 
-export function PrivacyPage() {
-  return null;
-}
+export function PrivacyPage() { return <ProfileSettingsPage />; }

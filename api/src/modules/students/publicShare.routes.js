@@ -78,7 +78,8 @@ router.get('/me', auth, async (req, res) => {
       createdAt: share.createdAt,
       viewCount: Number(share.viewCount || 0),
       lastViewedAt: share.lastViewedAt || null,
-      includeResume: Boolean(share.includeResume)
+      includeResume: Boolean(share.includeResume),
+      bio: share.bio || ''
     },
     // The full link is returned once at creation; afterwards we only confirm
     // it exists so the UI can say "link active" without re-leaking it.
@@ -112,7 +113,7 @@ router.post('/me', auth, async (req, res) => {
   });
   res.status(201).json({
     success: true,
-    share: { enabled: true, createdAt: share.createdAt, viewCount: 0, includeResume: share.includeResume },
+    share: { enabled: true, createdAt: share.createdAt, viewCount: 0, includeResume: share.includeResume, bio: share.bio },
     url: `/p/${token}`
   });
 });
@@ -125,7 +126,7 @@ router.patch('/me', auth, async (req, res) => {
   if (req.body?.bio !== undefined) share.bio = clean(req.body.bio).slice(0, 500);
   student.profileSettings.publicShare = share;
   await studentStore.saveStudent(student);
-  res.json({ success: true, share: { enabled: true, createdAt: share.createdAt, viewCount: Number(share.viewCount || 0), includeResume: Boolean(share.includeResume) } });
+  res.json({ success: true, share: { enabled: true, createdAt: share.createdAt, viewCount: Number(share.viewCount || 0), includeResume: Boolean(share.includeResume), bio: share.bio || '' } });
 });
 
 router.delete('/me', auth, async (req, res) => {
