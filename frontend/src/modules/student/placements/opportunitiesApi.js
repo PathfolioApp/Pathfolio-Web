@@ -1,18 +1,19 @@
 import { apiUrl, apiHeaders } from '../../../app/services/apiClient.js';
+import { placementRead } from './placementReads';
 
 export const opportunitiesApi = {
-  getMine: async () => {
+  getMine: studentId => placementRead(studentId, "/api/opportunities/mine", async () => {
     const res = await fetch(apiUrl('/api/opportunities/mine'), { credentials: 'include', headers: apiHeaders() });
     const data = await res.json().catch(() => ({}));
     if (!res.ok || !data.success) throw new Error(data.message || 'Failed to load your applications');
     return data;
-  },
-  getStats: async () => {
+  }),
+  getStats: studentId => placementRead(studentId, "/api/opportunities/stats", async () => {
     const res = await fetch(apiUrl('/api/opportunities/stats'), { credentials: 'include', headers: apiHeaders() });
     const data = await res.json().catch(() => ({}));
     if (!res.ok || !data.success) throw new Error(data.message || 'Failed to load placement stats');
     return data;
-  },
+  }),
   getSavedSearches: async () => {
     const res = await fetch(apiUrl('/api/opportunities/saved-searches'), { credentials: 'include', headers: apiHeaders() });
     const data = await res.json().catch(() => ({}));
@@ -31,13 +32,13 @@ export const opportunitiesApi = {
     if (!res.ok || !data.success) throw new Error(data.message || 'Unable to delete this search');
     return data;
   },
-  getOpportunities: async () => {
+  getOpportunities: studentId => placementRead(studentId, "/api/opportunities", async () => {
     const res = await fetch(apiUrl('/api/opportunities'), { credentials: 'include', headers: apiHeaders() });
     if (!res.ok) throw new Error('Failed to load opportunities');
     const data = await res.json();
     if (!data.success) throw new Error(data.message);
     return data;
-  },
+  }),
   getEligibility: async (jobId) => {
     const res = await fetch(apiUrl(`/api/opportunities/${jobId}/eligibility`), { credentials: 'include', headers: apiHeaders() });
     if (!res.ok) throw new Error('Failed to load eligibility status');

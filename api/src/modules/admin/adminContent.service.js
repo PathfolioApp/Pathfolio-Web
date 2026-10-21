@@ -20,12 +20,14 @@ const normalizeForm = form => ({ fields: Array.isArray(form?.fields) ? form.fiel
 const placementPolicy = require('./placementPolicy.service');
 const resumeStore = require('../resumes/resumeStore');
 
+const academicNumber = value => value === null || value === undefined || String(value).trim() === '' ? NaN : Number(value);
+
 const checkEligibility = (student, job, upgradeCheck = null) => {
   const issues = [];
   const criteria = job.eligibility || {};
 
   // CGPA Check
-  const cgpa = Number(student.academic?.cgpa);
+  const cgpa = academicNumber(student.academic?.cgpa);
   if (criteria.minCgpa !== null && criteria.minCgpa !== undefined) {
     if (!Number.isFinite(cgpa)) issues.push(`minimum CGPA ${criteria.minCgpa} (your CGPA is not on record)`);
     else if (cgpa < criteria.minCgpa) issues.push(`minimum CGPA ${criteria.minCgpa} (yours is ${cgpa})`);
@@ -33,39 +35,33 @@ const checkEligibility = (student, job, upgradeCheck = null) => {
 
   // 10th Percentage Check
   if (criteria.minTenthPercentage !== null && criteria.minTenthPercentage !== undefined) {
-    const tenth = Number(student.academic?.tenthPercentage);
+    const tenth = academicNumber(student.academic?.tenthPercentage);
     if (!Number.isFinite(tenth)) issues.push(`minimum 10th percentage ${criteria.minTenthPercentage}% (not on record)`);
     else if (tenth < criteria.minTenthPercentage) issues.push(`minimum 10th percentage ${criteria.minTenthPercentage}% (yours is ${tenth}%)`);
   }
 
   // 12th Percentage Check
   if (criteria.minTwelfthPercentage !== null && criteria.minTwelfthPercentage !== undefined) {
-    const twelfth = Number(student.academic?.twelfthPercentage);
+    const twelfth = academicNumber(student.academic?.twelfthPercentage);
     if (!Number.isFinite(twelfth)) issues.push(`minimum 12th percentage ${criteria.minTwelfthPercentage}% (not on record)`);
     else if (twelfth < criteria.minTwelfthPercentage) issues.push(`minimum 12th percentage ${criteria.minTwelfthPercentage}% (yours is ${twelfth}%)`);
   }
 
-  // Active Backlogs Check
-  const backlogs = Number(student.academic?.activeBacklogs);
-  if (criteria.maxActiveBacklogs !== null && criteria.maxActiveBacklogs !== undefined) {
-    const value = Number.isFinite(backlogs) ? backlogs : 0;
-    if (value > criteria.maxActiveBacklogs) issues.push(`at most ${criteria.maxActiveBacklogs} active backlog(s) (you have ${value})`);
-  }
-
-  // Historical Backlogs Check
-  if (criteria.maxHistoricalBacklogs !== null && criteria.maxHistoricalBacklogs !== undefined) {
-    const hist = Number(student.academic?.historicalBacklogs) || 0;
-    if (hist > criteria.maxHistoricalBacklogs) issues.push(`at most ${criteria.maxHistoricalBacklogs} historical backlog(s) (you have ${hist})`);
-  }
-
-  // Gap Years Check
-  if (criteria.maxGapYears !== null && criteria.maxGapYears !== undefined) {
-    const gaps = Number(student.academic?.gapYears) || 0;
-    if (gaps > criteria.maxGapYears) issues.push(`at most ${criteria.maxGapYears} gap year(s) (you have ${gaps})`);
+  // Missing counts are unknown, not evidence of zero backlogs or gap years.
+  for (const [field, limit, label] of [
+    ['activeBacklogs', 'maxActiveBacklogs', 'active backlog(s)'],
+    ['historicalBacklogs', 'maxHistoricalBacklogs', 'historical backlog(s)'],
+    ['gapYears', 'maxGapYears', 'gap year(s)']
+  ]) {
+    if (criteria[limit] !== null && criteria[limit] !== undefined) {
+      const value = academicNumber(student.academic?.[field]);
+      if (!Number.isFinite(value)) issues.push(`at most ${criteria[limit]} ${label} (not on record)`);
+      else if (value > criteria[limit]) issues.push(`at most ${criteria[limit]} ${label} (you have ${value})`);
+    }
   }
 
   // Department Restriction
-  if (criteria.allowedDepartments?.length && !criteria.allowedDepartments.some(dept => (student.academic?.department || '').toLowerCase().includes(dept.toLowerCase()) || dept.toLowerCase().includes((student.academic?.department || '').toLowerCase()))) {
+  if (criteria.allowedDepartments?.length && (!(student.academic?.department || '').trim() || !criteria.allowedDepartments.some(dept => (student.academic?.department || '').toLowerCase().includes(dept.toLowerCase()) || dept.toLowerCase().includes((student.academic?.department || '').toLowerCase())))) {
     issues.push(`department restriction (${criteria.allowedDepartments.join(', ')})`);
   }
 
@@ -220,16 +216,16 @@ class AdminContentService {
     return { updatedCount: results.length, applications: results };
   }
   async publishedJobs() { return store.listJobPosts('published'); }
-  async publishedJobsForStudent(studentId) {
-    const student = await studentStore.getStudentById(studentId);
+  async publishedJobsForStudent(studentId, profile = null) {
+    const student = profile?.id === studentId ? profile : await studentStore.getStudentById(studentId);
     if (!student) throw notFound('Student');
-    const jobs = await store.listJobPosts('published');
-    const myApps = (await store.listApplications()).filter(application => application.studentId === studentId);
+    const [jobs, myApps] = await Promise.all([store.listJobPosts('published'), store.listStudentApplications(studentId)]);
     const appliedMap = new Map(myApps.map(a => [a.jobPostId, a]));
+    const context = jobs.length ? await placementPolicy.createEligibilityContext(studentId, { applications: myApps, jobs }) : null;
 
     const result = [];
     for (const job of jobs) {
-      const upgradeCheck = await placementPolicy.evaluateUpgradeEligibility(studentId, job);
+      const upgradeCheck = await placementPolicy.evaluateUpgradeEligibility(studentId, job, context);
       const issues = checkEligibility(student, job, upgradeCheck);
       const existingApplication = appliedMap.get(job.id) || null;
 

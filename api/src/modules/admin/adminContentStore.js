@@ -40,6 +40,10 @@ class AdminContentStore {
         'ALTER TABLE applications ADD COLUMN resume_id VARCHAR(64) NULL',
         'ALTER TABLE applications ADD COLUMN selected_resume JSON NULL'
       ]) { try { await connection.query(statement); } catch (error) { if (error.code !== 'ER_DUP_FIELDNAME') throw error; } }
+      for (const statement of [
+        'ALTER TABLE applications ADD INDEX idx_applications_student_created (student_id, created_at)',
+        'ALTER TABLE job_posts ADD INDEX idx_job_posts_status_updated (status, updated_at)'
+      ]) { try { await connection.query(statement); } catch (error) { if (error.code !== 'ER_DUP_KEYNAME') throw error; } }
     } finally { connection.release(); }
   }
 
@@ -88,6 +92,40 @@ class AdminContentStore {
       .filter(item => !jobPostId || item.jobPostId === jobPostId)
       .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
       .map(row => this.application(row));
+  }
+
+  async listStudentApplications(studentId) {
+    if (this.pool) {
+      const [rows] = await db.withRetry(() => this.pool.execute('SELECT * FROM applications WHERE student_id=? ORDER BY created_at DESC', [studentId]), { label: 'listStudentApplications' });
+      return rows.map(row => this.application(row));
+    }
+    return [...this.applications.values()].filter(row => (row.student_id || row.studentId) === studentId)
+      .sort((a, b) => new Date(b.created_at || b.createdAt) - new Date(a.created_at || a.createdAt)).map(row => this.application(row));
+  }
+
+  async getJobPostsByIds(ids) {
+    const unique = [...new Set(ids)].filter(Boolean);
+    if (!unique.length) return [];
+    if (this.pool) {
+      const [rows] = await db.withRetry(() => this.pool.execute(`SELECT j.*, c.name company_name, c.logo_url company_logo_url FROM job_posts j LEFT JOIN companies c ON c.id=j.company_id WHERE j.id IN (${unique.map(() => '?').join(',')})`, unique), { label: 'getJobPostsByIds' });
+      return rows.map(row => ({ ...this.jobPost(row), companyName: row.company_name, companyLogoUrl: row.company_logo_url }));
+    }
+    return unique.map(id => { const row = this.jobPosts.get(id); if (!row) return null; const company = this.companies.get(row.companyId); return { ...this.jobPost(row), companyName: company?.name || 'Unknown company', companyLogoUrl: company?.logoUrl || '' }; }).filter(Boolean);
+  }
+
+  async getPlacementStats(studentId) {
+    if (!this.pool) return null; // Existing volatile-development route computes from maps.
+    const read = (sql, params = []) => db.withRetry(() => this.pool.execute(sql, params), { label: 'getPlacementStats' });
+    const [[[mine]], [[campus]], [[live]], [[students]], [companies]] = await Promise.all([
+      read("SELECT COUNT(*) applications, SUM(status='shortlisted') shortlisted, SUM(status='interview') interviews, SUM(status='selected') selected, SUM(status='rejected') rejected FROM applications WHERE student_id=?", [studentId]),
+      read("SELECT COUNT(*) totalApplications, SUM(status='selected') offers FROM applications"),
+      read("SELECT COUNT(*) activeOpportunities FROM job_posts WHERE status='published'"),
+      read('SELECT COUNT(*) students FROM students WHERE is_admin=FALSE AND is_recruiter=FALSE'),
+      read("SELECT COALESCE(NULLIF(c.name,''),'Unknown') companyName, COUNT(*) applications, SUM(a.status='selected') selected FROM applications a INNER JOIN job_posts j ON j.id=a.job_post_id LEFT JOIN companies c ON c.id=j.company_id GROUP BY COALESCE(NULLIF(c.name,''),'Unknown') ORDER BY applications DESC LIMIT 8")
+    ]);
+    const numberFields = row => Object.fromEntries(Object.entries(row).map(([key, value]) => [key, Number(value) || 0]));
+    const cohort = numberFields({ ...campus, ...students });
+    return { me: { ...numberFields(mine), ...numberFields(live) }, cohort: { ...cohort, applicationRate: cohort.students ? Math.round(cohort.totalApplications / cohort.students * 10) / 10 : 0 }, perCompany: companies.map(row => ({ companyName: row.companyName, applications: Number(row.applications), selected: Number(row.selected) || 0 })) };
   }
 
   async getApplication(id) {

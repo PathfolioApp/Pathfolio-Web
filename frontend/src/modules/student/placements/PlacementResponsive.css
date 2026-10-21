@@ -1,0 +1,141 @@
+/* Keep placement layouts responsive to the space left by the portal sidebar. */
+.pf-placement-page { container: placement / inline-size; min-width: 0; width: 100%; box-sizing: border-box; padding: clamp(1rem, 2.4vw, 2.5rem); }
+.pf-placement-browse { container-name: placement placement-browse; }
+.pf-placement-page :is(.pf-placement-container, .pf-opp-detail-wrapper, .pf-placement-list, .pf-applications-view, .pf-jd-side-column, .pf-jd-main-card, .pf-hiring-main, .pf-hiring-record) { min-width: 0; max-width: 100%; box-sizing: border-box; }
+.pf-placement-page :is(.pf-btn, .pf-placement-views button, .pf-opp-tab-btn, summary, select, .pf-overview-text-link) { min-height: 44px; }
+.pf-placement-page .pf-btn { height: auto; white-space: normal; padding-block: .65rem; line-height: 1.45; max-width: 100%; }
+.pf-placement-page .pf-btn__text { min-width: 0; overflow-wrap: anywhere; }
+.pf-placement-page :is(h1, h2, h3, p, dd, .pf-job-skill-chip, .pf-placement-notice, .pf-placement-eyebrow) { overflow-wrap: anywhere; }
+.pf-placement-page .pf-job-skill-chip { max-width: 100%; box-sizing: border-box; }
+.pf-placement-page .pf-opp-company-brand { min-width: 0; flex: 1; }
+.pf-placement-page .pf-opp-company-meta { min-width: 0; line-height: 1.65; }
+.pf-placement-page .pf-opp-facts-row > span { min-width: 0; max-width: 100%; overflow-wrap: anywhere; line-height: 1.7; }
+.pf-placement-page .pf-opp-facts-row svg, .pf-placement-page .pf-job-eligibility > svg { flex-shrink: 0; }
+.pf-placement-page .pf-overview-workspace, .pf-placement-page .pf-hiring-grid { grid-template-columns: minmax(0, 1fr); }
+.pf-placement-page .pf-elig-grid { grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); }
+.pf-placement-page .pf-elig-cell { min-width: 0; }
+.pf-placement-page .pf-job-eligibility > div { min-width: 0; overflow-wrap: anywhere; }
+.pf-placement-page .pf-job-eligibility ul { padding-left: 1.2rem; }
+.pf-placement-page .pf-elig-action-content { flex: 1 1 260px; min-width: 0; }
+.pf-placement-page .pf-elig-action-btn { max-width: 100%; }
+.pf-placement-page a.pf-placement-card-link { min-height: 44px; display: inline-flex; align-items: center; white-space: normal; }
+.pf-placement-filter-toggle { display: none; }
+.pf-placement-page .pf-application-controls { grid-template-columns: minmax(0, 1fr) minmax(140px, .4fr) minmax(155px, .4fr); }
+.pf-placement-page .pf-application-controls > .pf-placement-search { grid-column: auto; }
+.pf-placement-page .pf-hiring-record dl { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.pf-placement-page .pf-journey-stages li > div { min-width: 0; }
+
+@container placement (min-width: 880px) {
+  .pf-placement-page .pf-overview-workspace { grid-template-columns: minmax(0, 1.65fr) minmax(260px, .85fr); }
+  .pf-placement-page .pf-hiring-grid { grid-template-columns: minmax(0, 1.7fr) minmax(250px, .8fr); }
+  .pf-placement-page .pf-hiring-record dl { grid-template-columns: minmax(0, 1fr); }
+}
+@container placement (max-width: 759px) {
+  .pf-placement-page .pf-placement-header-note, .pf-placement-page .pf-placement-campus-label { display: none; }
+  .pf-placement-page .pf-placement-masthead { padding-block: .5rem 1.5rem; }
+  .pf-placement-page .pf-placement-masthead h1 { font-size: clamp(2.4rem, 7.5cqi, 3.4rem); }
+  .pf-placement-page .pf-placement-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .pf-placement-page .pf-application-controls { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .pf-placement-page .pf-application-controls > .pf-placement-search { grid-column: 1 / -1; }
+  .pf-placement-page .pf-application-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .pf-placement-page .pf-application-metrics button { min-height: 80px; gap: .5rem; }
+  .pf-placement-page .pf-application-metrics button:first-child { grid-column: 1 / -1; min-height: 60px; flex-direction: row; align-items: center; justify-content: space-between; padding-right: 2.5rem; }
+  .pf-placement-page .pf-application-metrics button > strong { font-size: 1.85rem; }
+  .pf-placement-page .pf-application-metrics button:first-child > svg { bottom: 1.3rem; }
+  .pf-placement-page .pf-application-facts { padding-left: 0; }
+}
+@container placement (max-width: 599px) {
+  .pf-placement-page .pf-placement-tools-title { margin-bottom: .75rem; }
+  .pf-placement-page .pf-placement-tools-title small { display: none; }
+  .pf-placement-filter-toggle { display: inline-flex; align-items: center; justify-content: space-between; gap: .5rem; width: 100%; min-height: 44px; margin-top: .5rem; padding: .5rem .15rem; border: 0; background: transparent; color: #536e4c; font: inherit; font-size: .8rem; cursor: pointer; }
+  .pf-placement-filter-toggle svg:last-child { margin-left: auto; }
+  .pf-placement-filter-toggle[aria-expanded="true"] svg:last-child { transform: rotate(180deg); }
+  .pf-placement-page .pf-placement-filters[data-open="false"] { display: none; }
+  .pf-placement-page .pf-placement-filters { margin-top: .5rem; }
+  .pf-placement-page :is(.pf-placement-field select, .pf-placement-search input) { font-size: 16px; }
+  .pf-placement-page .pf-placement-desktop-break { display: none; }
+  .pf-placement-page .pf-placement-masthead .pf-placement-intro { font-size: .85rem; }
+  .pf-placement-page .pf-opp-hero { padding: 1.1rem; }
+  .pf-placement-page .pf-opp-hero-top { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1rem; }
+  .pf-placement-page .pf-opp-company-brand { display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: .75rem; align-items: start; }
+  .pf-placement-page :is(.pf-opp-company-logo, .pf-opp-company-logo-fallback) { width: 44px; height: 44px; box-sizing: border-box; }
+  .pf-placement-page .pf-opp-title-area h1 { font-size: clamp(1.65rem, 6.5cqi, 2.2rem); }
+  .pf-placement-page .pf-opp-company-meta { font-size: .75rem; gap: .35rem; }
+  .pf-placement-page .pf-opp-facts-row { gap: .65rem 1rem; font-size: .75rem; padding-top: 1rem; }
+  .pf-placement-page .pf-opp-tabs-bar { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .35rem; overflow: visible; }
+  .pf-placement-page .pf-opp-tab-btn { justify-content: center; min-width: 0; padding: .75rem .2rem; font-size: .8rem; white-space: normal; }
+  .pf-placement-page .pf-opp-tab-btn > svg, .pf-placement-page .pf-opp-tab-pill { display: none; }
+  .pf-placement-page :is(.pf-jd-main-card, .pf-jd-side-card, .pf-elig-scorecard, .pf-elig-action-card, .pf-hiring-main, .pf-hiring-record) { padding: 1.15rem; }
+  .pf-placement-page .pf-elig-grid { grid-template-columns: minmax(0, 1fr); }
+  .pf-placement-page .pf-elig-action-btn, .pf-placement-page .pf-elig-action-btn > button { width: 100%; }
+  .pf-placement-page .pf-overview-next-step { padding: 1.15rem; }
+  .pf-placement-page .pf-overview-description h2 { font-size: 1.9rem; }
+  .pf-placement-page .pf-application-dossier-top { display: grid; grid-template-columns: 46px minmax(0, 1fr); align-items: start; gap: .75rem; }
+  .pf-placement-page .pf-application-dossier-top > .pf-job-status-badge { grid-column: 2; margin-left: 0; justify-self: start; }
+  .pf-placement-page .pf-application-dossier h3 { font-size: 1.375rem; }
+  .pf-placement-page .pf-application-facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+  .pf-placement-page .pf-application-record-actions { display: flex; flex-direction: column-reverse; gap: .5rem; }
+  .pf-placement-page .pf-application-record-actions > * { width: 100%; box-sizing: border-box; }
+  .pf-placement-page .pf-application-record-actions summary { width: auto; justify-content: space-between; }
+  .pf-placement-page .pf-application-external-note { padding: 1rem; }
+  .pf-placement-page .pf-hiring-status-bar > div { flex: 1 1 200px; min-width: 0; }
+}
+@container application-journey (max-width: 340px) {
+  .pf-journey-stages { grid-template-columns: minmax(0, 1fr); gap: .9rem; }
+  .pf-journey-stages li { flex-direction: row; align-items: center; }
+}
+@container placement (max-width: 359px) {
+  .pf-placement-page .pf-placement-filters { grid-template-columns: minmax(0, 1fr); }
+  .pf-placement-page .pf-placement-section-bar .pf-placement-views { gap: .75rem; justify-content: space-between; }
+  .pf-placement-page .pf-placement-section-bar .pf-placement-views button { font-size: .75rem; gap: .4rem; }
+  .pf-placement-page .pf-placement-discovery-summary { align-items: flex-start; flex-direction: column; gap: .5rem; }
+  .pf-placement-page .pf-application-controls { padding: .85rem; grid-template-columns: minmax(0, 1fr); }
+  .pf-placement-page .pf-application-facts, .pf-placement-page .pf-hiring-record dl { grid-template-columns: minmax(0, 1fr); }
+  .pf-placement-page .pf-opportunity-card { padding: 1rem 1rem 0; }
+  .pf-placement-page .pf-opportunity-footer { width: calc(100% + 2rem); margin-inline: -1rem; padding: .8rem 1rem; }
+}
+
+/* The dialog is portalled, so its dimensions follow the viewport, not the page container. */
+@media (max-width: 900px) {
+  /* PortalShell supplies the outer gutter once its desktop sidebar is hidden. */
+  .pf-placement-page { padding: 1.25rem 0 2rem; }
+}
+.pf-placement-apply-dialog { box-sizing: border-box; }
+.pf-placement-apply-dialog .pf-modal-container { min-width: 0; max-height: min(92vh, 92dvh); }
+.pf-placement-apply-dialog .pf-modal-header { min-width: 0; gap: .75rem; }
+.pf-placement-apply-dialog .pf-modal-title { min-width: 0; line-height: 1.25; overflow-wrap: anywhere; }
+.pf-placement-apply-dialog .pf-modal-close { flex-shrink: 0; }
+.pf-placement-apply-dialog .pf-modal-body { min-height: 0; overscroll-behavior: contain; scroll-padding-block: 1rem; }
+.pf-placement-apply-dialog .pf-modal-footer { flex-shrink: 0; }
+.pf-placement-apply-dialog .pf-btn { min-height: 44px; height: auto; padding-block: .65rem; white-space: normal; line-height: 1.45; }
+.pf-placement-apply-dialog .pf-btn__text { min-width: 0; overflow-wrap: anywhere; }
+.pf-placement-apply-dialog :is(.pf-apply-job-header__info, .pf-apply-eligibility-warning__body, .pf-apply-snapshot-banner__text, .pf-apply-success-details) { min-width: 0; overflow-wrap: anywhere; }
+.pf-placement-apply-dialog .pf-apply-job-header { flex-wrap: wrap; }
+.pf-placement-apply-dialog .pf-apply-job-header__badge { white-space: normal; }
+.pf-placement-apply-dialog .pf-resume-radio-card__name { white-space: normal; overflow-wrap: anywhere; }
+.pf-placement-apply-dialog :is(.pf-resume-radio-card__preview-btn, .pf-apply-snapshot-banner__link) { min-height: 44px; box-sizing: border-box; }
+.pf-placement-apply-dialog .pf-apply-success-details { max-width: 100%; box-sizing: border-box; }
+@media (max-width: 620px) {
+  .pf-placement-apply-dialog { padding: 0; }
+  .pf-placement-apply-dialog .pf-modal-container { height: 100dvh; max-height: 100dvh; border-radius: 0; }
+  .pf-placement-apply-dialog .pf-modal-header { padding: max(.75rem, env(safe-area-inset-top)) 1rem .75rem; }
+  .pf-placement-apply-dialog .pf-modal-body { padding: 1rem; }
+  .pf-placement-apply-dialog .pf-modal-footer { padding: .75rem 1rem max(.75rem, env(safe-area-inset-bottom)); }
+  .pf-placement-apply-dialog .pf-modal-footer > button { flex: 1 1 120px; }
+  .pf-placement-apply-dialog .pf-resume-radio-card { gap: .65rem; padding: .85rem; }
+  .pf-placement-apply-dialog .pf-resume-radio-card__details { flex-basis: 120px; }
+  .pf-placement-apply-dialog .pf-resume-radio-card__icon { display: none; }
+  .pf-placement-apply-dialog .pf-placement-questions :is(input, textarea) { font-size: 16px; }
+}
+@media (max-width: 360px) {
+  .pf-placement-apply-dialog .pf-modal-footer { flex-direction: column-reverse; }
+  .pf-placement-apply-dialog .pf-modal-footer > button { flex-basis: auto; width: 100%; }
+}
+@media (max-height: 500px) and (min-width: 621px) {
+  .pf-placement-apply-dialog { padding: .5rem; }
+  .pf-placement-apply-dialog .pf-modal-container { max-height: calc(100dvh - 1rem); }
+  .pf-placement-apply-dialog .pf-modal-header, .pf-placement-apply-dialog .pf-modal-footer { padding-block: .5rem; }
+}
+@media (hover: none) {
+  .pf-placement-page .pf-opportunity-card:hover { transform: none; }
+}

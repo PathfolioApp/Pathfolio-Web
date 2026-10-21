@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useId, useRef } from 'react';
 import { 
   FileText, 
   CheckCircle2, 
@@ -14,8 +14,15 @@ import { Button } from '../../../components/ui/Button';
 import { resumeApi } from '../resume/resumeApi';
 import { opportunitiesApi } from './opportunitiesApi';
 import './JobApplyModal.css';
+import { isClosed } from './placementModel.mjs';
 
 export function JobApplyModal({ isOpen, onClose, job, onApplied }) {
+  const formId = useId();
+  const formRef = useRef(null);
+  const submitLock = useRef(false);
+  const successTitleRef = useRef(null);
+  const [answers, setAnswers] = useState({});
+  const [resumeVersion, setResumeVersion] = useState(0);
   const [resumes, setResumes] = useState([]);
   const [loadingResumes, setLoadingResumes] = useState(false);
   const [selectedResumeId, setSelectedResumeId] = useState(null);
@@ -23,46 +30,58 @@ export function JobApplyModal({ isOpen, onClose, job, onApplied }) {
   const [error, setError] = useState('');
   const [successData, setSuccessData] = useState(null);
 
+  useEffect(() => { if (isOpen) { setSuccessData(null); setAnswers({}); } }, [isOpen, job?.id]);
+
   useEffect(() => {
-    if (isOpen) {
-      setError('');
-      setSuccessData(null);
-      loadResumes();
-    }
+    if (!isOpen) return;
+    let alive = true;
+    setError(''); setSelectedResumeId(null); setResumes([]); setLoadingResumes(true);
+    resumeApi.list().then(data => {
+      if (!alive) return;
+      const list = Array.isArray(data) ? data : (data.resumes || []);
+      setResumes(list); setSelectedResumeId((list.find(r => r.isDefault) || list[0])?.id || null);
+    }).catch(() => { if (alive) setError('Could not load your saved resumes. Please try again.'); })
+      .finally(() => { if (alive) setLoadingResumes(false); });
+    return () => { alive = false; };
+  }, [isOpen, job?.id, resumeVersion]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const opener = document.activeElement;
+    const dialog = formRef.current?.closest('[role="dialog"]');
+    if (!dialog) return;
+    const focusable = () => [...dialog.querySelectorAll('button:not([disabled]), a[href], input:not([disabled]), textarea:not([disabled]), select:not([disabled]), [tabindex="0"]')].filter(element => element.getClientRects().length);
+    focusable()[0]?.focus();
+    const trapFocus = event => {
+      if (event.key !== 'Tab') return;
+      const elements = focusable();
+      const first = elements[0]; const last = elements[elements.length - 1];
+      if (!first) { event.preventDefault(); return; }
+      if (event.shiftKey && (document.activeElement === first || !elements.includes(document.activeElement))) { event.preventDefault(); last.focus(); }
+      else if (!event.shiftKey && (document.activeElement === last || !elements.includes(document.activeElement))) { event.preventDefault(); first.focus(); }
+    };
+    dialog.addEventListener('keydown', trapFocus);
+    return () => { dialog.removeEventListener('keydown', trapFocus); if (opener?.isConnected) opener.focus(); };
   }, [isOpen]);
 
-  const loadResumes = async () => {
-    setLoadingResumes(true);
-    try {
-      const data = await resumeApi.list();
-      const list = Array.isArray(data) ? data : (data.resumes || []);
-      setResumes(list);
-
-      // Pre-select default resume or first available
-      const def = list.find(r => r.isDefault) || list[0];
-      if (def) {
-        setSelectedResumeId(def.id);
-      }
-    } catch (err) {
-      console.error('Failed to load resumes:', err);
-      setError('Could not load your saved resumes.');
-    } finally {
-      setLoadingResumes(false);
-    }
-  };
+  useEffect(() => { if (successData) successTitleRef.current?.focus(); }, [successData]);
 
   const handleConfirmApply = async () => {
+    if (submitLock.current || !formRef.current?.reportValidity()) return;
+    if (isClosed(job)) { setError('Applications for this role have closed.'); return; }
     if (!selectedResumeId) {
       setError('Please select a resume to attach to this application.');
       return;
     }
 
+    submitLock.current = true;
     setIsSubmitting(true);
     setError('');
 
     try {
       const res = await opportunitiesApi.apply(job.id, {
-        resumeId: selectedResumeId
+        resumeId: selectedResumeId,
+        answers
       });
 
       const selectedResumeObj = resumes.find(r => r.id === selectedResumeId);
@@ -77,6 +96,7 @@ export function JobApplyModal({ isOpen, onClose, job, onApplied }) {
     } catch (err) {
       setError(err.message || 'Failed to submit application.');
     } finally {
+      submitLock.current = false;
       setIsSubmitting(false);
     }
   };
@@ -84,12 +104,12 @@ export function JobApplyModal({ isOpen, onClose, job, onApplied }) {
   if (!job) return null;
 
   const eligibilityIssues = job.eligibility?.issues || [];
-  const isEligible = eligibilityIssues.length === 0;
+  const isEligible = eligibilityIssues.length === 0 && !isClosed(job);
 
   const formatDate = (iso) => {
     if (!iso) return '';
     try {
-      return new Date(iso).toLocaleDateString('en-US', {
+      return new Date(iso).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata',
         month: 'short',
         day: 'numeric',
         year: 'numeric'
@@ -102,13 +122,14 @@ export function JobApplyModal({ isOpen, onClose, job, onApplied }) {
   return (
     <Modal
       isOpen={isOpen}
-      onClose={isSubmitting ? undefined : onClose}
-      title={successData ? 'Application Confirmed' : 'Apply for Opportunity'}
+      className="pf-placement-apply-dialog"
+      onClose={isSubmitting ? () => {} : onClose}
+      title={successData ? 'Application submitted' : 'Make your next move'}
       maxWidth="580px"
       footer={
         successData ? (
           <Button variant="primary" onClick={onClose}>
-            Done
+            View application journey
           </Button>
         ) : (
           <>
@@ -119,7 +140,7 @@ export function JobApplyModal({ isOpen, onClose, job, onApplied }) {
               variant="primary"
               icon={Send}
               loading={isSubmitting}
-              disabled={isSubmitting || !isEligible || !selectedResumeId || resumes.length === 0}
+              disabled={isSubmitting || loadingResumes || !isEligible || !selectedResumeId || resumes.length === 0}
               onClick={handleConfirmApply}
             >
               Submit Application
@@ -128,16 +149,16 @@ export function JobApplyModal({ isOpen, onClose, job, onApplied }) {
         )
       }
     >
-      <div className="pf-apply-modal-content">
+      <form id={formId} ref={formRef} className="pf-apply-modal-content" onSubmit={e => { e.preventDefault(); handleConfirmApply(); }}>
         {/* Success View */}
         {successData ? (
           <div className="pf-apply-success-view">
             <div className="pf-apply-success-icon-wrap">
               <CheckCircle2 size={32} />
             </div>
-            <h3>Application Submitted!</h3>
+            <h3 ref={successTitleRef} tabIndex={-1}>You’ve taken the next step.</h3>
             <p>
-              Your application has been delivered to <strong>{job.companyName}</strong> for the position of <strong>{job.title}</strong>.
+              Your application for <strong>{job.title}</strong> at <strong>{job.companyName}</strong> is saved. Follow its progress in your application journey.
             </p>
             {successData.resume && (
               <div className="pf-apply-success-details">
@@ -146,11 +167,12 @@ export function JobApplyModal({ isOpen, onClose, job, onApplied }) {
               </div>
             )}
             <p style={{ fontSize: '0.8rem', color: '#688270', marginTop: '4px' }}>
-              A frozen snapshot of your profile credentials was securely recorded.
+              A copy of the profile details you submitted is saved with this application.
             </p>
           </div>
         ) : (
           <>
+            <ol className="pf-apply-checklist" aria-label="Before you submit"><li className={selectedResumeId ? 'is-complete' : ''}><span>{selectedResumeId ? <CheckCircle2 size={13} /> : '1'}</span>Choose a resume</li>{job.applicationForm?.fields?.length > 0 && <li><span>2</span>Answer questions</li>}<li><span>{job.applicationForm?.fields?.length > 0 ? '3' : '2'}</span>Review & submit</li></ol>
             {/* Job Summary Bar */}
             <div className="pf-apply-job-header">
               <div className="pf-apply-job-header__info">
@@ -168,7 +190,7 @@ export function JobApplyModal({ isOpen, onClose, job, onApplied }) {
                 <AlertTriangle size={18} className="pf-apply-eligibility-warning__icon" />
                 <div className="pf-apply-eligibility-warning__body">
                   <div className="pf-apply-eligibility-warning__title">
-                    You do not meet the criteria for this role:
+                    {isClosed(job) ? 'Applications for this role have closed.' : 'Review your eligibility before applying:'}
                   </div>
                   <ul>
                     {eligibilityIssues.map((issue, idx) => (
@@ -181,7 +203,7 @@ export function JobApplyModal({ isOpen, onClose, job, onApplied }) {
 
             {/* Error Banner */}
             {error && (
-              <div className="pf-apply-eligibility-warning" style={{ background: '#fdf2f2' }}>
+              <div role="alert" className="pf-apply-eligibility-warning" style={{ background: '#fdf2f2' }}>
                 <AlertTriangle size={18} className="pf-apply-eligibility-warning__icon" />
                 <div className="pf-apply-eligibility-warning__body">
                   {error}
@@ -192,7 +214,7 @@ export function JobApplyModal({ isOpen, onClose, job, onApplied }) {
             {/* Select Resume Section */}
             <div>
               <div className="pf-apply-section-title">
-                <span>Select Resume to Attach</span>
+                <span>Choose the resume you want to share</span>
                 <a
                   href="/resume"
                   target="_blank"
@@ -233,12 +255,14 @@ export function JobApplyModal({ isOpen, onClose, job, onApplied }) {
                       <div
                         key={resume.id}
                         className={`pf-resume-radio-card ${isSelected ? 'pf-resume-radio-card--selected' : ''}`}
-                        onClick={() => setSelectedResumeId(resume.id)}
+                        onClick={() => { if (!isSubmitting) setSelectedResumeId(resume.id); }}
                       >
                         <input
                           type="radio"
                           name="selectedResume"
                           className="pf-resume-radio-card__radio"
+                          aria-label={resume.filename || "Select resume"}
+                          disabled={isSubmitting}
                           checked={isSelected}
                           onChange={() => setSelectedResumeId(resume.id)}
                         />
@@ -280,11 +304,22 @@ export function JobApplyModal({ isOpen, onClose, job, onApplied }) {
               )}
             </div>
 
-            {/* Profile Snapshot Guarantee Callout */}
+            <Button variant="outline" icon={Upload} disabled={loadingResumes} onClick={() => setResumeVersion(v => v + 1)}>Reload resumes</Button>
+            {(job.applicationForm?.fields || []).length > 0 && <fieldset className="pf-placement-questions" disabled={isSubmitting}>
+              <legend>Questions from the employer</legend>
+              {(job.applicationForm.fields || []).map((field, index) => {
+                const id = formId + '-question-' + index;
+                const props = { id, name: field.id, required: field.required, maxLength: 10000, value: answers[field.id] || '', onChange: e => setAnswers(previous => ({ ...previous, [field.id]: e.target.value })) };
+                return <label key={field.id} htmlFor={id}>{field.label} <span>{field.required ? '(required)' : '(optional)'}</span>
+                  {field.type === 'textarea' ? <textarea {...props} rows={3} /> : <input {...props} type={field.type === 'url' ? 'url' : 'text'} />}
+                </label>;
+              })}
+            </fieldset>}
+            {/* Profile details shared with the employer */}
             <div className="pf-apply-snapshot-banner">
               <ShieldCheck size={18} className="pf-apply-snapshot-banner__icon" />
               <div className="pf-apply-snapshot-banner__text">
-                <strong>Immutable Profile Snapshot:</strong> Your verified academic performance, contact info, social links, and top projects will be frozen and securely attached to this application.
+                <strong>What you share:</strong> A copy of your current academic details, contact information, social links, and projects is attached to this application. Review your profile before submitting.
                 <a
                   href="/profile"
                   target="_blank"
@@ -297,7 +332,7 @@ export function JobApplyModal({ isOpen, onClose, job, onApplied }) {
             </div>
           </>
         )}
-      </div>
+      </form>
     </Modal>
   );
 }

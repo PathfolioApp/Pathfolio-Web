@@ -75,15 +75,18 @@ class PlacementPolicyService {
    * Retrieve all confirmed placement offers for a student.
    * Applications with status 'selected' or 'placed'.
    */
-  async getStudentOffers(studentId) {
-    const allApps = await store.listApplications();
+  async getStudentOffers(studentId, { applications, jobs = [] } = {}) {
+    const allApps = applications || await store.listStudentApplications(studentId);
     const studentApps = allApps.filter(
       app => app.studentId === studentId && ['selected', 'placed'].includes(String(app.status).toLowerCase())
     );
 
+    const jobMap = new Map(jobs.map(job => [job.id, job]));
+    const missingIds = [...new Set(studentApps.map(app => app.jobPostId).filter(id => !jobMap.has(id)))];
+    for (const job of await store.getJobPostsByIds(missingIds)) jobMap.set(job.id, job);
     const offers = [];
     for (const app of studentApps) {
-      const job = await store.getJobPost(app.jobPostId);
+      const job = jobMap.get(app.jobPostId);
       const lpa = this.getJobLpa(job);
       offers.push({
         applicationId: app.id,
@@ -102,13 +105,18 @@ class PlacementPolicyService {
   /**
    * Evaluate whether a student is eligible to apply for a role under the Placement Upgrade Policy.
    */
-  async evaluateUpgradeEligibility(studentId, job) {
+  async createEligibilityContext(studentId, source = {}) {
     const policy = await this.getPolicy();
+    const offers = policy.enabled ? await this.getStudentOffers(studentId, source) : [];
+    return { policy, offers };
+  }
+
+  async evaluateUpgradeEligibility(studentId, job, context = null) {
+    const { policy, offers } = context || await this.createEligibilityContext(studentId);
     if (!policy.enabled) {
       return { eligible: true, issues: [], offers: [], policy };
     }
 
-    const offers = await this.getStudentOffers(studentId);
     if (!offers || offers.length === 0) {
       return { eligible: true, issues: [], offers: [], policy };
     }

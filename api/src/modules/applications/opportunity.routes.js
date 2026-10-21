@@ -9,7 +9,7 @@ router.use(authenticate);
 
 router.get('/', async (req, res) => {
   try {
-    res.json({ success: true, jobPosts: await content.publishedJobsForStudent(req.student.id) });
+    res.json({ success: true, jobPosts: await content.publishedJobsForStudent(req.student.id, req.student) });
   } catch (error) {
     res.status(error.statusCode || 400).json({ success: false, message: error.message });
   }
@@ -18,12 +18,12 @@ router.get('/', async (req, res) => {
 /** The signed-in student's own applications with status timeline. */
 router.get('/mine', async (req, res) => {
   try {
-    const all = await contentStore.listApplications();
-    const mine = all.filter(a => a.studentId === req.student.id);
+    const mine = await contentStore.listStudentApplications(req.student.id);
+    const jobs = await contentStore.getJobPostsByIds(mine.map(app => app.jobPostId));
+    const jobMap = new Map(jobs.map(job => [job.id, job]));
     const applications = [];
     for (const app of mine) {
-      let job = null;
-      try { job = await contentStore.getJobPost(app.jobPostId); } catch { /* job may be archived */ }
+      const job = jobMap.get(app.jobPostId) || null;
       const history = [
         { status: 'applied', at: app.createdAt, label: 'Application submitted' },
         ...(app.updatedAt && app.updatedAt !== app.createdAt ? [{ status: app.status, at: app.updatedAt, label: `Status updated to ${app.status}` }] : [])
@@ -34,7 +34,7 @@ router.get('/mine', async (req, res) => {
         status: app.status,
         appliedAt: app.createdAt,
         updatedAt: app.updatedAt,
-        job: job ? { id: job.id, title: job.title, companyName: job.companyName || '', employmentType: job.employmentType || '', workMode: job.workMode || '', salaryRange: job.salaryRange || '' } : null,
+        job: job ? { id: job.id, title: job.title, companyName: job.companyName || '', companyLogoUrl: job.companyLogoUrl || '', employmentType: job.employmentType || '', workMode: job.workMode || '', salaryRange: job.salaryRange || '' } : null,
         timeline: history
       });
     }
@@ -48,9 +48,8 @@ router.get('/mine', async (req, res) => {
 /** Timeline for one specific application (per-event detail). */
 router.get('/mine/:id/timeline', async (req, res) => {
   try {
-    const all = await contentStore.listApplications();
-    const app = all.find(a => a.id === req.params.id && a.studentId === req.student.id);
-    if (!app) return res.status(404).json({ success: false, message: 'Application not found.' });
+    const app = await contentStore.getApplication(req.params.id);
+    if (!app || app.studentId !== req.student.id) return res.status(404).json({ success: false, message: 'Application not found.' });
     let job = null;
     try { job = await contentStore.getJobPost(app.jobPostId); } catch { /* archived */ }
     const auditService = require('../../shared/auditLog.service');
@@ -96,6 +95,8 @@ router.get('/:id/eligibility', async (req, res) => {
 /** Aggregate, privacy-safe placement statistics for the signed-in student. */
 router.get('/stats', async (req, res) => {
   try {
+    const stats = await contentStore.getPlacementStats(req.student.id);
+    if (stats) return res.json({ success: true, stats });
     const all = await contentStore.listApplications();
     const jobs = await contentStore.listJobPosts();
     const students = await studentStore.listStudents();
