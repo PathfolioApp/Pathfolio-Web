@@ -97,6 +97,7 @@ export function RecruitmentInbox() {
   }, []);
 
   if (loading) return <section className="pf-recruiter-results"><p className="pf-recruiter-loading">Loading recruitment proposals…</p></section>;
+  if (openId) return <EngagementConversation engagementId={openId} onClose={() => { setOpenId(null); window.scrollTo({ top: 0, behavior: 'instant' }); }} />;
 
   return (
     <section className="pf-recruiter-results">
@@ -113,9 +114,8 @@ export function RecruitmentInbox() {
         />
       )}
       {engagements.map(engagement => (
-        <EngagementCard key={engagement.id} engagement={engagement} onOpen={() => setOpenId(engagement.id)} />
+        <EngagementCard key={engagement.id} engagement={engagement} onOpen={() => { setOpenId(engagement.id); window.scrollTo({ top: 0, behavior: 'instant' }); }} />
       ))}
-      {openId && <EngagementConversation engagementId={openId} onClose={() => setOpenId(null)} />}
     </section>
   );
 }

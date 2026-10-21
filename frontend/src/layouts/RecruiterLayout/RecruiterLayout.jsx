@@ -48,8 +48,8 @@ export function RecruiterLayout() {
   );
 
   return (
-    <PortalShell navItems={navItems} portalLinks={portalLinks} showBackButton={false}>
+    <div className="pf-recruiter-shell"><PortalShell navItems={navItems} portalLinks={portalLinks} showBackButton={false}>
       <Outlet />
-    </PortalShell>
+    </PortalShell></div>
   );
 }

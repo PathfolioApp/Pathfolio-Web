@@ -1,0 +1,96 @@
+/* Recruiter-only refinements; shared student/admin surfaces keep their styles. */
+.pf-recruiter-page { container-type: inline-size; min-width: 0; padding: 12px 0 48px; }
+.pf-recruiter-page .pf-page-header { margin-bottom: 24px; padding-bottom: 22px; gap: 18px; }
+.pf-recruiter-page .pf-page-header__sub { max-width: 680px; line-height: 1.65; margin-top: 10px; }
+.pf-recruiter-page :is(.pf-recruiter-results, .pf-shared-card, .pf-shared-student, .pf-rec-timeline__body) { min-width: 0; }
+.pf-recruiter-page :is(h3, p, strong, b, .pf-shared-card__job, .pf-rec-history__company, .pf-shared-student__meta, .pf-shared-student__feedback-existing) { overflow-wrap: anywhere; }
+.pf-recruiter-page svg { flex-shrink: 0; }
+.pf-recruiter-page .pf-overview-cards { gap: 16px; }
+.pf-recruiter-page .pf-stat-card { min-width: 0; padding: 24px; gap: 7px; box-shadow: none; }
+.pf-recruiter-page .pf-stat-card__value { font-size: 2.25rem; }
+.pf-recruiter-page .pf-stat-card__hint { line-height: 1.6; }
+.pf-recruiter-page .pf-recruiter-quick-links { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.pf-recruiter-page .pf-recruiter-quick-links button { text-align: left; min-width: 0; padding: 22px 18px; line-height: 1.6; box-shadow: none; }
+.pf-recruiter-page .pf-recruiter-jobs--rows { border-radius: 16px; padding: 4px 24px; }
+.pf-recruiter-page .pf-recruiter-jobs--rows .pf-recruiter-job { padding: 24px 0; gap: 13px; }
+.pf-recruiter-page .pf-recruiter-job h3 { font: 500 1.4rem/1.35 var(--font-serif); }
+.pf-recruiter-page .pf-recruiter-job-company { line-height: 1.65; }
+.pf-recruiter-page .pf-recruiter-job-actions { flex-wrap: wrap; line-height: 1.6; }
+.pf-recruiter-page .pf-recruiter-job-actions-cluster { flex-wrap: wrap; }
+.pf-recruiter-page .pf-recruiter-job-skills b { max-width: 100%; }
+.pf-recruiter-page .pf-shared-card { margin-bottom: 16px; border-radius: 16px; padding: 22px; }
+.pf-recruiter-page .pf-shared-list .pf-shared-card { margin-bottom: 0; }
+.pf-recruiter-page .pf-shared-card__header > div, .pf-recruiter-page .pf-shared-student__head > div { min-width: 0; }
+.pf-recruiter-page .pf-shared-card__header h3 { margin: 10px 0 6px; font-size: 1.35rem; line-height: 1.4; }
+.pf-recruiter-page .pf-shared-card__header p { line-height: 1.7; }
+.pf-recruiter-page .pf-shared-student { padding: 18px; gap: 12px; background: var(--bg-page); }
+.pf-recruiter-page .pf-shared-student__meta { margin: 6px 0 0; line-height: 1.65; align-items: flex-start; }
+.pf-recruiter-page .pf-shared-student__meta svg { margin-top: 4px; }
+.pf-recruiter-page .pf-shared-student__resume { min-height: 40px; }
+.pf-recruiter-page .pf-shared-student__feedback { gap: 10px; }
+.pf-recruiter-page .pf-shared-student__feedback :is(input, select) { min-width: 0; max-width: 100%; min-height: 44px; border: 1px solid var(--border-medium); border-radius: 8px; padding: 10px; background: var(--bg-surface); color: var(--text-primary); font: inherit; font-size: .85rem; }
+.pf-recruiter-page .pf-shared-student__feedback input { flex: 1 1 220px; }
+.pf-recruiter-page .pf-shared-student__feedback-existing { width: 100%; border-radius: 8px; line-height: 1.6; }
+.pf-recruiter-page .pf-shared-student__tags > span { max-width: 100%; overflow-wrap: anywhere; padding: 5px 10px; border: 1px solid var(--border-subtle); border-radius: 10px; background: var(--bg-surface); color: var(--text-secondary); font-size: .78rem; line-height: 1.6; }
+.pf-recruiter-page .pf-rec-history { padding: 22px; box-shadow: none; }
+.pf-recruiter-page .pf-rec-history__stats { grid-template-columns: repeat(auto-fit, minmax(min(130px, 100%), 1fr)); gap: 10px; }
+.pf-recruiter-page .pf-rec-history__stat { min-width: 0; padding: 14px; }
+.pf-recruiter-page .pf-rec-history__stat span { display: block; line-height: 1.5; margin-top: 4px; }
+.pf-recruiter-page .pf-rec-respond { gap: 12px; border-style: solid; padding: 16px; background: var(--bg-subtle); }
+.pf-recruiter-page .pf-rec-respond label { min-width: 0; flex: 1 1 180px; }
+.pf-recruiter-page .pf-rec-respond :is(input, textarea) { width: 100%; min-width: 0; min-height: 44px; }
+.pf-recruiter-page .pf-rec-respond textarea { padding: 10px; line-height: 1.6; resize: vertical; }
+.pf-recruiter-page .pf-rec-timeline { padding: 16px 0; }
+.pf-recruiter-page .pf-rec-timeline__item { grid-template-columns: 110px minmax(0, 1fr); padding: 16px 0; }
+.pf-recruiter-page .pf-admin-list-item { padding: 18px; border: 1px solid var(--border-subtle); border-radius: 12px; background: var(--bg-surface); margin-top: 10px; }
+.pf-recruiter-page .pf-admin-list-item h3 { font-size: 1rem; margin: 0 0 8px; }
+.pf-recruiter-page .pf-admin-list-item p { font-size: .85rem; line-height: 1.65; margin: 0; }
+.pf-recruiter-error { padding: 14px; margin: 12px 0; border: 1px solid var(--color-danger-border, #e2c4bf); background: var(--color-danger-bg, #fbf0ee); color: var(--color-danger, #934c42); border-radius: 10px; line-height: 1.6; overflow-wrap: anywhere; }
+.pf-recruiter-page :is(button, a, input, select, textarea):focus-visible, .pf-recruiter-overlay :is(button, input, select, textarea):focus-visible { outline: 2px solid var(--color-sage); outline-offset: 3px; }
+.pf-recruiter-overlay .pf-modal-container { min-width: 0; max-height: calc(100dvh - 32px); height: auto; border-radius: 16px; }
+.pf-recruiter-overlay .pf-modal-header { gap: 12px; align-items: flex-start; }
+.pf-recruiter-overlay .pf-modal-title { min-width: 0; overflow-wrap: anywhere; line-height: 1.45; margin: 0; }
+.pf-recruiter-overlay .pf-modal-close { min-width: 40px; min-height: 40px; flex-shrink: 0; }
+.pf-recruiter-overlay .pf-modal-body { min-height: 0; overscroll-behavior: contain; }
+.pf-recruiter-overlay .pf-recruiter-job-form { gap: 18px; }
+.pf-recruiter-overlay .pf-recruiter-job-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.pf-recruiter-overlay .pf-recruiter-job-form :is(label, fieldset) { min-width: 0; }
+.pf-recruiter-overlay .pf-recruiter-job-form :is(input, select, textarea) { min-width: 0; min-height: 44px; }
+.pf-recruiter-overlay .pf-recruiter-job-publish input { min-height: 0; flex-shrink: 0; }
+.pf-recruiter-overlay .pf-recruiter-job-form-actions { flex-wrap: wrap; }
+@container (max-width: 850px) {
+  .pf-recruiter-page .pf-overview-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .pf-recruiter-page .pf-recruiter-quick-links { grid-template-columns: minmax(0, 1fr); }
+}
+@container (max-width: 540px) {
+  .pf-recruiter-page .pf-stat-card { padding: 18px 14px; }
+  .pf-recruiter-page .pf-stat-card__label { font-size: .7rem; letter-spacing: .02em; }
+  .pf-recruiter-page .pf-stat-card__value { font-size: 1.9rem; }
+  .pf-recruiter-page .pf-shared-card, .pf-recruiter-page .pf-rec-history { padding: 16px; }
+  .pf-recruiter-page .pf-shared-student { padding: 12px; }
+  .pf-recruiter-page .pf-shared-student__feedback :is(input, select, button) { width: 100%; flex: none; justify-content: center; }
+  .pf-recruiter-page .pf-recruiter-job-actions-cluster { align-self: stretch; width: 100%; }
+  .pf-recruiter-page .pf-recruiter-job-actions-cluster button { flex: 1 1 130px; }
+  .pf-recruiter-page .pf-rec-respond > label { min-width: 0 !important; flex-basis: 100% !important; }
+  .pf-recruiter-page .pf-rec-respond > button { flex: 1 1 150px; }
+  .pf-recruiter-page .pf-rec-timeline__item { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+}
+@media (max-width: 850px) {
+  .pf-recruiter-shell .pf-dashboard-main { padding-inline: 18px; }
+}
+@media (max-width: 620px) {
+  .pf-recruiter-shell .pf-dashboard-main { padding-inline: 14px; }
+  .pf-recruiter-page { padding: 12px 0 32px; }
+  .pf-recruiter-page .pf-recruiter-jobs--rows { padding-inline: 16px; }
+  .pf-recruiter-page .pf-page-header__title { font-size: 1.7rem; }
+  .pf-recruiter-page .pf-page-header__actions > button { width: 100%; }
+  .pf-recruiter-page :is(.pf-btn, .pf-shared-student__feedback button, .pf-shared-student__resume), .pf-recruiter-overlay .pf-btn { min-height: 44px; }
+  .pf-recruiter-page :is(input, select, textarea), .pf-recruiter-overlay .pf-recruiter-job-form :is(input, select, textarea) { font-size: 16px; }
+  .pf-modal-backdrop.pf-recruiter-overlay { padding: 10px; }
+  .pf-recruiter-overlay .pf-modal-header, .pf-recruiter-overlay .pf-modal-body { padding: 16px; }
+  .pf-recruiter-overlay .pf-recruiter-job-grid { grid-template-columns: minmax(0, 1fr); }
+  .pf-recruiter-overlay .pf-recruiter-job-form-actions > button { flex: 1 1 110px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pf-recruiter-page *, .pf-recruiter-overlay * { animation: none !important; transition: none !important; }
+}

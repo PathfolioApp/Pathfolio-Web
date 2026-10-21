@@ -10,7 +10,7 @@ export const EMPTY_JOB_FORM = {
 };
 
 /** Modal form for creating/editing a recruiter job post. */
-export function JobPostComposer({ open, job, companies, saving, onClose, onSubmit }) {
+export function JobPostComposer({ open, job, companies, saving, error, onClose, onSubmit }) {
   const [jobForm, setJobForm] = React.useState(EMPTY_JOB_FORM);
   const isEditing = Boolean(job);
 
@@ -32,7 +32,10 @@ export function JobPostComposer({ open, job, companies, saving, onClose, onSubmi
     }
   }, [open, job, companies]);
 
-  const update = field => event => setJobForm(prev => ({ ...prev, [field]: event.target.value }));
+  const update = field => event => {
+    const value = event.target.value;
+    setJobForm(prev => ({ ...prev, [field]: value }));
+  };
 
   const handleSubmit = async event => {
     event.preventDefault();
@@ -51,8 +54,9 @@ export function JobPostComposer({ open, job, companies, saving, onClose, onSubmi
   };
 
   return (
-    <Modal isOpen={open} onClose={() => !saving && onClose()} title={isEditing ? `Edit ${job.title}` : 'Create a job post'}>
+    <Modal className="pf-recruiter-overlay" maxWidth="720px" isOpen={open} onClose={() => !saving && onClose()} title={isEditing ? `Edit ${job.title}` : 'Create a job post'}>
       <form className="pf-recruiter-job-form" onSubmit={handleSubmit}>
+        {error && <div className="pf-recruiter-error" role="alert">{error}</div>}
         <label>Company *<input required list="recruiter-company-options" value={jobForm.companyName} onChange={update('companyName')} placeholder="e.g. Acme Systems" maxLength={180} />
           <datalist id="recruiter-company-options">
             {companies.map(company => <option key={company.id} value={company.name} />)}
@@ -79,7 +83,7 @@ export function JobPostComposer({ open, job, companies, saving, onClose, onSubmi
         </fieldset>
         <label className="pf-recruiter-job-url">External application URL<input type="url" value={jobForm.applicationUrl} onChange={update('applicationUrl')} placeholder="https://careers.company.com/role" /></label>
         <label className="pf-recruiter-job-publish">
-          <input type="checkbox" checked={jobForm.submit} onChange={event => setJobForm(prev => ({ ...prev, submit: event.target.checked }))} />
+          <input type="checkbox" checked={jobForm.submit} onChange={event => { const checked = event.target.checked; setJobForm(prev => ({ ...prev, submit: checked })); }} />
           {isEditing ? 'Submit for admin approval after saving' : 'Submit for admin approval immediately'}
         </label>
         <p className="pf-recruiter-job-hint" style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '-6px' }}>

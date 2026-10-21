@@ -192,7 +192,7 @@ export function SharedCandidates() {
                         )}
                         <select
                           value={draft.status || ''}
-                          onChange={e => setFeedbackDraft(prev => ({ ...prev, [`${share.id}:${student.id}`]: { ...draft, status: e.target.value || null } }))}
+                          onChange={e => { const status = e.target.value || null; setFeedbackDraft(prev => ({ ...prev, [`${share.id}:${student.id}`]: { ...prev[`${share.id}:${student.id}`], status } })); }}
                           aria-label="Feedback type"
                         >
                           <option value="">Feedback type…</option>
@@ -200,9 +200,10 @@ export function SharedCandidates() {
                         </select>
                         <input
                           type="text"
+                          aria-label={`Feedback for ${student.fullName}`}
                           placeholder="Add feedback for the placement team (optional)…"
                           value={draft.feedback || ''}
-                          onChange={e => setFeedbackDraft(prev => ({ ...prev, [`${share.id}:${student.id}`]: { ...draft, feedback: e.target.value } }))}
+                          onChange={e => { const feedback = e.target.value; setFeedbackDraft(prev => ({ ...prev, [`${share.id}:${student.id}`]: { ...prev[`${share.id}:${student.id}`], feedback } })); }}
                         />
                         <button type="button" disabled={savingFeedback || (!draft.feedback && !draft.status)} onClick={() => submitFeedback(share, student)}>
                           <MessageSquare size={13} /> {savingFeedback ? 'Saving…' : 'Send'}
