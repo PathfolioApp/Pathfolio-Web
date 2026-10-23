@@ -1,7 +1,7 @@
 # Deploy resume PDF export on Render and Vercel
 
 This guide assumes **Vercel hosts the frontend and Render hosts the Express API**.
-The API generates PDFs using Puppeteer and Chrome. The frontend does not need a
+The API generates PDFs using Puppeteer (puppeteer-core) and Chromium. The frontend does not need a
 browser binary. Pushing the code alone is sufficient only after this backend
 setup has been verified with a successful deployed PDF export.
 
@@ -32,7 +32,7 @@ Under **Environment**, add:
 
 ```env
 NODE_VERSION=22.21.0
-PUPPETEER_CACHE_DIR=/opt/render/project/src/.cache/puppeteer
+PUPPETEER_CACHE_DIR=/opt/render/project/src/api/.cache/puppeteer
 ```
 
 Node 22.21.0 matches the locally tested version; the installed Puppeteer requires
@@ -46,7 +46,7 @@ Puppeteer's dependency installation script. See
 [Puppeteer's browser installation and cache guidance](https://pptr.dev/troubleshooting).
 
 Leave `PUPPETEER_EXECUTABLE_PATH` unset unless you intentionally manage a
-compatible Chrome installation yourself. Do not copy a Windows Chrome path
+compatible Chromium installation yourself. Do not copy a Windows Chromium path
 from the local machine into Render. Remove `PUPPETEER_SKIP_DOWNLOAD=true` from
 the API service if it prevents the required browser installation.
 
@@ -98,17 +98,17 @@ when using that fallback.
 
 | Symptom or log | What to check |
 | --- | --- |
-| `Could not find Chrome` | Confirm the browser-install step succeeded and the same absolute cache directory is available to the API runtime. Rebuild after changing the cache setting. |
+| `Could not find Chromium` | Confirm the browser-install step succeeded and the same absolute cache directory is available to the API runtime. Rebuild after changing the cache setting. |
 | A shared formatter module cannot be found | Leave Render Root Directory empty and include `shared/` in the deployment. |
-| Chrome reports a missing `.so` library | The runtime lacks a Linux dependency. Use a properly configured host/container with the required libraries; downloading Chrome alone does not install those system packages. |
-| `No usable sandbox` or a sandbox launch error | The host must support Chrome's sandbox or provide a suitable isolated browser runtime. Do not disable the sandbox as a blanket fix for rendering user-supplied documents. |
+| Chromium reports a missing `.so` library | The runtime lacks a Linux dependency. Use a properly configured host/container with the required libraries; downloading Chrome alone does not install those system packages. |
+| `No usable sandbox` or a sandbox launch error | The host must support Chromium's sandbox or provide a suitable isolated browser runtime. Do not disable the sandbox as a blanket fix for rendering user-supplied documents. |
 | Requests still go to the Vercel API | Correct `VITE_API_BASE_URL` and rebuild/redeploy the frontend. |
-| Browser killed, service restarts, or timeouts | Inspect runtime logs and memory/CPU usage. Check the hosting plan can run Chrome within the application's rendering deadline. |
+| Browser killed, service restarts, or timeouts | Inspect runtime logs and memory/CPU usage. Check the hosting plan can run Chromium within the application's rendering deadline. |
 | Studio and library downloads differ | Save Studio changes first and compare the same saved record. Unsaved content is included only in the current Studio export. |
 
 Puppeteer's [Linux dependencies and sandbox troubleshooting](https://pptr.dev/troubleshooting)
 describe the runtime prerequisites. Render's native runtime is not verified for
-this project's Chrome configuration yet; these settings establish installation
+this project's Chromium configuration yet; these settings establish installation
 and routing, but successful deployed export is the final verification. If native
 hosting lacks the necessary system support, use a compatible API host/container
 and repeat the checks above.
@@ -129,4 +129,4 @@ Render API rather than assuming Vercel's function can generate these PDFs.
 After a deployed export succeeds, normal pushes can trigger both deployments
 when automatic deployment is enabled. Keep `shared/` covered by deployment
 filters, retain the browser-install step, and recheck PDF export after changing
-Puppeteer, Chrome, the Node version, or the hosting runtime.
+puppeteer-core, Chromium, the Node version, or the hosting runtime.

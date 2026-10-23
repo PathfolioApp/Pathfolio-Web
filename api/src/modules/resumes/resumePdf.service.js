@@ -1,4 +1,6 @@
 const log = require('../../shared/logger');
+const path = require('path');
+const fs = require('fs');
 
 const MAX_HTML_BYTES = 512 * 1024;
 const MAX_CONCURRENT_EXPORTS = 2;
@@ -18,14 +20,58 @@ function validateHtml(html) {
   }
 }
 
+/**
+ * Resolve the Chromium executable path.
+ *
+ * Priority:
+ *   1. PUPPETEER_EXECUTABLE_PATH env var (explicit override)
+ *   2. Auto-detect from the local browser cache written by
+ *      `npm run pdf:install-browser` (@puppeteer/browsers install chromium)
+ *   3. Fail with a clear message
+ */
+function resolveChromiumPath() {
+  if (process.env.PUPPETEER_EXECUTABLE_PATH) return process.env.PUPPETEER_EXECUTABLE_PATH;
+
+  // Auto-detect from the browser cache written by @puppeteer/browsers.
+  const cacheDir = process.env.PUPPETEER_CACHE_DIR || path.resolve(__dirname, '../../../.cache/puppeteer');
+  const chromiumDir = path.join(cacheDir, 'chromium');
+  if (fs.existsSync(chromiumDir)) {
+    try {
+      // Structure: chromium/<buildId>/<platform>/chrome-<platform>/chrome(.exe)
+      const buildIds = fs.readdirSync(chromiumDir).sort().reverse();
+      for (const buildId of buildIds) {
+        const buildDir = path.join(chromiumDir, buildId);
+        if (!fs.statSync(buildDir).isDirectory()) continue;
+        const platforms = fs.readdirSync(buildDir);
+        for (const plat of platforms) {
+          const platDir = path.join(buildDir, plat);
+          if (!fs.statSync(platDir).isDirectory()) continue;
+          const candidates = process.platform === 'win32'
+            ? [path.join(platDir, 'chrome-win', 'chrome.exe'), path.join(platDir, 'chrome.exe')]
+            : [path.join(platDir, 'chrome-linux', 'chrome'), path.join(platDir, 'chrome')];
+          for (const c of candidates) {
+            if (fs.existsSync(c)) return c;
+          }
+        }
+      }
+    } catch { /* fall through */ }
+  }
+
+  throw failure(
+    'Chromium executable not found. Run "npm run pdf:install-browser" or set PUPPETEER_EXECUTABLE_PATH.',
+    503
+  );
+}
+
 async function getBrowser() {
   clearTimeout(idleTimer);
   if (!browserPromise) {
-    const pending = import('puppeteer').then(({ default: puppeteer }) => puppeteer.launch({
+    const executablePath = resolveChromiumPath();
+    const pending = import('puppeteer-core').then(({ default: puppeteer }) => puppeteer.launch({
+      executablePath,
       headless: true,
       timeout: 10_000,
       protocolTimeout: 15_000,
-      ...(process.env.PUPPETEER_EXECUTABLE_PATH ? { executablePath: process.env.PUPPETEER_EXECUTABLE_PATH } : {})
     }));
     browserPromise = pending;
     pending.then(browser => browser.on('disconnected', () => {
@@ -34,8 +80,8 @@ async function getBrowser() {
   }
   try { return await browserPromise; }
   catch (error) {
-    log.api.warn('[Resume PDF] Chrome could not start.', { reason: error.message });
-    throw failure('PDF export is unavailable. Check the server’s Chrome installation or use Print / Save as PDF.', 503);
+    log.api.warn('[Resume PDF] Chromium could not start.', { reason: error.message });
+    throw failure('PDF export is unavailable. Check the server\u2019s Chromium installation or use Print / Save as PDF.', 503);
   }
 }
 
@@ -74,7 +120,7 @@ async function renderResumePdf(html) {
       await page.setViewport({ width: 794, height: 1123, deviceScaleFactor: 1 });
       await page.emulateMediaType('print');
       const policy = '<meta http-equiv="Content-Security-Policy" content="default-src &#39;none&#39;; style-src &#39;unsafe-inline&#39;; img-src &#39;none&#39;; font-src &#39;none&#39;; frame-src &#39;none&#39;; object-src &#39;none&#39;; form-action &#39;none&#39;">';
-      const document = html.replace(/<head(?:\s[^>]*)?>/i, match => match + policy);
+      const document = html.replace(/<head(?:\s[^>]*)?>/, match => match + policy);
       await page.setContent(document, { waitUntil: 'domcontentloaded', timeout: 8_000 });
       const { DENSITY_LIMITS } = await import('../../../../shared/resume/resumeDocument.mjs');
       await page.evaluate(async limits => {

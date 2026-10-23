@@ -7,7 +7,7 @@
     "dev": "concurrently --kill-others --names \"api,web\" --prefix-colors \"bgCyan.bold,bgMagenta.bold\" \"pnpm run dev:api\" \"pnpm run dev:frontend\"",
     "dev:frontend": "pnpm --dir frontend run dev",
     "dev:api": "pnpm --dir api run dev",
-    "install:all": "pnpm install && pnpm --dir api install && pnpm --dir frontend install",
+    "install:all": "pnpm install && pnpm --dir api install && pnpm --dir frontend install && pnpm --dir api run pdf:install-browser",
     "build": "pnpm --dir frontend run build",
     "build:frontend": "pnpm --dir frontend run build",
     "start": "concurrently --kill-others-on-fail --names \"api,web\" --prefix-colors \"bgCyan.bold,bgMagenta.bold\" \"pnpm run start:api\" \"pnpm run start:frontend\"",
