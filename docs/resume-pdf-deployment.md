@@ -101,7 +101,7 @@ when using that fallback.
 | `Could not find Chromium` | Confirm the browser-install step succeeded and the same absolute cache directory is available to the API runtime. Rebuild after changing the cache setting. |
 | A shared formatter module cannot be found | Leave Render Root Directory empty and include `shared/` in the deployment. |
 | Chromium reports a missing `.so` library | The runtime lacks a Linux dependency. Use a properly configured host/container with the required libraries; downloading Chrome alone does not install those system packages. |
-| `No usable sandbox` or a sandbox launch error | The host must support Chromium's sandbox or provide a suitable isolated browser runtime. Do not disable the sandbox as a blanket fix for rendering user-supplied documents. |
+| `No usable sandbox` or a sandbox launch error | The host must support Chromium's sandbox or provide a suitable isolated browser runtime. Do not disable the sandbox as a blanket fix for rendering user-supplied documents. For a container that blocks it, see [Pterodactyl-style containers](#if-the-api-runs-in-a-pterodactyl-container). |
 | Requests still go to the Vercel API | Correct `VITE_API_BASE_URL` and rebuild/redeploy the frontend. |
 | Browser killed, service restarts, or timeouts | Inspect runtime logs and memory/CPU usage. Check the hosting plan can run Chromium within the application's rendering deadline. |
 | Studio and library downloads differ | Save Studio changes first and compare the same saved record. Unsaved content is included only in the current Studio export. |
@@ -112,6 +112,32 @@ this project's Chromium configuration yet; these settings establish installation
 and routing, but successful deployed export is the final verification. If native
 hosting lacks the necessary system support, use a compatible API host/container
 and repeat the checks above.
+
+## If the API runs in a Pterodactyl container
+
+Pterodactyl runs servers as an unprivileged user with Docker's default seccomp
+profile, which blocks the user-namespace sandbox, and there is no way to install
+a setuid helper inside the server container. Chromium therefore aborts with
+`No usable sandbox` and PDF export returns HTTP 503.
+
+In that environment the container is the isolation boundary, so opt out of the
+browser sandbox explicitly:
+
+```env
+PUPPETEER_NO_SANDBOX=1
+PUPPETEER_CACHE_DIR=/home/container/api/.cache/puppeteer
+```
+
+Set both as startup variables and restart the server. The API logs a warning at
+startup while the override is active. Keep the cache directory inside the
+persisted server volume, or Chromium is re-downloaded on every restart. The
+export path is already restricted to the resume's own HTML: JavaScript is
+disabled, every document request is aborted, and a strict CSP is injected. Do
+not set this on a shared host where the container is not the isolation boundary.
+
+Also allow at least 1 GB of memory; headless Chromium plus Node is unstable below
+that. `--disable-dev-shm-usage` is already part of Puppeteer's default arguments,
+which matters because Pterodactyl's `/dev/shm` is small.
 
 ## If the API also runs on Vercel
 

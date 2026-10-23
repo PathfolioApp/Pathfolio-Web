@@ -45,9 +45,15 @@ pnpm --dir api run pdf:install-browser
 The API process must be able to read and execute that browser. In deployments,
 install it under the same OS user, keep its browser cache available at runtime,
 or set `PUPPETEER_EXECUTABLE_PATH` to a compatible server-installed Chrome.
-Linux servers also need Chrome's system libraries and a functioning sandbox;
-do not disable the sandbox to work around a hosting configuration problem.
-Puppeteer's [installation guide](https://pptr.dev/guides/installation) and
+Linux servers also need Chrome's system libraries and a functioning sandbox.
+
+Do not disable the sandbox to work around a hosting configuration problem. The
+one exception is a container platform that blocks both the user-namespace and
+setuid sandboxes, such as Pterodactyl. There the container is already the
+isolation boundary, so set `PUPPETEER_NO_SANDBOX=1` for the API process instead
+of running Chromium unconfined on a shared host. The API logs a warning at
+startup when that override is active. Puppeteer's
+[installation guide](https://pptr.dev/guides/installation) and
 [troubleshooting guide](https://pptr.dev/troubleshooting) describe the platform requirements.
 
 **Vercel:** the current project uses a 30-second serverless function. Installing

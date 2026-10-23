@@ -11,6 +11,23 @@ let idleTimer = null;
 
 const failure = (message, statusCode) => Object.assign(new Error(message), { statusCode });
 
+/**
+ * Chromium's renderer sandbox needs either unprivileged user namespaces or a
+ * setuid helper. Some container platforms (e.g. Pterodactyl) block both, so the
+ * browser aborts with "No usable sandbox". There the container is the isolation
+ * boundary; opt out explicitly rather than silently weakening every deployment.
+ */
+function sandboxDisabled() {
+  return /^(1|true|yes)$/i.test(String(process.env.PUPPETEER_NO_SANDBOX || '').trim());
+}
+
+if (sandboxDisabled()) {
+  log.api.warn(
+    '[Resume PDF] Chromium sandbox disabled by PUPPETEER_NO_SANDBOX. ' +
+    'Only do this where the container itself is the isolation boundary.'
+  );
+}
+
 function validateHtml(html) {
   if (typeof html !== 'string' || !/^\s*<!doctype html>/i.test(html)) {
     throw failure('A printable resume document is required.', 400);
@@ -78,11 +95,15 @@ async function getBrowser() {
     const pending = (async () => {
       const executablePath = await resolveChromiumPath();
       const { default: puppeteer } = await import('puppeteer-core');
+      const args = sandboxDisabled()
+        ? ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
+        : [];
       return puppeteer.launch({
         executablePath,
         headless: true,
         timeout: 10_000,
         protocolTimeout: 15_000,
+        args,
       });
     })();
     browserPromise = pending;
@@ -92,7 +113,13 @@ async function getBrowser() {
   }
   try { return await browserPromise; }
   catch (error) {
-    log.api.warn('[Resume PDF] Chromium could not start.', { reason: error.message });
+    const noSandbox = /No usable sandbox/i.test(error.message || '');
+    log.api.warn('[Resume PDF] Chromium could not start.', {
+      reason: error.message,
+      ...(noSandbox
+        ? { hint: 'Host blocks the browser sandbox. Set PUPPETEER_NO_SANDBOX=1 only where the container is the isolation boundary.' }
+        : {}),
+    });
     throw failure('PDF export is unavailable. Check the server\u2019s Chromium installation or use Print / Save as PDF.', 503);
   }
 }
