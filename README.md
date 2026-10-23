@@ -261,12 +261,16 @@ The frontend reads these values from `frontend/.env`:
 | --- | --- |
 | `VITE_HOST` | Vite bind address (use `0.0.0.0` for external access) |
 | `VITE_PORT` | Frontend port |
-| `VITE_API_BASE_URL` | API URL embedded in the frontend production bundle |
+| `VITE_API_BASE_URL` | API URL embedded in the frontend production bundle (empty = same origin) |
 | `VITE_API_PROXY_TARGET` | API target used by the Vite proxy |
 
-For the production host in this deployment, use `http://139.99.121.67:25613`
-for the frontend and `http://139.99.121.67:25569` for the API. Keep
-`api/.env` `CLIENT_ORIGIN` aligned with the frontend URL.
+The production deployment serves the frontend and the API on the SAME
+hostname: `https://pathfolio.potenfyr.in/` (frontend) and
+`https://pathfolio.potenfyr.in/api/` (API behind the reverse proxy). Keep
+`VITE_API_BASE_URL` empty so the built bundle calls relative `/api/...`
+requests against its own origin. If `API_KEY` is set in `api/.env`, set
+`VITE_API_KEY` in `frontend/.env` to exactly the same value before building,
+or every request will be rejected with 401.
 
 ---
 

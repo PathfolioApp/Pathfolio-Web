@@ -32,16 +32,44 @@ const app = express();
 // Transparent when unset, so local/volatile development needs no key.
 app.use(apiKeyAuth);
 
-app.use(cors({
-  origin: (origin, callback) => {
-    if (!origin || config.clientOrigins.includes(origin)) return callback(null, true);
-    // A structured 403 (not a thrown error) so browsers render a real response
-    // instead of surfacing a raw config string in the app's UI.
-    return callback(null, false);
-  },
+// CORS policy. `CLIENT_ORIGIN` stays the explicit allowlist. Additionally,
+// when the API is deployed on a subdomain of the frontend's site (frontend at
+// https://pathfolio.potenfyr.in, API at https://api.pathfolio.potenfyr.in),
+// origins on that same site are accepted automatically. Without this, a
+// domain change or new deployment fails with the bare browser error
+// "no 'Access-Control-Allow-Origin' header is present" even though the API
+// itself is healthy. The request-scoped form of `cors` gives access to the
+// Host header, which the reverse proxy forwards from the public URL.
+const corsBaseOptions = {
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-API-Key']
+};
+
+const requestHostname = url => {
+  try { return new URL(url).hostname.toLowerCase(); } catch { return ''; }
+};
+
+app.use(cors((req, callback) => {
+  const origin = req.headers.origin;
+  const host = (req.headers.host || '').split(':')[0].toLowerCase();
+  // Subdomain-equals-site: api.pathfolio.potenfyr.in -> pathfolio.potenfyr.in
+  const parentSite = host.includes('.') ? host.split('.').slice(1).join('.') : '';
+
+  if (!origin
+    || config.clientOrigins.includes(origin)
+    || (host && requestHostname(origin) === host)
+    || (parentSite && requestHostname(origin) === parentSite)) {
+    // `origin: true` echoes the request Origin; combined with credentials
+    // this is what the matching allowed origin needs to see.
+    return callback(null, { ...corsBaseOptions, origin: true });
+  }
+
+  // No CORS headers -> the browser blocks the response, but the request
+  // still runs server-side. Log once per rejection so deployments can see
+  // exactly which origin was refused and which hosts the API serves.
+  log.api.warn(`CORS: rejecting origin ${origin} (api host=${host || 'unknown'}, allowlist=${config.clientOrigins.join(', ') || 'empty'})`);
+  return callback(null, { ...corsBaseOptions, origin: false });
 }));
 
 app.use(express.json({ limit: '1mb' }));
