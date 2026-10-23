@@ -88,11 +88,8 @@ export function LandingPage() {
                 </div>
                 {/* Visual Card Header */}
                 <div className="pf-preview-card__top">
-                  <div className="pf-preview-card__avatar">
-                    <img src="/images/ananya-sharma.jpg" alt="Portrait of Ananya Sharma, a fictional student" width="56" height="56" decoding="async" />
-                  </div>
                   <div className="pf-preview-card__meta">
-                    <h3 className="pf-preview-card__name">Ananya Sharma</h3>
+                    <h3 className="pf-preview-card__name">Akarshan Gupta</h3>
                     <p className="pf-preview-card__enrollment">
                       Computer Science • Class of 2028
                     </p>

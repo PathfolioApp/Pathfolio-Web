@@ -145,7 +145,7 @@ export function StageRenderer({ milestoneManagerRef }) {
                 autoFocus
                 value={formData.personal.fullName}
                 onChange={(e) => updatePersonal('fullName', e.target.value)}
-                placeholder="e.g. Ananya Sharma"
+                placeholder="e.g. Akarshan Gupta"
                 className={`pf-stage-hero-input ${errors.fullName ? 'is-error' : ''}`}
                 maxLength={80}
               />

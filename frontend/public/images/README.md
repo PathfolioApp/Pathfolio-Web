@@ -1,6 +1,6 @@
 # Landing page portrait
 
-`ananya-sharma.jpg` is an AI-generated portrait of a fictional student for the landing page's example profile. It does not depict a real student or testimonial.
+`ananya-sharma.jpg` is an AI-generated portrait of a fictional student, previously used for the landing page's example profile. It is no longer referenced by the landing page but is kept for archival purposes. It does not depict a real student or testimonial.
 
 Created with the built-in image generation tool, then resized to a 192 × 192 JPEG for the 56px avatar (approximately 9.5 KB). The image is bundled locally and does not contact an external image host.
 
