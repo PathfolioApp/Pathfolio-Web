@@ -25,19 +25,28 @@ function validateHtml(html) {
  *
  * Priority:
  *   1. PUPPETEER_EXECUTABLE_PATH env var (explicit override)
- *   2. Auto-detect from the local browser cache written by
- *      `npm run pdf:install-browser` (@puppeteer/browsers install chromium)
- *   3. Fail with a clear message
+ *   2. getInstalledBrowsers from @puppeteer/browsers
+ *   3. Manual directory scan of local browser cache (.cache/puppeteer)
  */
-function resolveChromiumPath() {
+async function resolveChromiumPath() {
   if (process.env.PUPPETEER_EXECUTABLE_PATH) return process.env.PUPPETEER_EXECUTABLE_PATH;
 
-  // Auto-detect from the browser cache written by @puppeteer/browsers.
   const cacheDir = process.env.PUPPETEER_CACHE_DIR || path.resolve(__dirname, '../../../.cache/puppeteer');
+
+  try {
+    const { getInstalledBrowsers, Browser } = await import('@puppeteer/browsers');
+    const installed = await getInstalledBrowsers({ cacheDir });
+    const match = installed.find(b => b.browser === Browser.CHROMIUM || b.browser === 'chromium');
+    if (match && match.executablePath && fs.existsSync(match.executablePath)) {
+      return match.executablePath;
+    }
+  } catch {
+    // Fall back to filesystem scan
+  }
+
   const chromiumDir = path.join(cacheDir, 'chromium');
   if (fs.existsSync(chromiumDir)) {
     try {
-      // Structure: chromium/<buildId>/<platform>/chrome-<platform>/chrome(.exe)
       const buildIds = fs.readdirSync(chromiumDir).sort().reverse();
       for (const buildId of buildIds) {
         const buildDir = path.join(chromiumDir, buildId);
@@ -66,13 +75,16 @@ function resolveChromiumPath() {
 async function getBrowser() {
   clearTimeout(idleTimer);
   if (!browserPromise) {
-    const executablePath = resolveChromiumPath();
-    const pending = import('puppeteer-core').then(({ default: puppeteer }) => puppeteer.launch({
-      executablePath,
-      headless: true,
-      timeout: 10_000,
-      protocolTimeout: 15_000,
-    }));
+    const pending = (async () => {
+      const executablePath = await resolveChromiumPath();
+      const { default: puppeteer } = await import('puppeteer-core');
+      return puppeteer.launch({
+        executablePath,
+        headless: true,
+        timeout: 10_000,
+        protocolTimeout: 15_000,
+      });
+    })();
     browserPromise = pending;
     pending.then(browser => browser.on('disconnected', () => {
       if (browserPromise === pending) browserPromise = null;
@@ -108,14 +120,12 @@ async function renderResumePdf(html) {
     try {
       const browser = await getBrowser();
       checkDeadline();
-      // A fresh context prevents cookies and document data crossing between exports.
       context = await browser.createBrowserContext();
       checkDeadline();
       const page = await context.newPage();
       checkDeadline();
       await page.setJavaScriptEnabled(false);
       await page.setRequestInterception(true);
-      // Resume HTML is self-contained: no network, local files, external fonts or embeds.
       page.on('request', request => { request.abort().catch(() => {}); });
       await page.setViewport({ width: 794, height: 1123, deviceScaleFactor: 1 });
       await page.emulateMediaType('print');
