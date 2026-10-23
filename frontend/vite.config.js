@@ -5,7 +5,7 @@ import react from '@vitejs/plugin-react';
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
   const apiTarget = env.VITE_API_PROXY_TARGET || 'http://localhost:5000';
-  const allowedHosts = (env.VITE_ALLOWED_HOSTS || 'sg1.potenfyr.in')
+  const allowedHosts = (env.VITE_ALLOWED_HOSTS || 'pathfolio.potenfyr.in')
     .split(',')
     .map(host => host.trim())
     .filter(Boolean);

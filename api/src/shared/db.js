@@ -5,7 +5,7 @@
  * ----------------------
  * Every store used to build its own pool with `mysql.createPool({ ... })` and
  * no resilience settings, and nothing classified driver errors. On this
- * deployment - a *remote, shared* MySQL at sg1.potenfyr.in - the server
+ * deployment - a *remote, shared* MySQL at api.pathfolio.potenfyr.in - the server
  * regularly drops pooled connections between requests:
  *
  *   Aborted_clients 257 / Connections 421   (SHOW GLOBAL STATUS)
