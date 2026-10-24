@@ -16,6 +16,7 @@ import {
   UserCheck,
   BriefcaseBusiness,
   Users,
+  User,
   FileSearch,
   Building2
 } from 'lucide-react';
@@ -88,13 +89,17 @@ export function LandingPage() {
                 </div>
                 {/* Visual Card Header */}
                 <div className="pf-preview-card__top">
+                  <div className="pf-preview-card__avatar" aria-hidden="true">
+                    <User size={28} strokeWidth={1.6} />
+                  </div>
                   <div className="pf-preview-card__meta">
                     <h3 className="pf-preview-card__name">Akarshan Gupta</h3>
                     <p className="pf-preview-card__enrollment">
-                      Computer Science • Class of 2028
+                      <span>Computer Science</span>
+                      <span>Class of 2027</span>
                     </p>
                   </div>
-                  <Badge variant="sage" size="sm">Journey started</Badge>
+                  <Badge variant="sage" size="sm">Journey in progress</Badge>
                 </div>
 
                 {/* Example interests and milestone */}
@@ -125,7 +130,7 @@ export function LandingPage() {
 
                   <div className="pf-preview-timeline-hint">
                     <div className="pf-preview-timeline-dot" />
-                    <span>Year 1 • Your next chapter is taking shape</span>
+                    <span>Learning, building, and finding what comes next.</span>
                   </div>
                 </div>
               </div>
