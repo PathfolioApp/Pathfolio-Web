@@ -2,6 +2,7 @@ const studentStore = require('../students/studentStore');
 const { GENERIC_TERMS, createMatcher } = require('../../shared/textMatch');
 const embeddingStore = require('./embeddingStore');
 const { cosineSimilarity } = require('./embedding.service');
+let activeAnalyses = 0;
 
 /**
  * Skill taxonomy. Each entry maps a canonical skill to the aliases that may
@@ -11,15 +12,15 @@ const SKILLS = [
   // Frontend
   { name: 'JavaScript', domain: 'Frontend', aliases: ['javascript', 'js', 'ecmascript', 'es6'] },
   { name: 'TypeScript', domain: 'Frontend', aliases: ['typescript', 'ts'] },
-  { name: 'React', domain: 'Frontend', aliases: ['react', 'reactjs', 'react.js', 'react native', 'vite'] },
-  { name: 'Next.js', domain: 'Frontend', aliases: ['next.js', 'nextjs', 'next'] },
+  { name: 'React', domain: 'Frontend', aliases: ['react', 'reactjs', 'react.js', 'react native'] },
+  { name: 'Next.js', domain: 'Frontend', aliases: ['next.js', 'nextjs'] },
   { name: 'Vue', domain: 'Frontend', aliases: ['vue', 'vuejs', 'vue.js', 'nuxt'] },
   { name: 'Angular', domain: 'Frontend', aliases: ['angular', 'angularjs'] },
-  { name: 'HTML & CSS', domain: 'Frontend', aliases: ['html', 'css', 'sass', 'scss', 'less'] },
+  { name: 'HTML & CSS', domain: 'Frontend', aliases: ['html', 'css', 'sass', 'scss'] },
   { name: 'Tailwind CSS', domain: 'Frontend', aliases: ['tailwind', 'tailwindcss', 'tailwind css'] },
-  { name: 'Redux', domain: 'Frontend', aliases: ['redux', 'zustand', 'recoil'] },
+  { name: 'Redux', domain: 'Frontend', aliases: ['redux'] },
   { name: 'UI/UX Design', domain: 'Design', aliases: ['ui/ux', 'ui ux', 'ux design', 'ui design', 'user experience', 'user interface'] },
-  { name: 'Figma', domain: 'Design', aliases: ['figma', 'sketch', 'adobe xd'] },
+  { name: 'Figma', domain: 'Design', aliases: ['figma'] },
   { name: 'Product Design', domain: 'Design', aliases: ['product design', 'interaction design', 'design thinking'] },
 
   // Backend & languages
@@ -40,7 +41,7 @@ const SKILLS = [
   { name: 'GraphQL', domain: 'Backend', aliases: ['graphql'] },
   { name: 'Microservices', domain: 'Backend', aliases: ['microservice', 'microservices'] },
   { name: 'Prisma & ORM', domain: 'Backend', aliases: ['prisma', 'typeorm', 'hibernate', 'sqlalchemy'] },
-  { name: 'Redis', domain: 'Backend', aliases: ['redis', 'caching'] },
+  { name: 'Redis', domain: 'Backend', aliases: ['redis'] },
   { name: 'Kafka / Messaging', domain: 'Backend', aliases: ['kafka', 'apache kafka', 'rabbitmq', 'message queue'] },
   { name: 'Kotlin', domain: 'Mobile', aliases: ['kotlin'] },
   { name: 'Swift', domain: 'Mobile', aliases: ['swift', 'ios'] },
@@ -106,7 +107,7 @@ const DOMAIN_KEYWORDS = [
 const DEPARTMENT_ALIASES = [
   { match: /comput|software|information technology|\bit\b|cse|programming/i, label: 'Computer Science & Engineering' },
   { match: /data science|artificial intelligence|\bai\b|\bds\b|machine learning/i, label: 'Data Science & Artificial Intelligence' },
-  { match: /electronic|communication|\bece\b|ece|vlsi|embedded/i, label: 'Electronics & Communication Engineering' },
+  { match: /electronic|\bece\b|vlsi|embedded systems|communication engineering/i, label: 'Electronics & Communication Engineering' },
   { match: /electrical|\bee\b|power systems/i, label: 'Electrical Engineering' },
   { match: /mechanical|mechatronics|automobile|robotics/i, label: 'Mechanical Engineering' },
   { match: /civil|structural|construction/i, label: 'Civil Engineering' },
@@ -119,7 +120,7 @@ const DEPARTMENT_ALIASES = [
 
 const EDUCATION_KEYWORDS = [
   ['Bachelor of Technology (B.Tech)', /b\.?tech|bachelor of technology|undergraduate engineering/i],
-  ['Bachelor of Engineering (B.E.)', /b\.?e\.?\b|bachelor of engineering/i],
+  ['Bachelor of Engineering (B.E.)', /\bB\.?E\.?(?=\W|$)|[Bb]achelor of [Ee]ngineering/],
   ['Master of Technology (M.Tech)', /m\.?tech|master of technology/i],
   ['Master of Computer Applications (MCA)', /\bmca\b|master of computer applications/i],
   ['Master of Business Administration (MBA)', /\bmba\b|master of business administration/i],
@@ -145,10 +146,19 @@ const SKILL_INDEX = SKILLS.map(skill => ({
 
 function detectSkills(text) {
   const found = [];
+  const clauses = positiveClauses(text);
   for (const skill of SKILL_INDEX) {
-    if (skill.patterns.some(pattern => pattern.regex.test(text))) found.push(skill.name);
+    if (clauses.some(clause => skill.patterns.some(pattern => pattern.regex.test(clause)))) found.push(skill.name);
   }
   return found;
+}
+
+// Conservative clause exclusion: negated or explicitly unnecessary requirements
+// are not positive evidence. Split sentences without breaking Node.js or 7.0.
+function positiveClauses(text) {
+  return String(text).split(/\r?\n|;|\.(?:\s|$)/).filter(clause =>
+    !/\b(?:not required|not necessary|no experience|no knowledge|without experience|do not require|does not require|not used|never used)\b/i.test(clause)
+    && !/\bno\b.+\brequired\b/i.test(clause));
 }
 
 function detectDomains(text) {
@@ -161,8 +171,11 @@ function detectDomains(text) {
 
 function detectDepartments(text) {
   const found = [];
+  // Branch constraints come from education/eligibility clauses, never generic
+  // responsibilities such as communication, design, research or finance work.
+  const eligibilityText = String(text).split(/\r?\n|;|\.(?:\s|$)/).filter(line => /degree|bachelor|master|b\.?tech|b\.e\.|\bBE\b|branch|department|eligible|engineering|graduate/i.test(line)).join(' ');
   for (const entry of DEPARTMENT_ALIASES) {
-    if (entry.match.test(text)) found.push(entry.label);
+    if (entry.match.test(eligibilityText)) found.push(entry.label);
   }
   return [...new Set(found)];
 }
@@ -188,10 +201,16 @@ function extractMinCgpa(text) {
 }
 
 function extractExperienceYears(text) {
-  const match = text.match(/(\d{1,2})\s*\+?\s*(?:to\s*\d{1,2}\s*)?years?/i);
+  const match = text.match(/\b(\d{1,2})\s*(?:(?:-|–|—|to)\s*\d{1,2}\s*)?\+?\s*years?\b/i);
   if (!match) return null;
   const value = Number(match[1]);
-  return Number.isFinite(value) && value > 0 ? value : null;
+  return Number.isFinite(value) && value >= 0 ? value : null;
+}
+
+function experienceLabel(text, minimum) {
+  const range = text.match(/\b(\d{1,2})\s*(?:-|–|—|to)\s*(\d{1,2})\s*years?\b/i);
+  if (range) return `${range[1]}–${range[2]} years`;
+  return minimum === null ? (/\bfresher|entry.level\b/i.test(text) ? 'Fresher / entry-level' : 'Not specified') : `${minimum}+ years`;
 }
 
 function extractKeywords(text, excluded = []) {
@@ -245,7 +264,8 @@ function extractResponsibilities(text) {
     // Filter out introductory company / recruitment statements
     .filter(line => !/^(we are (looking for|seeking|hiring)|about (the|us)|join (our|us)|welcome to)/i.test(line))
     .filter(line => line.length >= 20 && line.length <= 220)
-    .filter(line => /(you will|responsib|build|design|develop|manage|lead|own|collaborat|analyz|analys|implement|maintain|support|conduct|test|deploy|engineer|architect)/i.test(line))
+    .filter(line => !/^(?:bachelor|master|minimum|qualifications?|requirements?)\b/i.test(line))
+    .filter(line => /(you will|responsib|build|design|develop|manage|lead|own|collaborat|analyz|analys|implement|maintain|support|conduct|test|deploy|architect)/i.test(line))
     .slice(0, 6);
 }
 
@@ -255,14 +275,16 @@ function buildSummary(analysis) {
   if (analysis.domains.length) parts.push(`Focus areas: ${analysis.domains.join(', ')}.`);
   if (analysis.skills.length) parts.push(`Core skills: ${analysis.skills.slice(0, 8).join(', ')}.`);
   if (analysis.minCgpa) parts.push(`Minimum CGPA: ${analysis.minCgpa}.`);
-  if (analysis.experienceYears) parts.push(`Experience requested: ${analysis.experienceYears}+ years.`);
+  if (analysis.experienceYears !== null) parts.push(`Experience requested: ${analysis.experienceLabel}.`);
   if (analysis.education.length) parts.push(`Education: ${analysis.education.join(', ')}.`);
   return parts.length ? parts.join(' ') : 'We could not detect structured requirements in this description. Try adding a fuller job description with skills and qualifications.';
 }
 
 function analyzeDescription({ jobDescription = '', jobTitle = '' } = {}) {
+  if (typeof jobDescription !== 'string' || typeof jobTitle !== 'string') throw new Error('Job description and title must be text.');
   const text = clean(jobDescription);
   if (text.length < 20) throw new Error('Please paste a fuller job description (at least a few sentences).');
+  if (text.length > 30000 || jobTitle.length > 200) throw new Error('Use a description under 30,000 characters and a title under 200 characters.');
 
   const lower = text.toLowerCase();
   const skills = detectSkills(text);
@@ -290,7 +312,7 @@ function analyzeDescription({ jobDescription = '', jobTitle = '' } = {}) {
   const keywords = extractKeywords(text, excluded);
   const responsibilities = extractResponsibilities(text);
 
-  return { role, skills, keywords, domains, departments, education, minCgpa, experienceYears, responsibilities, rawText: text, summary: '' };
+  return { role, skills, keywords, domains, departments, education, minCgpa, experienceYears, experienceLabel: experienceLabel(text, experienceYears), noBacklogs: /\bno (?:active )?backlogs|zero (?:active )?backlogs|backlog.free/i.test(text), responsibilities, rawText: text, summary: '' };
 }
 
 function mapTagToCanonicalSkill(tag) {
@@ -347,12 +369,12 @@ function studentSkillText(student) {
     // Academic & Personal
     student.academic?.department,
     student.academic?.degreeProgram,
-    student.personal?.fullName
+    ...(Array.isArray(student.interests?.skills) ? student.interests.skills : [])
   ];
   return tags.filter(Boolean).join(' \n ');
 }
 
-async function scoreStudent(student, analysis, jdEmbedding) {
+async function scoreStudent(student, analysis, jdEmbedding, embeddingOptions = {}) {
   const text = studentSkillText(student);
   const lower = text.toLowerCase();
 
@@ -397,8 +419,8 @@ async function scoreStudent(student, analysis, jdEmbedding) {
   const eligibilityFlags = [];
   const cgpa = student.academic?.cgpa;
   if (analysis.minCgpa) {
-    if (cgpa === undefined || cgpa === null || cgpa === '') {
-      eligibilityFlags.push('CGPA not on record');
+    if (cgpa === undefined || cgpa === null || cgpa === '' || !Number.isFinite(Number(cgpa)) || Number(cgpa) < 0 || Number(cgpa) > 10) {
+      eligibilityFlags.push('CGPA missing or invalid');
     } else if (Number(cgpa) < analysis.minCgpa) {
       eligibilityFlags.push(`CGPA below ${analysis.minCgpa}`);
       total -= 12;
@@ -406,34 +428,41 @@ async function scoreStudent(student, analysis, jdEmbedding) {
       total += 5;
     }
   }
-  if (Number(student.academic?.activeBacklogs) > 0) {
+  if (analysis.noBacklogs && (student.academic?.activeBacklogs === undefined || student.academic?.activeBacklogs === null || student.academic?.activeBacklogs === '' || !Number.isInteger(Number(student.academic.activeBacklogs)) || Number(student.academic.activeBacklogs) < 0)) {
+    eligibilityFlags.push('Backlog record needs review');
+  } else if (analysis.noBacklogs && Number(student.academic?.activeBacklogs) > 0) {
     eligibilityFlags.push('Active backlogs');
     total -= 8;
   }
 
-  const departmentAligned = analysis.departments.some(dept => (student.academic?.department || '').toLowerCase().includes(dept.split(' ')[0].toLowerCase()));
+  const studentDepartments = detectDepartments(student.academic?.department || '');
+  const departmentAligned = analysis.departments.some(dept => studentDepartments.includes(dept));
   if (analysis.departments.length && departmentAligned) total += 6;
+  if (analysis.departments.length && !departmentAligned) eligibilityFlags.push('Department requirement needs review');
+  const studentEducation = detectEducation(student.academic?.degreeProgram || '');
+  if (analysis.education.length && !analysis.education.some(degree => studentEducation.includes(degree))) eligibilityFlags.push('Degree requirement needs review');
+  if (analysis.experienceYears > 0) eligibilityFlags.push('Experience duration requires review');
+  const hasEligibilityRequirements = Boolean(analysis.minCgpa || analysis.noBacklogs || analysis.education.length || analysis.departments.length || analysis.experienceYears > 0);
 
   const deterministicScore = clamp(Math.round(total), 0, 100);
 
   let finalScore = deterministicScore;
   let semanticScore = 0;
+  let semanticUsed = false;
 
   if (jdEmbedding) {
     try {
-      const studentEmbedding = await embeddingStore.getStudentEmbedding(text);
+      const studentEmbedding = await withinDeadline(embeddingStore.getStudentEmbedding(text, embeddingOptions), embeddingOptions.budget?.deadlineAt || Date.now() + 4000);
       if (studentEmbedding) {
         const sim = cosineSimilarity(jdEmbedding, studentEmbedding);
+        if (!Number.isFinite(sim) || jdEmbedding.length !== studentEmbedding.length) throw new Error('Invalid semantic vector');
         
-        // Normalize the raw cosine similarity:
-        // In Gemini 768-dim embeddings, unrelated text baselines at ~0.55.
-        // Conceptually related profiles (e.g., Python/Django vs Java/Spring) reach ~0.65.
-        // Verbatim matches reach ~0.68 - 0.77.
-        const normalizedSim = (sim - 0.55) / (0.66 - 0.55);
-        semanticScore = clamp(Math.round(normalizedSim * 100), 0, 100);
-        
-        // Hybrid logic: 35% Deterministic (explicit skills, projects, internships, eligibility) + 65% Semantic conceptual alignment
-        finalScore = clamp(Math.round(0.35 * deterministicScore + 0.65 * semanticScore), 0, 100);
+        // Similarity is contextual evidence, not a calibrated hiring probability.
+        // Keep explicit source evidence dominant; avoid the previous arbitrary
+        // 0.55–0.66 expansion that turned modest similarity into a near-perfect score.
+        semanticScore = clamp(Math.round(sim * 100), 0, 100);
+        finalScore = clamp(Math.round(0.80 * deterministicScore + 0.20 * semanticScore), 0, 100);
+        semanticUsed = true;
       }
     } catch (err) {
       require('../../shared/logger').api.error('[JDAnalyzer] Error in semantic scoring:', err.message);
@@ -443,8 +472,8 @@ async function scoreStudent(student, analysis, jdEmbedding) {
   const score = finalScore;
 
   const reasons = [];
-  if (matchedSkills.length) reasons.push(`Matches ${matchedSkills.length}/${analysis.skills.length} required skills`);
-  if (semanticScore > 65) reasons.push(`Strong conceptual alignment (${semanticScore}% semantic match)`);
+  if (matchedSkills.length) reasons.push(`Matches ${matchedSkills.length}/${analysis.skills.length} detected skills`);
+  if (semanticScore > 80) reasons.push(`Strong conceptual alignment (${semanticScore}% similarity)`);
   if (matchedDomains.length) reasons.push(`Aligned to ${matchedDomains.join(', ')}`);
   if (projectCount || internshipCount) {
     const parts = [];
@@ -464,28 +493,49 @@ async function scoreStudent(student, analysis, jdEmbedding) {
     matchedDomains,
     reasons,
     eligibilityFlags,
+    eligibilityStatus: eligibilityFlags.length ? 'review' : hasEligibilityRequirements ? 'parsed_checks_passed' : 'not_specified',
+    evidence: {
+      projects: (student.projects || []).filter(entry => detectSkills(studentSkillText({projects:[entry]})).some(skill => analysis.skills.includes(skill))).length,
+      internships: (student.internships || []).filter(entry => detectSkills(studentSkillText({internships:[entry]})).some(skill => analysis.skills.includes(skill))).length,
+    },
     semanticScore,
+    semanticUsed,
     deterministicScore
   };
 }
 
 class JDAnalyzerService {
-  async analyze({ jobDescription = '', jobTitle = '', limit = 1000 } = {}) {
+  async analyze(input = {}) {
+    if (activeAnalyses >= 2) { const error = new Error('JD analysis is busy. Please retry shortly.'); error.statusCode = 503; throw error; }
+    activeAnalyses++;
+    try { return await this._analyze(input); }
+    finally { activeAnalyses--; }
+  }
+
+  async _analyze({ jobDescription = '', jobTitle = '', limit = 1000, useSemantic = false } = {}) {
+    if (typeof useSemantic !== 'boolean') throw new Error('Semantic scoring must be explicitly enabled or disabled.');
+    const responseDeadline = Date.now() + 12000;
     const analysis = analyzeDescription({ jobDescription, jobTitle });
     analysis.summary = buildSummary(analysis);
 
+    const deadlineAt = Date.now() + 8000;
+    const budget = { remaining: 24, deadlineAt };
     let jdEmbedding = null;
     try {
-      jdEmbedding = await embeddingStore.getJdEmbedding(analysis.rawText);
+      if (useSemantic) jdEmbedding = await withinDeadline(embeddingStore.getJdEmbedding(analysis.rawText, {budget}), deadlineAt);
     } catch (err) {
       require('../../shared/logger').api.warn('[JDAnalyzer] Failed to get JD embedding. Falling back to deterministic scoring.', err.message);
     }
 
-    const students = (await studentStore.listStudents())
-      .filter(student => student.status !== 'suspended' && student.onboarding?.completed !== false);
+    const records = await withinDeadline(studentStore.listStudents(), responseDeadline);
+    if (!Array.isArray(records)) { const error = new Error('Student data is taking too long to load. Please retry shortly.'); error.statusCode = 503; throw error; }
+    const students = records
+      .filter(student => student && !student.blocked && student.status !== 'suspended' && student.onboarding?.completed === true
+        && (!(student.isAdmin || student.isRecruiter) || /^\d{6,12}$/.test(String(student.rollNumber || student.academic?.rollNumber || ''))))
+      .map(normalizeStudent);
 
-    const scoredStudents = await Promise.all(students.map(async student => {
-      const result = await scoreStudent(student, analysis, jdEmbedding);
+    const scoredStudents = await mapBounded(students, 4, async student => {
+      const result = await scoreStudent(student, analysis, Date.now() < deadlineAt ? jdEmbedding : null, {budget});
       return {
         id: student.id,
         rollNumber: student.rollNumber || student.academic?.rollNumber || '',
@@ -500,7 +550,15 @@ class JDAnalyzerService {
         profileVisibility: student.profileSettings?.visibility || 'private',
         ...result
       };
-    }));
+    });
+
+    // Never compare hybrid scores for a few cached profiles with deterministic
+    // scores for everybody else. Incomplete enrichment uses one common baseline.
+    const fullySemantic = scoredStudents.length > 0 && scoredStudents.every(candidate => candidate.semanticUsed);
+    if (!fullySemantic) for (const candidate of scoredStudents) {
+      candidate.score = candidate.deterministicScore;
+      candidate.reasons = candidate.reasons.filter(reason => !reason.startsWith('Strong conceptual alignment'));
+    }
 
     const candidates = scoredStudents.sort((left, right) => right.score - left.score || left.name.localeCompare(right.name));
 
@@ -512,8 +570,9 @@ class JDAnalyzerService {
       stats: {
         evaluated: candidates.length,
         returned: top.length,
-        strongMatches: candidates.filter(candidate => candidate.score >= 60).length
-      }
+        strongMatches: candidates.filter(candidate => candidate.score >= 75).length
+      },
+      scoring: { mode: fullySemantic ? 'hybrid' : 'deterministic', semanticProfiles: scoredStudents.filter(candidate => candidate.semanticUsed).length, totalProfiles: scoredStudents.length, explanation: fullySemantic ? 'All evaluated profiles received semantic enrichment. Scores estimate alignment, not hiring probability.' : useSemantic ? 'Using consistent deterministic scores for all profiles. Semantic enrichment was unavailable or incomplete within the request budget.' : 'AI semantic scoring is off. Scores use source-profile skill overlap and recorded evidence.' }
     };
   }
 
@@ -523,6 +582,32 @@ class JDAnalyzerService {
     analysis.summary = buildSummary(analysis);
     return analysis;
   }
+}
+
+async function withinDeadline(promise, deadlineAt) {
+  let timer;
+  try { return await Promise.race([promise, new Promise(resolve => { timer = setTimeout(() => resolve(null), Math.max(0, deadlineAt - Date.now())); })]); }
+  finally { clearTimeout(timer); }
+}
+
+function normalizeStudent(student) {
+  const record = value => value && typeof value === 'object' && !Array.isArray(value) ? value : {};
+  const entries = value => Array.isArray(value) ? value.filter(item => item && typeof item === 'object' && !Array.isArray(item)) : [];
+  const strings = value => (Array.isArray(value) ? value : typeof value === 'string' ? [value] : []).filter(item=>typeof item === 'string');
+  const interests = record(student.interests);
+  return {...student,personal:record(student.personal),academic:record(student.academic),interests:{...interests,skills:strings(interests.skills),hobbies:strings(interests.hobbies),passions:strings(interests.passions)},
+    projects:entries(student.projects).map(entry=>({...entry,technologies:strings(entry.technologies),contributions:strings(entry.contributions)})),
+    internships:entries(student.internships).map(entry=>({...entry,skills:strings(entry.skills),responsibilities:strings(entry.responsibilities)})),
+    achievements:entries(student.achievements)};
+}
+
+async function mapBounded(items, concurrency, action) {
+  const results = new Array(items.length);
+  let next = 0;
+  await Promise.all(Array.from({length:Math.min(concurrency,items.length)},async()=>{
+    while (next < items.length) { const index=next++; results[index]=await action(items[index]); }
+  }));
+  return results;
 }
 
 module.exports = new JDAnalyzerService();

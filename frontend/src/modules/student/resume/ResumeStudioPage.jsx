@@ -16,6 +16,7 @@ import './ResumeStudioPage.css';
 import './ResumeStudioFields.css';
 import './ResumeStudioResponsive.css';
 import { fitPreviewZoom } from './studioViewport.mjs';
+import { browserPrintDocument } from './browserPrint.mjs';
 
 import {
   DEFAULT_SECTION_ORDER, getValidSectionOrder, normalizeExtractedData, formatPlatformLabel,
@@ -1388,12 +1389,12 @@ function ResumeStudioInner() {
     finally { setExporting(false); }
   };
 
-  const printResume = () => {
+  const printResume = async () => {
     if (!data) return;
     const docTitle = resume?.filename
       ? resume.filename.replace(/\.pdf$/i, '')
       : (data.personal?.fullName ? `${data.personal.fullName.replace(/\s+/g, '_')}_Resume` : 'Resume');
-    const htmlContent = printable(data, template, isCompact, docTitle, condenseDesc);
+    const htmlContent = browserPrintDocument(data, template, isCompact, docTitle, condenseDesc);
 
     const popup = window.open('', '_blank');
     if (popup) {
@@ -1401,16 +1402,16 @@ function ResumeStudioInner() {
       popup.document.write(htmlContent);
       popup.document.close();
       
-      // We removed the embedded window.print() script from HTML to fix the double dialog.
-      // Now we just trigger it once from here.
-      setTimeout(() => {
-        try {
-          popup.focus();
-          popup.print();
-        } catch { /* print() can throw if the popup was closed */ }
-      }, 350);
+      try {
+        await popup.document.fonts.ready;
+        if (popup.closed) return;
+        await new Promise(resolve => popup.requestAnimationFrame(() => popup.requestAnimationFrame(resolve)));
+        if (popup.closed) return;
+        popup.focus();
+        popup.print();
+      } catch { setError('Unable to open the print dialog. Please try again or use Export PDF.'); }
     } else {
-      alert("Please allow popups to export the PDF.");
+      setError('Allow pop-ups for this site to open the print dialog.');
     }
   };
 

@@ -10,6 +10,8 @@ const studentSearch = require('./studentSearch.service');
 const shares = require('../recruiters/recruiterShare.service');
 const auditLog = require('../../shared/auditLog.service');
 const placementPolicy = require('./placementPolicy.service');
+const rateLimit = require('../../shared/rateLimit');
+const jdLimiter = rateLimit({windowMs:60000,max:10,keyBy:req=>`admin-jd:${req.student.id}`,message:'Too many JD analyses. Please wait a minute and retry.'});
 
 router.use(authenticate, requireAdmin);
 
@@ -74,7 +76,7 @@ router.post('/job-posts/:id/review', (req, res) => send(res, async () => ({ jobP
 router.post('/job-posts/:id/publish', (req, res) => send(res, async () => ({ jobPost: await content.publishJob(req.params.id, req.student.id) })));
 router.post('/job-posts/:id/unpublish', (req, res) => send(res, async () => ({ jobPost: await content.unpublishJob(req.params.id) })));
 router.post('/job-posts/:id/reopen', (req, res) => send(res, async () => ({ jobPost: await content.reopenJob(req.params.id) })));
-router.post('/jd/analyze', (req, res) => send(res, async () => jdAnalyzer.analyze(req.body)));
+router.post('/jd/analyze', jdLimiter, (req, res) => send(res, async () => jdAnalyzer.analyze(req.body)));
 router.get('/applications', (req, res) => send(res, async () => ({ applications: await content.applications(req.query.jobPostId) })));
 router.patch('/applications/bulk', (req, res) => send(res, async () => ({ result: await content.updateApplicationsBulk(req.body.ids, req.body) })));
 router.patch('/applications/:id', (req, res) => send(res, async () => ({ application: await content.updateApplication(req.params.id, req.body) })));

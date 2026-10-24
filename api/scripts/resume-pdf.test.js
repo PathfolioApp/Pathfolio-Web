@@ -46,6 +46,36 @@ test('rejects missing, invalid and oversized documents before opening Chrome', (
   assert.throws(() => validateHtml('<!doctype html>' + 'x'.repeat(512 * 1024)), { statusCode: 413 });
 });
 
+test('browser Print preserves A4 text positions with physical margins without changing Export PDF', { timeout: 40000 }, async t => {
+  t.after(closePdfBrowser);
+  const printable = await loadPrintable();
+  const {browserPrintDocument} = await import('../../frontend/src/modules/student/resume/browserPrint.mjs');
+  const originalHtml=printable(fixture,'classic',false,'Print comparison');
+  const printHtml=browserPrintDocument(fixture,'classic',false,'Print comparison');
+  assert.match(originalHtml, /@page \{ size: A4 portrait; margin: 14mm 18mm; \}/);
+  assert.match(printHtml, /@page \{ size: A4 portrait; margin: 0; \}/);
+  const original=await renderResumePdf(originalHtml);
+  const printed=await renderResumePdf(printHtml);
+  assert.equal((await PDFDocument.load(printed)).getPageCount(),1);
+  const positions=async bytes=>{
+    const pages=[];
+    await parsePdf(bytes,{pagerender:async page=>{
+      const text=await page.getTextContent();
+      pages.push(text.items.filter(item=>item.str.trim()).map(item=>({text:item.str,x:item.transform[4],y:item.transform[5]})));
+      return text.items.map(item=>item.str).join(' ');
+    }});
+    return pages;
+  };
+  const expected=await positions(original), actual=await positions(printed);
+  assert.equal(actual.length,expected.length);
+  assert.deepEqual(actual[0].map(item=>item.text),expected[0].map(item=>item.text));
+  for(let i=0;i<expected[0].length;i++){
+    assert.ok(Math.abs(actual[0][i].x-expected[0][i].x)<1,'Horizontal margin differs');
+    assert.ok(Math.abs(actual[0][i].y-expected[0][i].y)<1,'Vertical margin differs');
+  }
+  assert.deepEqual(linksIn(await PDFDocument.load(printed)),linksIn(await PDFDocument.load(original)));
+});
+
 test('library downloads render saved data as PDF, preserve uploads and enforce ownership', { timeout: 40_000 }, async t => {
   t.after(closePdfBrowser);
   const uploaded = await (await PDFDocument.create()).save();

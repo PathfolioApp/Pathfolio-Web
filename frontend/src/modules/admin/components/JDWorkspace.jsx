@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   AlertTriangle, CheckCircle2, Clock, Download, FileSearch, ListChecks,
   Sparkles, Target, Upload, UserRound, Wand2, X, ChevronDown, ChevronUp,
@@ -28,12 +28,12 @@ What we look for:
 function getMatchSummary(candidate, totalRequired) {
   const matched = candidate.matchedSkills?.length || 0;
   const total = totalRequired || matched || 1;
-  const projectCount = (candidate.projects || []).length;
-  const internshipCount = (candidate.internships || []).length;
+  const projectCount = candidate.evidence?.projects || 0;
+  const internshipCount = candidate.evidence?.internships || 0;
   const score = candidate.score || 0;
 
   // 1. Required skills bullet
-  const skillsBullet = `${matched}/${total} required skills`;
+  const skillsBullet = `${matched}/${total} detected skills`;
 
   // 2. Technical alignment bullet
   let alignmentBullet = 'Limited technical alignment';
@@ -59,8 +59,8 @@ function getMatchSummary(candidate, totalRequired) {
 function getMatchBreakdown(candidate, totalRequired) {
   const matched = candidate.matchedSkills?.length || 0;
   const total = totalRequired || matched || 1;
-  const projectCount = (candidate.projects || []).length;
-  const internshipCount = (candidate.internships || []).length;
+  const projectCount = candidate.evidence?.projects || 0;
+  const internshipCount = candidate.evidence?.internships || 0;
   const totalEvidence = projectCount + internshipCount;
   const flagsCount = (candidate.eligibilityFlags || []).length;
 
@@ -107,11 +107,11 @@ function getMatchBreakdown(candidate, totalRequired) {
   }
 
   // Eligibility: Met vs Review flags
-  const eligibility = flagsCount === 0 ? 'Met' : 'Review flags';
-  const eligibilityTone = flagsCount === 0 ? 'strong' : 'warning';
+  const eligibility = flagsCount ? 'Review flags' : candidate.eligibilityStatus === 'parsed_checks_passed' ? 'Parsed checks passed' : 'Not specified';
+  const eligibilityTone = flagsCount ? 'warning' : candidate.eligibilityStatus === 'parsed_checks_passed' ? 'strong' : 'muted';
 
   return [
-    { label: 'Required skills', value: `${matched} / ${total}`, tone: matched >= (total * 0.7) ? 'strong' : matched >= (total * 0.3) ? 'moderate' : 'limited' },
+    { label: 'Detected skills', value: `${matched} / ${total}`, tone: matched >= (total * 0.7) ? 'strong' : matched >= (total * 0.3) ? 'moderate' : 'limited' },
     { label: 'Technical evidence', value: technicalEvidence, tone: technicalEvidenceTone },
     { label: 'Project relevance', value: projectRelevance, tone: projectRelevanceTone },
     { label: 'Experience relevance', value: experienceRelevance, tone: experienceRelevanceTone },
@@ -122,6 +122,7 @@ function getMatchBreakdown(candidate, totalRequired) {
 export function JDWorkspace() {
   const [jobTitle, setJobTitle] = useState('');
   const [jobDescription, setJobDescription] = useState('');
+  const [useSemantic, setUseSemantic] = useState(false);
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -129,31 +130,42 @@ export function JDWorkspace() {
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [expandedIds, setExpandedIds] = useState(new Set());
   const [copied, setCopied] = useState(false);
+  const requestVersion = useRef(0);
+  useEffect(() => {
+    requestVersion.current++;
+    setResult(null); setLoading(false); setSelectedIds(new Set()); setExpandedIds(new Set());
+  }, [jobTitle, jobDescription, useSemantic]);
 
   const analyze = async event => {
     event?.preventDefault();
     if (jobDescription.trim().length < 20) { setError('Paste a fuller job description before analysing.'); return; }
     setLoading(true); setError('');
+    const version = ++requestVersion.current;
     try {
-      const data = await adminApi.analyzeJobDescription({ jobTitle, jobDescription });
+      const data = await adminApi.analyzeJobDescription({ jobTitle, jobDescription, useSemantic });
+      if (version !== requestVersion.current) return;
       setResult(data);
       setSelectedIds(new Set());
       setExpandedIds(new Set());
-    } catch (err) { setError(err.message); } finally { setLoading(false); }
+    } catch (err) { if (version === requestVersion.current) setError(err.message); } finally { if (version === requestVersion.current) setLoading(false); }
   };
 
   const loadFile = event => {
     const file = event.target.files?.[0];
     if (!file) return;
+    if (!/\.(txt|md)$/i.test(file.name) || file.size > 100000) { setError('Choose a .txt or .md file under 100 KB.'); event.target.value = ''; return; }
     const reader = new FileReader();
     reader.onload = () => setJobDescription(String(reader.result || ''));
+    reader.onerror = () => setError('Unable to read this file. Please paste the description instead.');
     reader.readAsText(file);
     event.target.value = '';
   };
 
   const reset = () => {
+    requestVersion.current++; setLoading(false);
     setJobTitle('');
     setJobDescription('');
+    setUseSemantic(false);
     setResult(null);
     setError('');
     setFilters({ search: '', minScore: 0, eligibleOnly: false });
@@ -226,7 +238,7 @@ export function JDWorkspace() {
       c.matchedSkills.join('; '),
       (c.projects || []).map(p => p.projectName).join('; '),
       (c.internships || []).map(i => `${i.role} at ${i.companyName}`).join('; '),
-      c.eligibilityFlags.join('; ') || 'Meets eligibility',
+      c.eligibilityFlags.join('; ') || (c.eligibilityStatus === 'parsed_checks_passed' ? 'Parsed checks passed; verify full eligibility' : 'Eligibility not specified'),
       c.email || 'Private'
     ].map(escapeCsv).join(','));
     downloadCsvFile('pathfolio-jd-shortlist.csv', [header.join(','), ...rows].join('\n'));
@@ -234,7 +246,7 @@ export function JDWorkspace() {
 
   const candidates = (result?.candidates || []).filter(candidate => {
     if (candidate.score < filters.minScore) return false;
-    if (filters.eligibleOnly && candidate.eligibilityFlags.length) return false;
+    if (filters.eligibleOnly && candidate.eligibilityStatus !== 'parsed_checks_passed') return false;
     if (!filters.search.trim()) return true;
     const needle = filters.search.toLowerCase();
     const roll = String(candidate.rollNumber || candidate.academic?.rollNumber || '');
@@ -249,10 +261,12 @@ export function JDWorkspace() {
       <div className="pf-admin-panel">
         <PanelHeading eyebrow="Requirement intelligence" title="Analyse a job description" action={<button className="pf-admin-jd-sample" type="button" onClick={() => { setJobTitle('Software Engineer (Frontend)'); setJobDescription(SAMPLE_JD); }}><Wand2 size={14} />Use sample</button>} />
         <p className="pf-admin-import-copy">Paste a job description or upload a .txt / .md file. Pathfolio extracts the meaningful skills and eligibility criteria, then ranks students with an explainable match.</p>
+        <label className="pf-admin-jd-toggle"><input type="checkbox" checked={useSemantic} onChange={event=>setUseSemantic(event.target.checked)} /> Optional AI semantic scoring</label>
+        <p className="pf-admin-import-copy">When enabled, Google Gemini processes the JD and candidate skills, project and internship descriptions. Off by default; deterministic matching works without AI.</p>
         <form className="pf-admin-form pf-admin-jd-form" onSubmit={analyze}>
-          <Input label="Role title (optional)"><input value={jobTitle} onChange={event => setJobTitle(event.target.value)} placeholder="e.g. Frontend Engineer" /></Input>
+          <Input label="Role title (optional)"><input maxLength={200} value={jobTitle} onChange={event => setJobTitle(event.target.value)} placeholder="e.g. Frontend Engineer" /></Input>
           <Input label="Job description" full>
-            <textarea required rows="12" value={jobDescription} onChange={event => setJobDescription(event.target.value)} placeholder="Paste the full job description here, responsibilities, skills, and qualifications..." />
+            <textarea required maxLength={30000} rows="12" value={jobDescription} onChange={event => setJobDescription(event.target.value)} placeholder="Paste the full job description here, responsibilities, skills, and qualifications..." />
           </Input>
           <label className="pf-admin-jd-upload"><Upload size={14} />Upload .txt or .md<input type="file" accept=".txt,.md,text/plain,text/markdown" onChange={loadFile} /></label>
           <div className="pf-admin-jd-actions">
@@ -273,10 +287,11 @@ export function JDWorkspace() {
             <article className="pf-admin-jd-analysis">
               <div className="pf-admin-jd-analysis-head"><div><p className="pf-admin-eyebrow">Extracted requirements</p><h2>{result.analysis.role}</h2></div><Target size={22} /></div>
               <p className="pf-admin-jd-summary">{result.analysis.summary}</p>
+              <p className="pf-admin-import-copy">{result.scoring?.mode === 'hybrid' ? 'Hybrid scoring' : 'Deterministic scoring'} · {result.scoring?.explanation} Eligibility covers parsed checks only; review the full JD before shortlisting.</p>
               <div className="pf-admin-jd-facts">
                 <div><span>Domains</span><strong>{result.analysis.domains.join(', ') || 'Not detected'}</strong></div>
                 <div><span>Minimum CGPA</span><strong>{result.analysis.minCgpa ?? 'Not specified'}</strong></div>
-                <div><span>Experience</span><strong>{result.analysis.experienceYears ? `${result.analysis.experienceYears}+ years` : 'Not specified'}</strong></div>
+                <div><span>Experience</span><strong>{result.analysis.experienceLabel || 'Not specified'}</strong></div>
                 <div><span>Education</span><strong>{result.analysis.education.join(', ') || 'Not specified'}</strong></div>
               </div>
               {result.analysis.skills.length > 0 && <div className="pf-admin-jd-block"><span className="pf-admin-jd-block-label"><ListChecks size={14} />Detected skills ({result.analysis.skills.length})</span><div className="pf-admin-jd-chips">{result.analysis.skills.map(skill => <b key={skill}>{skill}</b>)}</div></div>}
@@ -324,7 +339,7 @@ export function JDWorkspace() {
                     checked={filters.eligibleOnly}
                     onChange={event => setFilters(prev => ({ ...prev, eligibleOnly: event.target.checked }))}
                   />
-                  Eligible only
+                  Parsed checks passed only
                 </label>
               </div>
 
@@ -579,7 +594,7 @@ export function JDWorkspace() {
                             </span>
                           ) : (
                             <span className="pf-admin-jd-ok">
-                              <CheckCircle2 size={14} /> Meets stated eligibility
+                              <CheckCircle2 size={14} /> {candidate.eligibilityStatus === 'parsed_checks_passed' ? 'Parsed checks passed · verify full eligibility' : 'Eligibility not specified'}
                             </span>
                           )}
                         </div>

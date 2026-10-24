@@ -79,6 +79,7 @@ export function ResumeDetailsPage() {
   const [saving, setSaving] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
   const [replacing, setReplacing] = useState(false);
+  const [openingDocument, setOpeningDocument] = useState(false);
   const [error, setError] = useState('');
   // Blob URL for the authorized document preview (iframe requests cannot
   // carry the X-API-Key header, so the file is fetched here instead).
@@ -169,6 +170,38 @@ export function ResumeDetailsPage() {
     try { setAnalyzing(true); setError(''); await resumeApi.analyze(resume.id); await load(); setSearchParams({ tab: 'analysis' }); }
     catch (err) { setError(err.message || 'Unable to analyse resume.'); }
     finally { setAnalyzing(false); }
+  };
+  const openDocument = async event => {
+    event.preventDefault();
+    if (openingDocument) return;
+    if (fileObjectUrl) {
+      window.open(fileObjectUrl, '_blank', 'noopener');
+      return;
+    }
+    if (!resume.downloadUrl) return;
+    // Open during the click so browsers don't block the tab after the PDF fetch.
+    const documentTab = window.open('about:blank', '_blank');
+    if (!documentTab) {
+      setError('Allow pop-ups for this site to open the document, or use Download PDF.');
+      return;
+    }
+    documentTab.opener = null;
+    documentTab.document.title = 'Opening resume…';
+    documentTab.document.body.textContent = 'Preparing your PDF…';
+    setOpeningDocument(true);
+    setError('');
+    try {
+      // Generated resumes have no uploaded file; use the same validated native
+      // PDF as library downloads, rather than the HTML-only view endpoint.
+      const blob = await resumeApi.downloadPdf(resume.downloadUrl);
+      if (documentTab.closed) return;
+      const url = URL.createObjectURL(blob);
+      documentTab.location.replace(url);
+      setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    } catch (err) {
+      documentTab.close();
+      setError(err.message || 'Unable to open the document.');
+    } finally { setOpeningDocument(false); }
   };
   const saveExtracted = async () => {
     try { setSaving(true); setError(''); const updated = await resumeApi.updateExtracted(resume.id, draft); setResume(current => ({ ...current, ...updated })); setDraft(getStructured(updated)); }
@@ -269,7 +302,7 @@ export function ResumeDetailsPage() {
     {error && <div className="pf-detail-alert" role="alert"><AlertCircle size={15} />{error}</div>}
     <nav className="pf-detail-tabs" aria-label="Resume details"><button type="button" className={tab === 'overview' ? 'is-active' : ''} onClick={() => setSearchParams({ tab: 'overview' })}>Overview</button><button type="button" className={tab === 'analysis' ? 'is-active' : ''} onClick={() => setSearchParams({ tab: 'analysis' })}>Analysis</button><button type="button" className={tab === 'extracted' ? 'is-active' : ''} onClick={() => setSearchParams({ tab: 'extracted' })}>Extracted information</button></nav>
 
-    {tab === 'overview' && <div className="pf-detail-overview"><section className="pf-detail-document"><div className="pf-detail-document-head"><h2>Original document</h2>{resume.fileUrl && <a href="#" onClick={event => { event.preventDefault(); if (fileObjectUrl) window.open(fileObjectUrl, '_blank', 'noopener'); }}><ExternalLink size={14} /> Open document</a>}</div>
+    {tab === 'overview' && <div className="pf-detail-overview"><section className="pf-detail-document"><div className="pf-detail-document-head"><h2>Original document</h2>{resume.fileUrl && <a href="#" onClick={openDocument} aria-disabled={openingDocument} aria-busy={openingDocument}>{openingDocument ? <Loader className="spin" size={14} /> : <ExternalLink size={14} />} {openingDocument ? 'Opening document…' : 'Open document'}</a>}</div>
       {/* 
         CRITICAL: DO NOT MODIFY OR REMOVE THIS IFRAME / PREVIEW RENDER LOGIC.
         - Studio-generated resumes MUST be rendered using the live `<Preview>` component for CSS margin consistency.

@@ -2,7 +2,7 @@ import { apiUrl, apiHeaders } from '../../app/services/apiClient.js';
 
 async function request(path, options = {}) {
   const response = await fetch(apiUrl(`/api/admin${path}`), { ...options, credentials: 'include', headers: apiHeaders({ 'Content-Type': 'application/json', ...(options.headers || {}) }) });
-  const data = await response.json().catch(() => ({}));
+  const data = await response.json().catch(error => { if (error.name === 'AbortError') throw error; throw new Error('The server returned an invalid response. Please retry shortly.'); });
   if (!response.ok) throw new Error(data.message || 'Unable to complete this admin action.');
   return data;
 }
@@ -38,7 +38,13 @@ export const adminApi = {
   createShare: data => request('/shares', { method: 'POST', body: JSON.stringify(data) }),
   logs: params => request(`/logs?${new URLSearchParams(Object.entries(params).filter(([, value]) => String(value).trim() !== '')).toString()}`),
   uploadSignature: () => request('/uploads/signature', { method: 'POST' }),
-  analyzeJobDescription: data => request('/jd/analyze', { method: 'POST', body: JSON.stringify(data) }),
+  analyzeJobDescription: async data => {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(),30000);
+    try { return await request('/jd/analyze', { method: 'POST', body: JSON.stringify(data), signal:controller.signal }); }
+    catch (error) { if (error.name === 'AbortError') throw new Error('JD analysis timed out. Please try again.'); throw error; }
+    finally { clearTimeout(timeout); }
+  },
   applications: jobPostId => request(`/applications${jobPostId ? `?jobPostId=${jobPostId}` : ''}`),
   updateApplication: (id, data) => request(`/applications/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
   updateApplicationsBulk: (ids, data) => request('/applications/bulk', { method: 'PATCH', body: JSON.stringify({ ids, ...data }) }),
