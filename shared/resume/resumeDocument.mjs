@@ -66,10 +66,9 @@ function formatIsoDateStr(str) {
   return s;
 }
 
-function unbundleEducation(eduItems, profileData) {
+function unbundleEducation(eduItems) {
   if (!Array.isArray(eduItems) || eduItems.length === 0) return eduItems || [];
 
-  const academic = profileData?.academic || {};
   const result = [];
   const extracted = [];
 
@@ -99,8 +98,6 @@ function unbundleEducation(eduItems, profileData) {
         const parenMatch = institution.match(/^(.*?)\s*\((.*?)\)$/);
         if (parenMatch && parenMatch[1] && parenMatch[2]) {
           institution = `${parenMatch[2].trim()} (${parenMatch[1].trim()})`;
-        } else if (!institution && academic.twelfthSchool) {
-          institution = academic.twelfthBoard ? `${academic.twelfthSchool} (${academic.twelfthBoard})` : academic.twelfthSchool;
         }
 
         let desc = details;
@@ -109,17 +106,14 @@ function unbundleEducation(eduItems, profileData) {
           if (!/^percentage/i.test(desc) && !/^score/i.test(desc) && !/^gpa/i.test(desc)) {
             desc = `Percentage: ${desc}`;
           }
-        } else if (academic.twelfthPercentage) {
-          const pct = String(academic.twelfthPercentage).trim();
-          desc = `Percentage: ${pct.endsWith('%') ? pct : `${pct}%`}${academic.twelfthStream ? ` · Stream: ${academic.twelfthStream}` : ''}`;
         }
 
         extracted.push({
           id: `edu_twelfth_${Date.now()}`,
           title: 'Class XII (Senior Secondary)',
-          institution: institution || academic.twelfthSchool || 'Senior Secondary School',
-          company: institution || academic.twelfthSchool || 'Senior Secondary School',
-          dates: academic.twelfthYear ? String(academic.twelfthYear) : '',
+          institution: institution,
+          company: institution,
+          dates: '',
           description: desc,
           bullets: [],
         });
@@ -139,8 +133,6 @@ function unbundleEducation(eduItems, profileData) {
         const parenMatch = institution.match(/^(.*?)\s*\((.*?)\)$/);
         if (parenMatch && parenMatch[1] && parenMatch[2]) {
           institution = `${parenMatch[2].trim()} (${parenMatch[1].trim()})`;
-        } else if (!institution && academic.tenthSchool) {
-          institution = academic.tenthBoard ? `${academic.tenthSchool} (${academic.tenthBoard})` : academic.tenthSchool;
         }
 
         let desc = details;
@@ -149,17 +141,14 @@ function unbundleEducation(eduItems, profileData) {
           if (!/^percentage/i.test(desc) && !/^score/i.test(desc) && !/^gpa/i.test(desc)) {
             desc = `Percentage: ${desc}`;
           }
-        } else if (academic.tenthPercentage) {
-          const pct = String(academic.tenthPercentage).trim();
-          desc = `Percentage: ${pct.endsWith('%') ? pct : `${pct}%`}`;
         }
 
         extracted.push({
           id: `edu_tenth_${Date.now()}`,
           title: 'Class X (Secondary)',
-          institution: institution || academic.tenthSchool || 'Secondary School',
-          company: institution || academic.tenthSchool || 'Secondary School',
-          dates: academic.tenthYear ? String(academic.tenthYear) : '',
+          institution: institution,
+          company: institution,
+          dates: '',
           description: desc,
           bullets: [],
         });
@@ -200,7 +189,7 @@ export function isCandidateProfileLink(url) {
 
 export function normalizeExtractedData(source, profileData) {
   const data = source && typeof source === 'object' ? source : {};
-  const records = key => Array.isArray(data[key]) ? data[key].map(item => {
+  const records = key => Array.isArray(data[key]) ? data[key].filter(item => item && typeof item === 'object' && !Array.isArray(item)).map(item => {
     const originalTitle = item.title || item.role || item.company || item.institution || item.name || '';
     const sourceText = `${originalTitle} ${item.raw || ''}`;
     const rawDates = item.dates || sourceText.match(DATE_PATTERN)?.[0] || '';
@@ -314,6 +303,7 @@ export function normalizeExtractedData(source, profileData) {
       concepts: coreConcepts,
       raw: rawSkills,
     },
+    documentLinks: Array.isArray(data.documentLinks) ? data.documentLinks.filter(l => typeof l === 'string' && /^https?:\/\//i.test(l)) : [],
     sectionOrder: getValidSectionOrder(data.sectionOrder),
     ...(getSavedLayout(data) ? { studioLayout: getSavedLayout(data) } : {}),
   };
@@ -380,22 +370,11 @@ function formatEducationEntry(item) {
     .replace(/Class X \(Secondary\)/gi, 'Class X')
     .trim();
 
-  // Specifically hardcode KIIT for university education instead of generic University
-  const isSchool = /XII|12|X|10|Secondary/i.test(cleanDegree) || /XII|12|X|10|Secondary/i.test(cleanTitle) || /school|cbse|icse/i.test(institution);
-  if (!isSchool) {
-    if (!institution || /^(?:university|college|kiit|kalinga.*)$/i.test(institution.trim()) || /kiit/i.test(institution)) {
-      institution = 'Kalinga Institute of Industrial Technology (KIIT)';
-    }
-    if (!location) {
-      location = 'Bhubaneswar, India';
-    }
-  }
-
   let topTitle = institution;
   let degreeLine = cleanDegree || '';
 
   if (!topTitle) {
-    topTitle = cleanTitle || degreeLine || 'Kalinga Institute of Industrial Technology (KIIT)';
+    topTitle = cleanTitle || degreeLine || '';
   } else if (cleanTitle && cleanTitle.toLowerCase() !== topTitle.toLowerCase()) {
     if (!degreeLine) {
       degreeLine = cleanTitle;

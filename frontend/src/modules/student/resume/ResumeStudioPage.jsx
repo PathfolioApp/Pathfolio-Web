@@ -947,9 +947,9 @@ function ResumeStudioInner() {
         duration: 0,
       });
       const updated = await resumeApi.reparse(resume.id);
-      if (updated?.extractedData) {
-        setData(normalizeExtractedData(updated.extractedData, studentProfile));
-      }
+      if (!updated?.extractedData) throw new Error('No usable extraction was returned. Your canvas was kept unchanged.');
+      setResume(updated);
+      setData(normalizeExtractedData(updated.extractedData, studentProfile));
       showToast({
         type: 'success',
         title: 'Resume re-extracted',

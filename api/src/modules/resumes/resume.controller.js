@@ -41,6 +41,45 @@ async function bodyToBuffer(body) {
   return Buffer.from(body);
 }
 
+// Reparse must never silently replace saved facts with a lower-quality extraction.
+function assertSafeReparse(previous, analysis) {
+  const next = analysis?.structured;
+  const fail = () => { throw serviceError('Re-extraction was incomplete. Your saved resume was kept unchanged. Review the source PDF or try again.', 409); };
+  if (!next || !analysis.parserReady) fail();
+  if (!previous) return;
+  const canonical = value => String(value || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  const fields = ['fullName','email','phone','headline','location'];
+  for (const field of fields) if (previous.personal?.[field] && !next.personal?.[field]) fail();
+  if (previous.summary?.text && !next.summary?.text) fail();
+  for (const key of ['education','experience','projects','certifications','achievements','leadership']) {
+    const oldRecords = Array.isArray(previous[key]) ? previous[key].filter(Boolean) : [];
+    const records = Array.isArray(next[key]) ? next[key] : [];
+    if (records.length < oldRecords.length) fail();
+    for (const old of oldRecords) {
+      const anchor = canonical(old.title || old.institution || old.company);
+      const record = records.find(item => anchor && [item.title,item.institution,item.company,item.raw].some(value => canonical(value).includes(anchor)));
+      if (!record) fail();
+      for (const field of ['institution','company','dates','description','location','technologies','liveUrl','repoUrl']) {
+        if (old[field] && !record[field]) {
+          const retained = canonical([record.sourceEvidence,record.raw,...(record.bullets || [])].join(' '));
+          if (field !== 'description' || !retained.includes(canonical(old[field]))) fail();
+        }
+      }
+      if ((record.bullets || []).length < (old.bullets || []).length) fail();
+      const evidence = canonical([record.sourceEvidence,record.raw,record.description,...(record.bullets || [])].join(' '));
+      for (const bullet of old.bullets || []) if (!evidence.includes(canonical(bullet))) fail();
+      const technologies = String(record.technologies || '').split(/[,;|]/).map(canonical);
+      for (const tech of String(old.technologies || '').split(/[,;|]/).filter(Boolean)) if (!technologies.includes(canonical(tech))) fail();
+    }
+  }
+  const urls = data => [...(data.documentLinks || []), ...(data.personal?.links || []), data.personal?.linkedin, data.personal?.github, data.personal?.portfolio,
+    ...(data.projects || []).flatMap(item => [item?.liveUrl,item?.repoUrl])].filter(Boolean).map(value => typeof value === 'string' ? value.replace(/\/$/, '') : value.url?.replace(/\/$/, '')).filter(Boolean);
+  const nextLinks = new Set(urls(next));
+  if (urls(previous).some(link => !nextLinks.has(link))) fail();
+  const oldSkills = previous.skills?.raw || [], newSkills = new Set((next.skills?.raw || []).map(canonical));
+  if (oldSkills.some(skill => !newSkills.has(canonical(skill)))) fail();
+}
+
 const resumeController = {
   async list(req, res, next) {
     try {
@@ -388,10 +427,16 @@ const resumeController = {
       const resume = await resumeStore.findOwnedResume(req.student.id, req.params.resumeId);
       if (!resume) throw notFound();
       if (!resume.filepath) throw badRequest('This resume does not have an uploaded file');
+      const original = { filepath: resume.filepath, extractedData: JSON.parse(JSON.stringify(resume.extractedData || null)) };
       const object = await r2Service.getFile(resume.filepath);
       if (!object.Body) throw serviceError('Resume file is unavailable', 404);
       const analysis = await analysePdf(await bodyToBuffer(object.Body));
-      const updated = await resumeStore.updateAnalysis(req.student.id, req.params.resumeId, analysis);
+      assertSafeReparse(original.extractedData, analysis);
+      // Retain one previous extraction for recovery; do not recursively store old analyses.
+      analysis.previousExtraction = original.extractedData;
+      if (resume.extractedData?.studioLayout) analysis.structured.studioLayout = resume.extractedData.studioLayout;
+      if (resume.extractedData?.sectionOrder) analysis.structured.sectionOrder = resume.extractedData.sectionOrder;
+      const updated = await resumeStore.updateAnalysis(req.student.id, req.params.resumeId, analysis, original);
       res.json(updated);
     } catch (error) {
       next(error);

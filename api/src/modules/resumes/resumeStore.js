@@ -168,12 +168,33 @@ class ResumeStore {
     return r;
   }
 
-  async updateAnalysis(studentId, resumeId, analysis) {
+  async updateAnalysis(studentId, resumeId, analysis, expectedResume) {
+    const canonical = value => JSON.stringify(value, function(key, item) {
+      if (item && typeof item === 'object' && !Array.isArray(item)) return Object.fromEntries(Object.keys(item).sort().map(k => [k,item[k]]));
+      return item;
+    });
+    const assertUnchanged = current => {
+      if (!expectedResume) return;
+      if (!current || current.filepath !== expectedResume.filepath || canonical(current.extractedData || null) !== canonical(expectedResume.extractedData || null)) {
+        const error = new Error('This resume changed while re-extraction was running. Your newer edits were kept. Reload before trying again.');
+        error.statusCode = 409; throw error;
+      }
+    };
     if (this.pool) {
-      await this.pool.execute('UPDATE resumes SET analysis = ?, extracted_data = ?, updated_at = NOW() WHERE id = ? AND student_id = ?', [JSON.stringify(analysis), JSON.stringify(analysis?.structured || null), resumeId, studentId]);
+      const connection = await this.pool.getConnection();
+      try {
+        await connection.beginTransaction();
+        const [rows] = await connection.execute('SELECT filepath, extracted_data FROM resumes WHERE id = ? AND student_id = ? FOR UPDATE', [resumeId, studentId]);
+        const row = rows[0];
+        assertUnchanged(row ? { filepath: row.filepath, extractedData: typeof row.extracted_data === 'string' ? JSON.parse(row.extracted_data) : row.extracted_data } : null);
+        await connection.execute('UPDATE resumes SET analysis = ?, extracted_data = ?, updated_at = NOW() WHERE id = ? AND student_id = ?', [JSON.stringify(analysis), JSON.stringify(analysis?.structured || null), resumeId, studentId]);
+        await connection.commit();
+      } catch (error) { await connection.rollback(); throw error; }
+      finally { connection.release(); }
       return await this.findOwnedResume(studentId, resumeId);
     }
     const r = this.resumes.get(Number(resumeId));
+    assertUnchanged(r?.studentId === studentId ? r : null);
     if (r && r.studentId === studentId) {
       r.analysis = analysis;
       r.extractedData = analysis?.structured || null;
