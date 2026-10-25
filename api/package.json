@@ -18,7 +18,11 @@
     "seed:recruiter": "node scripts/seed-recruiter-demo.js",
     "test:story": "node --test scripts/story-ai.test.js scripts/story-client.test.js scripts/story-mysql.test.js",
     "test:resume-pdf": "node --test scripts/resume-pdf.test.js",
-    "pdf:install-browser": "node scripts/install-browser.js"
+    "test:resume-tailoring": "node --test scripts/resume-tailoring.test.js",
+    "test:resume-tailoring:live": "node scripts/resume-tailoring-live.cjs --live",
+    "test:jd": "node scripts/jd-analyzer-audit.cjs && node --test scripts/jd-analyzer.test.js",
+    "pdf:install-browser": "node scripts/install-browser.js",
+    "test:resume-parser": "node scripts/resume-parser-audit.cjs && node --test scripts/resume-parser.test.js"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1142.0",
